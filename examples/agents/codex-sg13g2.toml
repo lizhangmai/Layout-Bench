@@ -1,6 +1,5 @@
 schema_version = 1
 id = "codex-sg13g2-development"
-adapter = "codex"
 image = "layout-bench-agent:local"
 wall_seconds = 300
 memory_mb = 1024
@@ -11,3 +10,10 @@ workspace_mb = 128
 [environment]
 KLAYOUT = "1"
 PYTHONPATH = "/resources/ihp-sg13g2/libs.tech/klayout/python:/resources/ihp-sg13g2/libs.tech/klayout/python/pycell4klayout-api/source/python"
+
+[harness]
+id = "codex"
+protocol = "layout-session.v1"
+mode = "native"
+capabilities = ["tools", "model_gateway"]
+wire_api = "responses"

@@ -1,6 +1,6 @@
 # Contributing
 
-This developer preview focuses on reproducible public layout tasks and a usable local runner. Small fixes, reproduction reports and improvements to task/agent onboarding are welcome. Issues and pull requests may be written in English or Chinese.
+This developer preview focuses on reproducible public layout tasks and a usable local runner. Small fixes, reproduction reports and improvements to task/harness onboarding are welcome. Issues and pull requests may be written in English or Chinese.
 
 ## Set up and verify
 
@@ -26,7 +26,7 @@ Keep repository-local generated files under `build/`: use `build/runs/` for benc
 |---|---|
 | Documentation only | Local link checker, `git diff --check`, and verify paths/commands against their consumers |
 | Framework logic | Ruff, unit tests and affected integration checks |
-| Images, sessions or model adapters | Build-context/tool checks and affected container regressions below |
+| Images, sessions, harnesses or wire adapters | Build-context/tool checks and affected container regressions below |
 | Tasks, rules or evaluators | Real EDA positive/negative cases, task qualification and schematic/post-layout calibration |
 
 After the README quick start with `--output build/runs/preview`, choose the applicable commands:
@@ -42,7 +42,7 @@ LAYOUT_BENCH_TEST_IMAGE=layout-bench-tools:local uv run --locked pytest \
 uv run --locked pytest tests/integration/test_inference_https.py
 ```
 
-Use new output directories. The HTTPS test requires host `openssl` and uses local certificates. Codex tests use a deterministic endpoint; neither invokes a paid model or establishes a model score.
+Use new output directories. The HTTPS test requires host `openssl` and uses local certificates. The native-harness integration test uses a deterministic endpoint; neither invokes a paid model or establishes a model score.
 
 The remaining low-level EDA regressions use the [manual tool profiles](docs/tools.md#manual-tools), not the generated preview configuration. Prepare the targets they use before running:
 
@@ -73,7 +73,7 @@ Before the first tagged release, allow GitHub Actions to write packages in the r
 | Contribution | Start here | Evidence to include |
 |---|---|---|
 | Public task | [Task design](docs/tasks.md#task-design), `tasks/academy-tgate/` | Source and license, explicit input list, executable constraints/metrics, passing witness and rejected counterexamples |
-| Agent or CLI adapter | [CLI examples](examples/agents/README.md), `benchmarking/model_config.py` | Frozen command/files, budgets, an offline protocol test and clear result labels |
+| Harness or wire adapter | [Harness examples](examples/agents/README.md), `benchmarking/model_config.py`, `benchmarking/inference.py` | Frozen command/files, budgets, protocol metadata, and clear result labels |
 | EDA backend | [Architecture](docs/architecture.md#architecture), `benchmarking/toolchains.py` | Tool identity, isolated inputs, structured evidence and tests of passing/failing/error cases |
 | Runner or statistics | `benchmarking/session.py`, `swarm.py`, `report.py` | Relevant lifecycle, evidence-integrity or measurement tests |
 | Documentation or preparation UX | `README.md`, `scripts/public_preview.py` | Commands that work from a clean checkout and repository-local links |

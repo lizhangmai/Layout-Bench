@@ -59,6 +59,7 @@ def verify_run(root, entry, manifest, execution_sha):
     if (report.get("schema_version") != 2 or report.get("phase") != "finished"
             or report.get("execution") != expected or report.get("task_sha256") != task["task_sha256"]
             or report.get("run_kind") != agent["run_kind"] or report.get("agent_id") != agent["agent_id"]
+            or report.get("harness") != agent["harness"]
             or report.get("configuration", {}).get("sha256") != agent["source"]["sha256"]
             or report.get("command") != agent["command"] or report.get("public_environment") != agent["environment"]
             or report.get("environment", {}).get("image_id") != agent["image_id"]):
@@ -200,7 +201,8 @@ def summarize_batch(destination):
             complete = all(t["missing"] == 0 for t in per_task.values())
             finished_attempts = sum(e["state"] != "running" for e, _, _ in all_attempts)
             groups.append({
-                "configuration_id": config_id, "run_kind": agent["run_kind"], "environment_group": environment,
+                "configuration_id": config_id, "run_kind": agent["run_kind"],
+                "harness": agent["harness"], "environment_group": environment,
                 "environment": manifest["tasks"][task_ids[0]]["environment"],
                 "complete": complete, "tasks": per_task, "family_count": len(families),
                 "success_rate": sum(t["weight"]*t["success_rate"] for t in per_task.values()) if complete else None,

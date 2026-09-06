@@ -33,7 +33,7 @@ Layout-Bench 在隔离容器中运行 Agent，记录明确提交的 GDS，并使
 | **端到端版图任务** | 冻结网表、约束、工艺资源和评估计划，最终产出 GDS 工件。 |
 | **可复现的运行条件** | 固定输入、配置摘要、镜像 ID、预算、事件日志和持久提交记录。 |
 | **独立裁判** | Agent 停止后由可信评估器重新检查候选；自报检查结果不决定分数。 |
-| **开放的接入接口** | 手写 CLI、内置 Codex adapter 和可配置 EDA 后端共享同一会话契约。 |
+| **开放的接入接口** | 任意可执行 harness 和可配置 EDA 后端都能使用统一的会话与评估契约。 |
 | **资格验证优先** | 通过参考 witness、反例、提取检查及原理图/后仿校准，在发布前暴露裁判问题。 |
 
 ## 前置条件
@@ -56,7 +56,7 @@ cd Layout-Bench
 uv run --python 3.12 --locked python scripts/public_preview.py quickstart --output build/runs/preview
 ```
 
-该命令只构建一个 `layout-bench-tools:local` 镜像，获取固定版本的 PDK，准备经过审查的资料，并运行参考解、提交和批量检查。KLayout、ngspice、Magic、OpenVAF、Xschem 和 Codex CLI 已包含在镜像中，不需要单独的 Agent 镜像。快速开始不会调用模型账户。
+该命令只构建一个 `layout-bench-tools:local` 镜像，获取固定版本的 PDK，准备经过审查的资料，并运行参考解、提交和批量检查。KLayout、ngspice、Magic、OpenVAF、Xschem、Python 和可选的 native harness runtime 已包含在镜像中，不需要单独的 Agent 镜像。快速开始不会调用模型账户。
 
 首次运行需要下载工具和 PDK，可能耗时数分钟。后续运行会复用 Docker 层和 PDK checkout，同时重新准备已验证的资料和全新工作区。每次运行都应选择新的 `--output` 目录；已有证据不会被覆盖。若要复用已构建的镜像，可使用 `--skip-build`。该命令只初始化 PDK submodule，其他公开资料 submodule 为可选项。
 
@@ -88,24 +88,24 @@ uv run --locked python scripts/public_preview.py qualify \
 工作流程如下：
 
 1. **选择任务**：从公开的 `academy-tgate` 任务及其声明输入开始。
-2. **配置 Agent**：使用手写 CLI 或 Codex adapter，并指定经过审查的文件、资料和预算。
+2. **配置 harness**：提供任意可执行命令、经过审查的文件、资料和预算；可选 harness profile 只记录协议和执行语义。
 3. **提交候选版图**：在 `/workspace` 中工作，然后运行 `python -I /protocol/submit.py`，明确提交配置的 GDS。
 4. **评估和比较**：单个候选使用独立评估器；批量测量使用冻结的“任务 × 配置 × 重复次数”计划。
 
-Agent 会收到 `/protocol/prompt.txt`、`/protocol/task.json` 和只读的 `/task` 输入。标准运行不会收到公开参考解。
+配置的 harness 会收到 `/protocol/prompt.txt`、`/protocol/task.json`、`/protocol/harness.json` 和只读的 `/task` 输入。标准运行不会收到公开参考解。Runner 不解析 harness 内部会话；harness 只需按协议显式提交候选版图。
 
-使用 Codex adapter 时，复制 [inference.example.toml](examples/agents/inference.example.toml)，填写端点、模型和主机密钥变量名，然后运行：
+通过主机持有的 gateway 连接模型时，复制 [inference.example.toml](examples/agents/inference.example.toml)，填写端点、模型和主机密钥变量名，再运行自己的 harness 配置：
 
 ```bash
 uv run --locked python main.py run tasks/academy-tgate/task.toml \
-  --agent build/runs/preview/prepared/codex-sg13g2.toml \
+  --agent path/to/agent.toml \
   --resources build/runs/preview/prepared/agent-resources \
   --toolchain build/runs/preview/prepared/toolchain.toml \
   --inference build/runs/inference.toml \
   --output build/runs/my-first-model-run
 ```
 
-该命令会调用你配置的模型；快速开始本身不会调用模型。凭据保留在主机上。当前尚未实现同语义的会话内裁判反馈。
+该命令会调用你配置的模型；快速开始本身不会调用模型。凭据保留在主机上。当前 gateway 提供 Responses wire family；harness 自己负责适配所需的桥接。当前尚未实现同语义的会话内裁判反馈。
 
 ## 工作原理
 
@@ -125,7 +125,7 @@ DRC/LVS 是物理有效性门槛。任务成功还要求所有硬约束、必需
 | 需求 | 链接 |
 | --- | --- |
 | 重现无需模型密钥的公开预览 | [快速开始](#quick-start) |
-| 接入自定义 CLI 或 Codex | [CLI adapter 示例](examples/agents/README.md) |
+| 接入自定义 harness | [Harness 示例](examples/agents/README.md) |
 | 添加任务并验证裁判 | [任务与评估](docs/tasks.md) |
 | 了解运行计划、推理限制和评分 | [运行指南](docs/running.md) |
 | 准备 PDK/EDA 资料或排错 | [工具指南](docs/tools.md) |
@@ -152,9 +152,9 @@ DRC/LVS 是物理有效性门槛。任务成功还要求所有硬约束、必需
 </details>
 
 <details>
-<summary><strong>可以使用 Codex 之外的 Agent 吗？</strong></summary>
+<summary><strong>可以使用内置 profile 之外的 harness 吗？</strong></summary>
 
-可以。任何遵循会话契约的 CLI 都能配置其命令、经过审查的文件、资料和预算。Codex adapter 是可选项。
+可以。任何遵循会话协议的可执行程序都能配置其命令、经过审查的文件、资料和预算。内置 profile 只是便利项，Runner 不要求特定 Agent 框架。
 
 </details>
 
@@ -181,7 +181,7 @@ DRC/LVS 是物理有效性门槛。任务成功还要求所有硬约束、必需
 
 ## 预览状态
 
-当前版本是本地开发预览，包含一个公开任务及其资格材料、Codex CLI adapter、受控 Responses gateway、可配置 EDA 后端和本地批量统计。下一步计划包括配置真实模型基线、同语义过程反馈，以及来自另一电路家族的第二个公开任务。预览期间 API 和报告 schema 可能变化。
+当前版本是本地开发预览，包含一个公开任务及其资格材料、通用可执行 harness 会话协议、受控模型 gateway、可配置 EDA 后端和本地批量统计。下一步计划包括配置真实模型基线、同语义过程反馈、更多 wire adapter，以及来自另一电路家族的第二个公开任务。预览期间 API 和报告 schema 可能变化。
 
 框架采用 [MIT](LICENSE) 许可。公开的 `academy-tgate` 任务保留其 [Apache-2.0 许可](tasks/academy-tgate/LICENSE)。Submodule、工具和依赖保留各自的许可与声明；来源和资料准备见[工具指南](docs/tools.md#external-sources)。
 

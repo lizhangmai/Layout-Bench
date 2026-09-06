@@ -16,7 +16,7 @@ The host uses Linux x86-64, Git, uv, Python 3.12+, and accessible Docker/BuildKi
 
 `quickstart` chains host checks, image build, PDK initialization, preparation, and smoke validation, and writes `prepared/` and `run/`. It reuses build caches and the pinned upstream checkout, but prepares derived resources and fresh run artifacts again. `--skip-build` reuses an existing image and still binds its actual ID; it does not download an unpublished prebuilt image or overwrite existing output. The script assembles only public examples; use `main.py` and your own tool configuration for custom tasks.
 
-The unified image contains KLayout, Python, ngspice, Magic, OpenVAF, Xschem, and Codex. Each role still starts a separate container. The image contains no task, PDK, harness source, or credentials; `.dockerignore` allows only dependency declarations and lock files. Install the KLayout CLI and Python API from separate packages and have tool checks confirm that their versions agree. The build does not depend on a local KLayout source tree or private cache.
+The unified image contains KLayout, Python, ngspice, Magic, OpenVAF, Xschem, and the optional native harness runtime used by the bundled example. Each role still starts a separate container. The image contains no task, PDK, harness source, or credentials; `.dockerignore` allows only dependency declarations and lock files. Install the KLayout CLI and Python API from separate packages and have tool checks confirm that their versions agree. The build does not depend on a local KLayout source tree or private cache.
 
 The build needs access to system packages, tool release sites, and the Python index, and verifies downloaded artifacts against fixed digests. The distribution still resolves base system packages, so the final image identity binds the result; the Dockerfile alone cannot guarantee a byte-for-byte rebuild. To use a host loopback proxy:
 
@@ -40,7 +40,7 @@ The script preserves existing `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` variab
 | Output directory already exists | Choose a new `--output` path; logs produced by failed steps remain in the old directory for diagnosis |
 | Build download fails | Check connectivity to Ubuntu, the Python package index, and tool release sites; downloads require matching digests. With a host loopback proxy, add `--network host` to `quickstart` or `build` and preserve `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY`; see [stepwise preparation and reuse](#stepwise-preparation-and-reuse) for other network setup |
 | Protocol probe exits 1 / success rate is 0 | The probe draws only a rectangle and does not implement a circuit, so evaluation failure is expected. The preview wrapper checks normal exit, submission, and statistics; do not treat an infrastructure failure as a passing probe |
-| A real model lacks a key or cannot be reached | Validate the environment with the no-key public flow first, then configure your endpoint, model, and host key variable using [the Codex adapter and fixed inference endpoint](running.md#model-inference); public CI does not call a paid model |
+| A real model lacks a key or cannot be reached | Validate the environment with the no-key public flow first, then configure your endpoint, model, and host key variable using [the model gateway and declared wire adapter](running.md#model-inference); public CI does not call a paid model |
 
 <a id="external-sources"></a>
 

@@ -12,7 +12,7 @@ from .agent import run_agent
 from .bundles import load_bundle
 from .evaluation import identifier
 from .files import Asset, keys, read_file, text
-from .inference import ResponsesGateway, load_inference_config
+from .inference import InferenceGateway, load_inference_config, validate_harness_wire
 from .model_config import load_run_config
 from .provenance import host_identity, json_asset, snapshot_framework, verify_framework
 from .recorder import RunRecorder, atomic_write
@@ -83,7 +83,7 @@ def _schedule(plan, tasks, agents):
 
 
 def execute_plan(plan, destination, *, runner=run_agent, session_factory=DockerSession,
-                 gateway_factory=ResponsesGateway, toolchain_loader=load_toolchain,
+                 gateway_factory=InferenceGateway, toolchain_loader=load_toolchain,
                  policy=None, prepare_only=False):
     """Preflight/freeze everything before the first solver receives a task.
 
@@ -124,6 +124,8 @@ def execute_plan(plan, destination, *, runner=run_agent, session_factory=DockerS
             bundle = load_bundle(entry["resources"])
             resources = {**dict(bundle.files), "manifest.json": bundle.manifest}
         profile = load_inference_config(entry["inference"]) if "inference" in entry else None
+        if profile:
+            validate_harness_wire(config.harness.wire_api, profile.wire_api)
         session = session_factory(config.image)
         # Capture credential availability now, but create a fresh gateway for every attempt.
         gateway = gateway_factory(profile) if profile else None
@@ -156,6 +158,7 @@ def execute_plan(plan, destination, *, runner=run_agent, session_factory=DockerS
         config, profile = entry["config"], entry["profile"]
         manifest["agents"][entry["id"]] = {
             "agent_id": config.id, "source": archive(config.source), "image": config.image,
+            "harness": config.harness.identity(),
             "run_kind": entry["run_kind"],
             "image_id": entry["session"].image_id, "command": list(config.command),
             "environment": config.environment,

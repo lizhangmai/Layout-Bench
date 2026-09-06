@@ -154,7 +154,7 @@ def quickstart(output, image, network, skip_build):
     call("git", "submodule", "update", "--init", "--recursive", "--depth", "1", "third_party/IHP-Open-PDK")
     prepare(output / "prepared", image)
     run(output / "prepared", output / "run", False)
-    print(f"Ready for your agent: {output / 'prepared/codex-sg13g2.toml'}\n"
+    print(f"Ready with the bundled harness example: {output / 'prepared/codex-sg13g2.toml'}\n"
           f"Reviewed resources: {output / 'prepared/agent-resources'}\n"
           f"Judge configuration: {output / 'prepared/toolchain.toml'}", flush=True)
 

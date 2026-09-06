@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .evaluate import run_evaluation
 from .files import Asset
+from .inference import validate_harness_wire
 from .recorder import RecordingError, RunRecorder
 from .session import DockerSession, task_message
 
@@ -16,6 +17,8 @@ def run_agent(task, config, resources, backends, destination: Path, *, inference
     operations = {job.operation for job in task.evaluation.jobs}
     if not operations <= backends.keys():
         raise ValueError("Missing evaluation backend bindings")
+    if inference:
+        validate_harness_wire(config.harness.wire_api, inference.config.wire_api)
     destination = destination.absolute()
     if destination.exists() or destination.is_symlink():
         raise FileExistsError(destination)
@@ -25,7 +28,8 @@ def run_agent(task, config, resources, backends, destination: Path, *, inference
     archive = recorder.archive
     message = task_message(task, config)
     report = {"schema_version": 2, "events": {"path": "events.jsonl", "schema_version": 1}, "run_kind": "offline_cli_development", "task_sha256": task.digest,
-              "agent_id": config.id, "configuration": archive(config.source), "execution": execution,
+              "agent_id": config.id, "harness": config.harness.identity(),
+              "configuration": archive(config.source), "execution": execution,
               "command": list(config.command), "public_environment": config.environment,
               "prompt": archive(Asset(message.encode(), "text")),
               "task": archive(task.evaluation_inputs()["task"]),
@@ -33,7 +37,7 @@ def run_agent(task, config, resources, backends, destination: Path, *, inference
               "agent_files": {name: archive(a) for name, a in config.files.items()},
               "resources": {name: archive(a) for name, a in resources.items()},
               "implementation": {name: archive(Asset(Path(__file__).with_name(name).read_bytes(), "python"))
-                                 for name in ("agent.py", "session.py", "snapshot.py", "submit.py", "model_config.py", "recorder.py", "recording.py")},
+                                 for name in ("agent.py", "session.py", "snapshot.py", "submit.py", "model_config.py", "harnesses.py", "recorder.py", "recording.py")},
               "usage": {"input_tokens": None, "output_tokens": None, "cost": None},
               "phase": "running", "outcome": None, "task_success": None, "evaluation": None}
     def save():

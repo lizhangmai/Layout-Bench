@@ -10,6 +10,7 @@ import time
 from pathlib import Path
 
 from .files import Asset, relative
+from .inference import INFERENCE_SOCKET, LEGACY_INFERENCE_SOCKET
 from .recorder import RecordingError
 from .recording import SessionResult
 
@@ -19,6 +20,7 @@ MAX_CONSOLE_BYTES = 64 * 1024 * 1024
 def task_message(task, config):
     return ("Generate a GDS layout implementing the authoritative netlist and all task requirements.\n"
             "Read /protocol/task.json for input paths, top cell, output path and limits.\n"
+            "Read /protocol/harness.json for the session protocol and declared capabilities.\n"
             "Task inputs are read-only in /task; reviewed resources are in /resources.\n"
             "The writable /workspace starts empty. Available tools come from the recorded image.\n"
             f"Wall-clock budget: {config.wall_seconds:g} seconds, including your tool calls.\n"
@@ -57,6 +59,7 @@ class DockerSession:
         started = None
         elapsed = 0.0
         identity = {"image_id": self.image_id, "network": "none", "read_only_root": True,
+                    "harness": config.harness.identity(),
                     "memory_mb": config.memory_mb, "cpus": config.cpus, "pids": config.pids,
                     "workspace_mb": config.workspace_mb, "tmp_mb": 64, "shm_mb": 16,
                     "user": f"{uid}:{gid}", "wall_seconds": config.wall_seconds,
@@ -93,10 +96,15 @@ class DockerSession:
             groups = {"agent": config.files, "resources": resources, "protocol": {
                 "task.json": Asset(json.dumps(task.description()).encode(), "json"),
                 "prompt.txt": Asset(message.encode(), "text"),
+                "harness.json": Asset(json.dumps(config.harness.identity(), sort_keys=True).encode(), "json"),
                 **{name: Asset(Path(__file__).with_name(name).read_bytes(), "python")
                    for name in ("snapshot.py", "submit.py")}}}
             if inference:
-                groups["protocol"]["model.json"] = Asset(json.dumps(inference.public).encode(), "json")
+                profile = Asset(json.dumps(inference.public, sort_keys=True).encode(), "json")
+                groups["protocol"]["inference.json"] = profile
+                # Keep the old filename readable while harnesses migrate to the
+                # generic inference profile name.
+                groups["protocol"]["model.json"] = profile
             for group, files in groups.items():
                 (root / group).mkdir()
                 for name, asset in files.items():
@@ -111,6 +119,11 @@ class DockerSession:
             (root / "protocol/control.sock").chmod(0o600)
             server.listen(4)
             server.settimeout(0.05)
+            if inference:
+                # Keep the former model.sock path as a compatibility alias while
+                # new harnesses use the provider-neutral inference.sock name.
+                legacy_socket = root / LEGACY_INFERENCE_SOCKET.lstrip("/")
+                legacy_socket.symlink_to(Path(INFERENCE_SOCKET).name)
             mounts = [arg for name in ("task", "agent", "resources", "protocol")
                       for arg in ("--mount", f"type=bind,src={root/name},dst=/{name},readonly")]
             env = [arg for k, v in config.environment.items() for arg in ("--env", f"{k}={v}")]
@@ -132,7 +145,7 @@ class DockerSession:
                 started = time.monotonic()
                 deadline = started + config.wall_seconds
                 if inference:
-                    inference.start(root / "protocol/model.sock", deadline, uid=uid)
+                    inference.start(root / INFERENCE_SOCKET.lstrip("/"), deadline, uid=uid)
                 process = subprocess.Popen(["docker", "start", "-a", cid], stdin=subprocess.DEVNULL,
                                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 reader = threading.Thread(target=drain, args=(process.stdout,), daemon=True)

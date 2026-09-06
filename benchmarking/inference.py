@@ -1,4 +1,8 @@
-"""Fixed-destination Responses gateway. Credentials never enter solver containers."""
+"""Host-owned model gateway with a provider-wire adapter seam.
+
+The current built-in wire adapter is ``responses``.  Harnesses remain opaque
+to this module; they may use the gateway through a small bridge of their own.
+"""
 
 import copy
 import hashlib
@@ -12,6 +16,7 @@ import time
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Protocol
 from urllib.parse import urlsplit
 
 from .files import Asset, keys, read_file, text
@@ -19,6 +24,8 @@ from .recorder import RecordingError
 
 MAX_BODY = 8 * 1024 * 1024
 MAX_RESPONSE = 16 * 1024 * 1024
+INFERENCE_SOCKET = "/protocol/inference.sock"
+LEGACY_INFERENCE_SOCKET = "/protocol/model.sock"
 
 
 @dataclass(frozen=True)
@@ -29,6 +36,7 @@ class InferenceConfig:
     max_requests: int
     request_timeout_seconds: int
     source: Asset
+    wire_api: str = "responses"
 
 
 def load_inference_config(path):
@@ -36,7 +44,7 @@ def load_inference_config(path):
     source = Asset(read_file(path.parent, path.name), "toml")
     data = tomllib.loads(source.content.decode())
     keys(data, {"schema_version", "base_url", "model", "api_key_env", "max_requests",
-                "request_timeout_seconds"}, set(), "inference profile")
+                "request_timeout_seconds"}, {"wire_api"}, "inference profile")
     if type(data["schema_version"]) is not int or data["schema_version"] != 1:
         raise ValueError("Unsupported inference profile")
     url = urlsplit(text(data["base_url"], "inference endpoint"))
@@ -49,11 +57,13 @@ def load_inference_config(path):
     for name in ("max_requests", "request_timeout_seconds"):
         if type(data[name]) is not int or data[name] <= 0:
             raise ValueError(f"{name} must be a positive integer")
+    wire_api = text(data.get("wire_api", "responses"), "inference wire_api")
+    _wire_adapter(wire_api)
     return InferenceConfig(*(data[k] for k in ("base_url", "model", "api_key_env", "max_requests",
-                                             "request_timeout_seconds")), source)
+                                             "request_timeout_seconds")), source, wire_api)
 
 
-def validate_request(path, body, model):
+def _validate_responses_request(path, body, model):
     if path not in {"/responses", "/responses/compact"}:
         raise ValueError("Only Responses generation and compaction are allowed")
     data = json.loads(body)
@@ -90,7 +100,7 @@ def validate_request(path, body, model):
     return json.dumps(data, separators=(",", ":")).encode()
 
 
-def response_semantics(path, content_type, body):
+def _responses_response_semantics(path, content_type, body):
     """Require a terminal Responses result, independently of HTTP success."""
     messages = []
     media = content_type.split(";", 1)[0].strip().lower()
@@ -149,9 +159,61 @@ def response_semantics(path, content_type, body):
     return {"outcome": outcome, "reason": reason, "usage": response.get("usage")}
 
 
-class ResponsesGateway:
+class WireAdapter(Protocol):
+    """Provider-wire semantics kept behind the host gateway seam."""
+
+    id: str
+
+    def validate_request(self, path: str, body: bytes, model: str) -> bytes: ...
+
+    def response_semantics(self, path: str, content_type: str, body: bytes) -> dict: ...
+
+
+class _ResponsesWireAdapter:
+    id = "responses"
+
+    def validate_request(self, path, body, model):
+        return _validate_responses_request(path, body, model)
+
+    def response_semantics(self, path, content_type, body):
+        return _responses_response_semantics(path, content_type, body)
+
+
+_WIRE_ADAPTERS: dict[str, WireAdapter] = {"responses": _ResponsesWireAdapter()}
+
+
+def _wire_adapter(name: str) -> WireAdapter:
+    adapter = _WIRE_ADAPTERS.get(name)
+    if adapter is None:
+        raise ValueError(
+            f"Unsupported inference wire_api: {name!r}; "
+            "add a wire adapter instead of coupling a harness to the runner"
+        )
+    return adapter
+
+
+def validate_harness_wire(harness_wire_api, gateway_wire_api):
+    """Ensure an explicitly declared harness bridge uses this gateway family."""
+    if harness_wire_api is not None and harness_wire_api != gateway_wire_api:
+        raise ValueError("Harness wire_api differs from the inference profile")
+
+
+def validate_request(path, body, model, wire_api="responses"):
+    """Validate a request using the selected provider-wire adapter."""
+    return _wire_adapter(wire_api).validate_request(path, body, model)
+
+
+def response_semantics(path, content_type, body, wire_api="responses"):
+    """Validate a response using the selected provider-wire adapter."""
+    return _wire_adapter(wire_api).response_semantics(path, content_type, body)
+
+
+class InferenceGateway:
+    """One generic gateway implementation backed by the Responses adapter."""
+
     def __init__(self, config, *, transport=None):
         self.config = config
+        self.wire_adapter = _wire_adapter(config.wire_api)
         self.is_test = transport is not None
         self._key = None if self.is_test else os.environ.get(config.api_key_env)
         if not self.is_test and not self._key:
@@ -174,6 +236,8 @@ class ResponsesGateway:
     @property
     def public(self):
         return {"model": self.config.model, "base_url": self.config.base_url,
+                "wire_api": self.config.wire_api,
+                "socket": INFERENCE_SOCKET,
                 "max_requests": self.config.max_requests,
                 "request_timeout_seconds": self.config.request_timeout_seconds,
                 "transport": "test" if self.is_test else "https",
@@ -241,7 +305,7 @@ class ResponsesGateway:
                 self._record("inference.denied", reason="budget_exhausted")
                 return 429, "application/json", b'{"error":"Inference budget exhausted"}'
             try:
-                payload = validate_request(path, body, self.config.model)
+                payload = self.wire_adapter.validate_request(path, body, self.config.model)
             except (ValueError, TypeError, RecursionError):
                 self.denied += 1
                 self._record("inference.denied", reason="invalid_request")
@@ -262,7 +326,7 @@ class ResponsesGateway:
                 if self.recorder:
                     event["response"] = self.recorder.archive(Asset(response, "text"))
                 if 200 <= status < 300:
-                    event.update(response_semantics(path, content_type, response))
+                    event.update(self.wire_adapter.response_semantics(path, content_type, response))
                 else:
                     event["outcome"] = "http_error"
                 event["content_type"] = content_type
@@ -359,3 +423,7 @@ class ResponsesGateway:
                 "infrastructure_error": self.shutdown_incomplete or any(e["outcome"] not in {"completed", "budget_truncated",
                                                                   "content_filtered", "cancelled"}
                                             for e in self.events)}
+
+
+# Compatibility name for callers that used the original implementation name.
+ResponsesGateway = InferenceGateway

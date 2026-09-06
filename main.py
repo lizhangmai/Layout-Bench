@@ -11,7 +11,11 @@ from benchmarking.bundles import load_bundle
 from benchmarking.evaluate import run_evaluation
 from benchmarking.evaluation import identifier, parse_evaluation
 from benchmarking.files import Asset, read_file
-from benchmarking.inference import ResponsesGateway, load_inference_config
+from benchmarking.inference import (
+    InferenceGateway,
+    load_inference_config,
+    validate_harness_wire,
+)
 from benchmarking.model_config import load_run_config
 from benchmarking.recorder import recover_submissions
 from benchmarking.report import summarize_batch
@@ -94,9 +98,13 @@ def main() -> None:
             if args.resources:
                 bundle = load_bundle(args.resources)
                 resources = {**dict(bundle.files), "manifest.json": bundle.manifest}
-            report = run_agent(load_task(args.config), load_run_config(args.agent), resources,
+            config = load_run_config(args.agent)
+            profile = load_inference_config(args.inference) if args.inference else None
+            if profile:
+                validate_harness_wire(config.harness.wire_api, profile.wire_api)
+            report = run_agent(load_task(args.config), config, resources,
                                load_toolchain(args.toolchain), args.output,
-                               inference=ResponsesGateway(load_inference_config(args.inference)) if args.inference else None)
+                               inference=InferenceGateway(profile) if profile else None)
             print(json.dumps({"report": str(args.output / "run.json"), **{k: report[k] for k in
                   ("termination", "outcome", "task_success", "candidate")}}, indent=2))
             if report["outcome"] != "passed":

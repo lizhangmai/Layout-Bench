@@ -32,7 +32,7 @@ Layout-Bench runs an Agent in an isolated container, records an explicit GDS sub
 | **End-to-end layout tasks** | A frozen netlist, constraints, process resources, and evaluation plan, ending in a GDS artifact. |
 | **Reproducible conditions** | Pinned inputs, configuration digests, image IDs, budgets, event logs, and durable submissions. |
 | **Independent judgment** | A trusted evaluator rechecks the candidate after the Agent stops; self-reported checks do not decide the score. |
-| **Open integration surface** | Hand-written CLIs, the built-in Codex adapter, and configurable EDA backends share one session contract. |
+| **Open integration surface** | Any executable harness and configurable EDA backend can use the same frozen session and evaluation contracts. |
 | **Qualification-first evaluation** | Reference witnesses, counterexamples, extraction checks, and schematic/post-layout calibration expose judge failures before release. |
 
 ## Prerequisites:
@@ -55,7 +55,7 @@ cd Layout-Bench
 uv run --python 3.12 --locked python scripts/public_preview.py quickstart --output build/runs/preview
 ```
 
-This builds one `layout-bench-tools:local` image, fetches the pinned PDK, prepares reviewed resources, and runs the reference, submission, and batch checks. KLayout, ngspice, Magic, OpenVAF, Xschem, and Codex CLI are already in that image; no separate Agent image is needed. The quick start never calls a model account.
+This builds one `layout-bench-tools:local` image, fetches the pinned PDK, prepares reviewed resources, and runs the reference, submission, and batch checks. KLayout, ngspice, Magic, OpenVAF, Xschem, Python, and the optional native harness runtime are already in that image; no separate Agent image is needed. The quick start never calls a model account.
 
 The first run downloads tools and the PDK and may take several minutes. Later runs reuse Docker layers and the PDK checkout while preparing fresh, verified resources and workspaces. Choose a new `--output` directory for each run; existing evidence is never overwritten. Use `--skip-build` to reuse an already built image. Only the PDK submodule is initialized; the other public source submodules are optional.
 
@@ -89,24 +89,24 @@ The [reference solution](tasks/academy-tgate/reference/README.md) and [qualifica
 The workflow is simple:
 
 1. **Choose a task** — start with the public `academy-tgate` task and its declared inputs.
-2. **Configure an Agent** — use a hand-written CLI or the Codex adapter with reviewed files, resources, and budgets.
+2. **Configure a harness** — provide any executable command, reviewed files, resources, and budgets; an optional harness profile records its protocol and execution semantics.
 3. **Submit a candidate** — work in `/workspace`, then run `python -I /protocol/submit.py` to submit the configured GDS explicitly.
 4. **Evaluate and compare** — use the independent evaluator for one candidate, or a frozen batch plan for task × configuration × repetition measurements.
 
-An Agent receives `/protocol/prompt.txt`, `/protocol/task.json`, and read-only `/task` inputs. It does not receive the public reference solution during a standard run.
+The configured harness receives `/protocol/prompt.txt`, `/protocol/task.json`, `/protocol/harness.json`, and read-only `/task` inputs. It does not receive the public reference solution during a standard run. The harness is opaque to the runner: it only needs to produce the session's explicit submission.
 
-To use the Codex adapter, copy [inference.example.toml](examples/agents/inference.example.toml), fill in your endpoint, model, and host key-variable name, then run:
+To connect a model through the host-owned gateway, copy [inference.example.toml](examples/agents/inference.example.toml), fill in your endpoint, model, and host key-variable name, then run your harness configuration:
 
 ```bash
 uv run --locked python main.py run tasks/academy-tgate/task.toml \
-  --agent build/runs/preview/prepared/codex-sg13g2.toml \
+  --agent path/to/agent.toml \
   --resources build/runs/preview/prepared/agent-resources \
   --toolchain build/runs/preview/prepared/toolchain.toml \
   --inference build/runs/inference.toml \
   --output build/runs/my-first-model-run
 ```
 
-This command calls your configured model; quick start itself never does. Credentials stay on the host. Same-semantic in-session judge feedback is not implemented yet.
+This command calls your configured model; quick start itself never does. Credentials stay on the host. The gateway currently exposes the Responses wire family, while the harness owns any bridge needed by its model client. Same-semantic in-session judge feedback is not implemented yet.
 
 ## How It Works
 
@@ -126,7 +126,7 @@ DRC/LVS are physical-validity gates. Task success additionally requires every ha
 | Need | Link |
 | --- | --- |
 | Reproduce the no-key public preview | [Quick Start](#quick-start) |
-| Connect a custom CLI or Codex | [CLI adapter examples](examples/agents/README.md) |
+| Connect a custom harness | [Harness examples](examples/agents/README.md) |
 | Add a task and qualify its judge | [Tasks and evaluation](docs/tasks.md) |
 | Understand run plans, inference limits, and scoring | [Running](docs/running.md) |
 | Prepare PDK/EDA resources or troubleshoot tools | [Tools](docs/tools.md) |
@@ -153,9 +153,9 @@ No. DRC/LVS establish physical validity under the selected rules. Task success a
 </details>
 
 <details>
-<summary><strong>Can I use an Agent other than Codex?</strong></summary>
+<summary><strong>Can I use a harness other than the built-in profile?</strong></summary>
 
-Yes. Any CLI that follows the session contract can be configured with its command, reviewed files, resources, and budget. The Codex adapter is optional.
+Yes. Any executable that follows the session protocol can be configured with its command, reviewed files, resources, and budget. Built-in profiles are optional conveniences; the runner does not require a particular Agent framework.
 
 </details>
 
@@ -182,7 +182,7 @@ They exercise the judge's positive, negative, geometry, extraction, performance,
 
 ## Preview Status
 
-The current release is a local developer preview with one public task, its qualification materials, a Codex CLI adapter, a controlled Responses gateway, configurable EDA backends, and local batch statistics. The next milestones are a configured real-model baseline, same-semantic process feedback, and a second public task from another circuit family. APIs and report schemas may change during the preview.
+The current release is a local developer preview with one public task, its qualification materials, a generic executable-harness session protocol, a controlled model gateway, configurable EDA backends, and local batch statistics. The next milestones are a configured real-model baseline, same-semantic process feedback, additional wire adapters, and a second public task from another circuit family. APIs and report schemas may change during the preview.
 
 The framework is licensed under [MIT](LICENSE). The public `academy-tgate` task retains its [Apache-2.0 license](tasks/academy-tgate/LICENSE). Submodules, tools, and dependencies retain their own licenses and notices; source and resource preparation are described in the [tool guide](docs/tools.md#external-sources).
 

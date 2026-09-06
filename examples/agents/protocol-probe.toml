@@ -12,3 +12,9 @@ workspace_mb = 16
 path = "protocol_probe.py"
 target = "protocol_probe.py"
 sha256 = "cfd10b814959d14d49d2e2e5bfb702d44fdbab73a2d57699e88e706d910be0f4"
+
+[harness]
+id = "external-cli"
+version = "1"
+protocol = "layout-session.v1"
+mode = "opaque"

@@ -1,6 +1,6 @@
 # Architecture and Extension Interfaces
 
-Layout-Bench measures an Agent's ability to turn authoritative netlists, constraints, and process resources into GDS. The system under test includes the model, prompt, context strategy, and tools; each measurement covers one task, one configuration, and one independent repetition. See the root [README](../README.md) for the current scope and next steps.
+Layout-Bench measures an Agent's ability to turn authoritative netlists, constraints, and process resources into GDS. The system under test includes the harness, model, prompt, context strategy, and tools; each measurement covers one task, one configuration, and one independent repetition. The benchmark owns a small session protocol and treats harness internals as opaque unless a run explicitly declares a managed or native runtime semantic. See the root [README](../README.md) for the current scope and next steps.
 
 <a id="repositories"></a>
 
@@ -13,7 +13,7 @@ The public repository owns the common framework, public tasks, reference solutio
 ```mermaid
 flowchart LR
     P[Task and Agent configuration / run plan] --> R[Runner freezes conditions]
-    R --> A[Isolated Agent session]
+    R --> A[Isolated harness session]
     A -->|Explicit submission| C[Durable GDS snapshot]
     C --> E[Independent evaluator]
     T[Trusted task and tool materials] --> E
@@ -22,30 +22,61 @@ flowchart LR
     L --> S[Statistics / optional restricted export]
 ```
 
-| Responsibility | Code entry points | Boundary |
+| Responsibility | Code entry points | Contract / seam |
 |---|---|---|
 | Configuration and freezing | `tasks.py`, `model_config.py`, `provenance.py` | Validate inputs, configuration, files, and the actual execution identity; do not interpret the circuit |
 | Run orchestration | `agent.py`, `swarm.py` | One execution and independent batch repetitions; invoke evaluation after stopping |
 | Session and submission | `session.py`, `snapshot.py`, `submit.py` | Isolation, budgets, and the last valid submission; do not judge layout correctness |
-| Model integration | `codex_cli.py`, `inference.py` | CLI integration, the fixed inference endpoint, and host credentials; no EDA dependency |
+| Harness and model gateway | `harnesses.py`, `session.py`, `inference.py` | Common session protocol, optional harness profiles, fixed wire-family gateway, and host credentials; no EDA dependency |
 | Evaluation | `evaluation.py`, `evaluate.py`, `toolchains.py` | Execute each task's dependency graph, call backends, and decide metrics |
 | EDA and materials | `klayout.py`, `geometry.py`, `magic.py`, `ngspice.py`; `prepare.py`, `environment.py`, `prepare_support.py` | Tool execution, format interpretation, resource preparation, and validation |
 | Evidence and statistics | `recording.py`, `recorder.py`, `report.py`, `admission.py` | Durable events and artifacts, evidence binding, statistics, and optional admission/export |
 
-These modules live under `benchmarking/` and are assembled by the root `main.py`. The Agent owns provider conversations and tool orchestration, the runner enforces external budgets, and the evaluator rejudges frozen candidates. Generated scripts, self-reported check results, and process logs cannot replace the final judge.
+These modules live under `benchmarking/` and are assembled by the root `main.py`. A harness owns its provider conversation and tool orchestration unless it opts into a declared managed/native semantic; the runner enforces the external session contract and budgets, and the evaluator rejudges frozen candidates. Generated scripts, self-reported check results, and process logs cannot replace the final judge.
 
 <a id="extension-layers"></a>
 
 ## Where to Change When Extending
 
 - **New task**: add inputs, constraints, and an evaluation plan, then complete [qualification](tasks.md#qualification). Models, budgets, and repetitions belong to the [run configuration](running.md), not to `task.toml`.
-- **New Agent**: use command/file configuration or add an adapter that produces the same interface. The current CLI manages model state itself; add a shared provider-runtime abstraction only when an actual consumer needs it.
+- **New harness**: use `command` plus reviewed `files` and implement the `layout-session.v1` protocol. Add a profile under the harness seam only when launch preparation or a trusted capability declaration is reusable; the session runner must not learn the framework's internal conversation.
+- **New model wire family**: add one gateway adapter that validates requests and response semantics, then select it with `wire_api`. Do not add one benchmark branch per model or per harness.
 - **New EDA backend**: implement `identity` and `run(job, inputs) -> JobResult`, returning measured values with units, declared artifacts, and diagnostic evidence. The backend owns execution isolation and format interpretation and may use a container, a native library, or a controlled remote tool.
 - **New process or environment**: configure support bundles, device mappings, rules, and parameters, then validate the supported range using the [tools guide](tools.md). Individual tools being usable does not mean their combination has passed task qualification.
 
 `evaluation.py` and `evaluate.py` do not import concrete tools; `tasks.py` depends only on evaluation data definitions. `toolchains.py` assembles backends at the entry point: `backends.<id>` declares `type` and `settings`, while `bindings` maps logical operations to backend IDs. Python callers may also inject a backend instance or factory. Task files cannot trigger dynamic Python imports; decks and file formats for different EDAs must be adapted explicitly.
 
-A unified image serves preparation, solving, and judging, while each role runs in its own container. The host harness controls mounts, the inference endpoint, budgets, and trusted materials; the evaluator never sees Agent credentials or a writable workspace. A public development host may be controlled by the user; confidentiality for hidden data depends on a host controlled by the evaluator and cannot be provided by containers on the user's machine. See [admission and export](admission.md) for optional mechanisms and trust boundaries.
+A unified image serves preparation, solving, and judging, while each role runs in its own container. The session runner controls mounts, the optional model gateway, budgets, and trusted materials; the evaluator never sees Agent credentials or a writable workspace. A public development host may be controlled by the user; confidentiality for hidden data depends on a host controlled by the evaluator and cannot be provided by containers on the user's machine. See [admission and export](admission.md) for optional mechanisms and trust seams.
+
+<a id="harness-semantics"></a>
+
+## Harness and Runtime Semantics
+
+The external seam is the same for every harness:
+
+```text
+task inputs + /protocol/harness.json
+              ↓
+        executable harness
+              ↓  python -I /protocol/submit.py
+       frozen candidate snapshot
+              ↓
+       independent evaluator
+```
+
+Every run records a `HarnessSpec` with `id`, `version`, `protocol`, `mode`,
+capabilities, and optional `wire_api`. The default `external-cli` profile is
+`opaque`: the benchmark does not inspect or reproduce the harness's internal
+conversation. `managed` and `native` are explicit measurement conditions and
+must be kept separate in reports when context ownership changes. A built-in
+profile is only a launch/file Adapter at this seam; it is not part of task or
+judge semantics.
+
+The current host-owned gateway implements the `responses` wire family. A
+harness may provide its own bridge to that socket, while credentials and
+endpoint restrictions remain in the host gateway. Supporting another provider
+API means adding one wire-family Adapter and its semantic tests, not changing
+the session runner or adding a branch for every Agent framework.
 
 ## Design Basis
 

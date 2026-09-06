@@ -1,4 +1,4 @@
-"""Run the installed Codex CLI through a loopback-to-Unix inference bridge."""
+"""Run the optional built-in CLI through the session's inference gateway."""
 
 import http.server
 import json
@@ -11,6 +11,8 @@ from pathlib import Path
 
 
 class Bridge(http.server.BaseHTTPRequestHandler):
+    socket_path = None
+
     def log_message(self, *args):
         pass
 
@@ -22,7 +24,7 @@ class Bridge(http.server.BaseHTTPRequestHandler):
                 return
             body = self.rfile.read(size)
             with socket.socket(socket.AF_UNIX) as connection:
-                connection.connect("/protocol/model.sock")
+                connection.connect(self.socket_path)
                 connection.sendall(json.dumps({"path": self.path, "bytes": len(body)}).encode()+b"\n"+body)
                 stream = connection.makefile("rb")
                 header = json.loads(stream.readline(1025))
@@ -36,7 +38,9 @@ class Bridge(http.server.BaseHTTPRequestHandler):
 
 
 def main():
-    model = json.loads(Path("/protocol/model.json").read_text())["model"]
+    profile = json.loads(Path("/protocol/inference.json").read_text())
+    model = profile["model"]
+    Bridge.socket_path = profile["socket"]
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Bridge)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     options = {"model_provider": "layout_bench", "model_providers.layout_bench.name": "Layout-Bench",

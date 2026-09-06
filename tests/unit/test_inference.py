@@ -9,6 +9,7 @@ from benchmarking.inference import (
     InferenceConfig,
     ResponsesGateway,
     load_inference_config,
+    validate_harness_wire,
     validate_request,
 )
 
@@ -65,9 +66,31 @@ request_timeout_seconds = 5
     monkeypatch.setenv(config.api_key_env, "unique-secret-value")
     gateway = ResponsesGateway(config)
     assert "unique-secret-value" not in json.dumps(gateway.public)
+    assert gateway.public["socket"] == "/protocol/inference.sock"
     source.write_text(source.read_text().replace("https://", "http://"))
     with pytest.raises(ValueError, match="HTTPS"):
         load_inference_config(source)
+
+
+def test_profile_rejects_unknown_wire_adapter(tmp_path):
+    source = Path(tmp_path / "profile.toml")
+    source.write_text('''schema_version = 1
+wire_api = "unknown"
+base_url = "https://example.invalid/v1"
+model = "test-model"
+api_key_env = "LAYOUT_BENCH_TEST_KEY"
+max_requests = 2
+request_timeout_seconds = 5
+''')
+    with pytest.raises(ValueError, match="wire_api"):
+        load_inference_config(source)
+
+
+def test_harness_wire_declaration_must_match_gateway():
+    validate_harness_wire(None, "responses")
+    validate_harness_wire("responses", "responses")
+    with pytest.raises(ValueError, match="wire_api"):
+        validate_harness_wire("other", "responses")
 
 
 def test_http_200_failed_event_is_infrastructure_error():

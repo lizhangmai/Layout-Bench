@@ -1,11 +1,12 @@
-"""Frozen offline CLI configuration; model-provider settings are adapter-owned."""
+"""Frozen Agent configuration; harness profiles are optional and generic."""
 
 import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from .evaluation import number
 from .files import Asset, keys, read_file, relative, text
+from .harnesses import HarnessSpec, prepare_harness
 
 
 @dataclass(frozen=True)
@@ -21,6 +22,7 @@ class RunConfig:
     files: dict[str, Asset]
     environment: dict[str, str]
     source: Asset
+    harness: HarnessSpec = field(default_factory=HarnessSpec)
 
 
 def load_run_config(path: Path) -> RunConfig:
@@ -28,27 +30,27 @@ def load_run_config(path: Path) -> RunConfig:
     source = Asset(read_file(path.parent, path.name), "toml")
     data = tomllib.loads(source.content.decode())
     keys(data, {"schema_version", "id", "image", "wall_seconds", "memory_mb",
-                "cpus", "pids", "workspace_mb"}, {"files", "environment", "command", "adapter"}, "run configuration")
+                "cpus", "pids", "workspace_mb"},
+         {"files", "environment", "command", "harness", "adapter"},
+         "run configuration")
     if type(data["schema_version"]) is not int or data["schema_version"] != 1:
         raise ValueError("Unsupported run configuration version")
-    for field in ("id", "image"):
-        text(data[field], field)
-    files = {}
-    if "adapter" in data:
-        if data["adapter"] != "codex" or "command" in data:
-            raise ValueError("Use adapter=codex or an explicit command")
-        files["codex_cli.py"] = Asset(Path(__file__).with_name("codex_cli.py").read_bytes(), "python")
-        data["command"] = ["python", "/agent/codex_cli.py"]
+    for name in ("id", "image"):
+        text(data[name], name)
+    prepared_harness = prepare_harness(data, path.parent)
+    files = dict(prepared_harness.files or {})
+    if prepared_harness.command is not None:
+        data["command"] = list(prepared_harness.command)
     if not isinstance(data.get("command"), list) or not data["command"]:
         raise ValueError("command must be a nonempty argument list")
     for argument in data["command"]:
         text(argument, "command argument")
-    for field in ("wall_seconds", "cpus"):
-        if number(data[field]) <= 0:
-            raise ValueError(f"{field} must be positive")
-    for field in ("memory_mb", "pids", "workspace_mb"):
-        if type(data[field]) is not int or data[field] <= 0:
-            raise ValueError(f"{field} must be a positive integer")
+    for name in ("wall_seconds", "cpus"):
+        if number(data[name]) <= 0:
+            raise ValueError(f"{name} must be positive")
+    for name in ("memory_mb", "pids", "workspace_mb"):
+        if type(data[name]) is not int or data[name] <= 0:
+            raise ValueError(f"{name} must be a positive integer")
     for entry in data.get("files", []):
         keys(entry, {"path", "target", "sha256"}, set(), "CLI file")
         target = relative(entry["target"], "CLI file target")
@@ -67,4 +69,4 @@ def load_run_config(path: Path) -> RunConfig:
         text(value, "public environment setting")
     return RunConfig(data["id"], data["image"], tuple(data["command"]), number(data["wall_seconds"]),
                      data["memory_mb"], number(data["cpus"]), data["pids"], data["workspace_mb"],
-                     files, environment, source)
+                     files, environment, source, prepared_harness.spec)
