@@ -1,0 +1,14 @@
+schema_version = 1
+id = "offline-protocol-probe"
+image = "layout-bench-evaluator:local"
+command = ["python", "/agent/protocol_probe.py"]
+wall_seconds = 15
+memory_mb = 256
+cpus = 1
+pids = 32
+workspace_mb = 16
+
+[[files]]
+path = "protocol_probe.py"
+target = "protocol_probe.py"
+sha256 = "cfd10b814959d14d49d2e2e5bfb702d44fdbab73a2d57699e88e706d910be0f4"

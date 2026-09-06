@@ -1,0 +1,55 @@
+schema_version = 1
+id = "academy-tgate"
+title = "IHP AnalogAcademy transmission gate"
+kind = "netlist_to_gds"
+family = "transmission_gate"
+status = "qualified"
+environment = "sg13g2-klayout-main-magic-c-v1"
+
+[inputs.netlist]
+path = "inputs/circuit.spice"
+sha256 = "173d8ad93008a527e08da56956183aa802abfd7c3bfa14b4ce3f534fe5d342d9"
+subcircuit = "T_gate"
+
+[inputs.constraints]
+path = "inputs/constraints.json"
+sha256 = "5338c1db5867ea8c121008d07db15513f4f41320843764c5494ecc1cc1fc5c39"
+format = "json"
+
+[inputs.description]
+path = "inputs/description.md"
+sha256 = "c794debe26a0d5b3dc1206aa2322d9d43187b073bbd4f51222f798217c9589b3"
+
+[inputs.license]
+path = "LICENSE"
+sha256 = "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+
+[output]
+path = "output/final.gds"
+format = "gds"
+top_cell = "T_gate"
+max_bytes = 10485760
+
+[provenance]
+path = "provenance.json"
+sha256 = "310d39793fb82b1f4d6facff8b19ced7c7be90f6539190943ff174007ca554ed"
+
+[inputs.evaluation]
+path = "inputs/evaluation.toml"
+sha256 = "209534505f7cda29f70ede955167309f293170b98bf309cc8a9a6d590ca0aecb"
+format = "toml"
+
+[inputs.on]
+path = "inputs/on.spice"
+sha256 = "17d83bbe071e3ed59ea385bbcce8d038ba08093e69d934e90512d4826e5f2ff6"
+format = "spice"
+
+[inputs.off]
+path = "inputs/off.spice"
+sha256 = "0fb37558df2fe4ba7c84493b58e6a396f6ff9597280c0451deff14e0a39bacf8"
+format = "spice"
+
+[inputs.transient]
+path = "inputs/transient.spice"
+sha256 = "70cfe8a1bb35e9ceb6e019685a41d48397fda71e01dfd4391cad7ad1c831a18e"
+format = "spice"

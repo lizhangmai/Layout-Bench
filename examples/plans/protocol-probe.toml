@@ -1,0 +1,15 @@
+schema_version = 1
+id = "public-protocol-probe"
+scope = "public_development"
+repetitions = 2
+order = "interleaved"
+seed = 0
+max_infrastructure_retries = 0
+
+[[tasks]]
+config = "../../tasks/academy-tgate/task.toml"
+toolchain = "../../tasks/academy-tgate/qualification/toolchain.toml"
+
+[[agents]]
+id = "offline-probe"
+config = "../agents/protocol-probe.toml"

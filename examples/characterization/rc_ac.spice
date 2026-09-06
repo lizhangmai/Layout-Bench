@@ -1,0 +1,12 @@
+RC small signal response
+.include parameters.spice
+.include dut.spice
+Vdrive in 0 DC 0 AC 1
+Xdut in out 0 RC
+.control
+ac dec 1000 1k 10Meg
+let gain = mag(v(out))
+meas ac bandwidth WHEN gain=0.7071067811865476 FALL=1
+quit
+.endc
+.end

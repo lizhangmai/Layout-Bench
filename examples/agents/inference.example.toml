@@ -1,0 +1,6 @@
+schema_version = 1
+base_url = "https://api.openai.com/v1"
+model = "REPLACE_WITH_YOUR_MODEL"
+api_key_env = "LAYOUT_BENCH_API_KEY"
+max_requests = 100
+request_timeout_seconds = 60

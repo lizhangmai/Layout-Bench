@@ -1,0 +1,191 @@
+<p align="center">
+<strong>Layout-Bench</strong><br/>
+<sub>A reproducible benchmark for AI agents that generate integrated-circuit layouts.</sub>
+</p>
+
+<p align="center">
+Measure whether an agent can turn a circuit netlist, physical constraints, and process resources into a valid GDS layout.
+</p>
+
+<p align="center">
+<a href="README_CN.md">简体中文</a> •
+<a href="#quick-start">Quick Start</a> •
+<a href="docs/architecture.md">Architecture</a> •
+<a href="CONTRIBUTING.md">Contributing</a>
+</p>
+
+<p align="center">
+<a href="https://github.com/lizhangmai/Layout-Bench/actions/workflows/checks.yml"><img src="https://github.com/lizhangmai/Layout-Bench/actions/workflows/checks.yml/badge.svg?branch=main" alt="Framework checks"></a>
+<a href="https://github.com/lizhangmai/Layout-Bench/actions/workflows/cd.yml"><img src="https://github.com/lizhangmai/Layout-Bench/actions/workflows/cd.yml/badge.svg" alt="Release workflow"></a>
+<a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.12%2B-3776AB.svg?logo=python&logoColor=white" alt="Python 3.12+"></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-2ea44f.svg" alt="MIT license"></a>
+</p>
+
+Layout-Bench runs an Agent in an isolated container, records an explicit GDS submission, and evaluates the frozen candidate with independent EDA tools. DRC/LVS establish physical validity; a complete task also checks the declared geometry and post-layout performance limits.
+
+> **Developer preview.** The repository currently ships one public task, `academy-tgate`, its reference solution, and 14 qualification scenarios. APIs and report schemas may change while the benchmark is being extended.
+
+## Why Layout-Bench?
+
+| Capability | What it provides |
+| --- | --- |
+| **End-to-end layout tasks** | A frozen netlist, constraints, process resources, and evaluation plan, ending in a GDS artifact. |
+| **Reproducible conditions** | Pinned inputs, configuration digests, image IDs, budgets, event logs, and durable submissions. |
+| **Independent judgment** | A trusted evaluator rechecks the candidate after the Agent stops; self-reported checks do not decide the score. |
+| **Open integration surface** | Hand-written CLIs, the built-in Codex adapter, and configurable EDA backends share one session contract. |
+| **Qualification-first evaluation** | Reference witnesses, counterexamples, extraction checks, and schematic/post-layout calibration expose judge failures before release. |
+
+## Prerequisites:
+
+- **Linux x86-64**, Git, and [uv](https://docs.astral.sh/uv/getting-started/installation/).
+- **Docker with BuildKit**, accessible to your user. Tool images use Ubuntu 24.04; native macOS, Windows, and ARM execution are not validated.
+- **Network access and storage** for the initial tool/image/PDK downloads and several GB of free space. Evaluation containers run without external network access.
+
+Use a source checkout and run commands from its root. The quick-start command supplies Python 3.12 through uv. No private checkout, PyPI installation, or prebuilt image release is required.
+
+<a id="quick-start-no-model-key-required"></a>
+
+## Quick Start
+
+Clone the public repository, then run:
+
+```bash
+git clone https://github.com/lizhangmai/Layout-Bench.git
+cd Layout-Bench
+uv run --python 3.12 --locked python scripts/public_preview.py quickstart --output build/runs/preview
+```
+
+This builds one `layout-bench-tools:local` image, fetches the pinned PDK, prepares reviewed resources, and runs the reference, submission, and batch checks. KLayout, ngspice, Magic, OpenVAF, Xschem, and Codex CLI are already in that image; no separate Agent image is needed. The quick start never calls a model account.
+
+The first run downloads tools and the PDK and may take several minutes. Later runs reuse Docker layers and the PDK checkout while preparing fresh, verified resources and workspaces. Choose a new `--output` directory for each run; existing evidence is never overwritten. Use `--skip-build` to reuse an already built image. Only the PDK submodule is initialized; the other public source submodules are optional.
+
+Repository-local generated files use one top-level directory: benchmark runs are under `build/runs/`, prepared PDK and EDA bundles under `build/support/`, and Python distributions under `build/dist/`. The `build/lib/` and `build/bdist.*` directories are temporary setuptools staging files. The directory is ignored by Git and can be removed at any time when you do not need its local reports or prepared resources.
+
+A successful smoke run ends with `PASS` and writes:
+
+| File | Expected result |
+| --- | --- |
+| `build/runs/preview/run/preview.json` | Reference passed, protocol failure expected, batch complete, and no model called. |
+| `build/runs/preview/run/reference/report.json` | The published reference passes DRC/LVS, geometry, and post-layout limits. |
+| `build/runs/preview/run/probe/run.json` | The offline probe submits a rectangle, then fails task evaluation as expected. |
+| `build/runs/preview/run/batch/summary.json` | Two independent probe runs, complete coverage, and zero task successes. |
+
+The wrapper exits **0** when these expectations hold. Detailed output stays in `.log` files in the run directory. Individual commands distinguish a rejected layout from an infrastructure error: `main.py run` returns **1** for a rejected layout, while `main.py batch` returns **0** when all scheduled measurements finish, even if every layout fails.
+
+To rebuild the reference and counterexamples and rerun qualification plus schematic calibration:
+
+```bash
+uv run --locked python scripts/public_preview.py qualify \
+  --prepared build/runs/preview/prepared \
+  --output build/runs/preview-qualification
+```
+
+The [reference solution](tasks/academy-tgate/reference/README.md) and [qualification evidence](tasks/academy-tgate/qualification/README.md) are public for debugging. Standard Agent runs receive only the declared task inputs and never the reference solution.
+
+<a id="run-your-agent"></a>
+
+## How to Use
+
+The workflow is simple:
+
+1. **Choose a task** — start with the public `academy-tgate` task and its declared inputs.
+2. **Configure an Agent** — use a hand-written CLI or the Codex adapter with reviewed files, resources, and budgets.
+3. **Submit a candidate** — work in `/workspace`, then run `python -I /protocol/submit.py` to submit the configured GDS explicitly.
+4. **Evaluate and compare** — use the independent evaluator for one candidate, or a frozen batch plan for task × configuration × repetition measurements.
+
+An Agent receives `/protocol/prompt.txt`, `/protocol/task.json`, and read-only `/task` inputs. It does not receive the public reference solution during a standard run.
+
+To use the Codex adapter, copy [inference.example.toml](examples/agents/inference.example.toml), fill in your endpoint, model, and host key-variable name, then run:
+
+```bash
+uv run --locked python main.py run tasks/academy-tgate/task.toml \
+  --agent build/runs/preview/prepared/codex-sg13g2.toml \
+  --resources build/runs/preview/prepared/agent-resources \
+  --toolchain build/runs/preview/prepared/toolchain.toml \
+  --inference build/runs/inference.toml \
+  --output build/runs/my-first-model-run
+```
+
+This command calls your configured model; quick start itself never does. Credentials stay on the host. Same-semantic in-session judge feedback is not implemented yet.
+
+## How It Works
+
+Layout-Bench runs a four-phase loop:
+
+1. **Define** — `task.toml` freezes the task inputs, output contract, constraints, and optional evaluation plan.
+2. **Run** — the Runner freezes the Agent configuration, resources, budgets, toolchain, and execution identity, then starts an isolated session.
+3. **Judge** — after an explicit submission, the evaluator checks the frozen GDS with the declared artifact, DRC, LVS, geometry, extraction, and performance jobs.
+4. **Report** — durable events and artifacts support independent re-evaluation, batch statistics, and reproducibility checks.
+
+DRC/LVS are physical-validity gates. Task success additionally requires every hard constraint, required post-layout job, and declared performance limit to pass.
+
+<a id="documentation-and-development"></a>
+
+## Resources
+
+| Need | Link |
+| --- | --- |
+| Reproduce the no-key public preview | [Quick Start](#quick-start) |
+| Connect a custom CLI or Codex | [CLI adapter examples](examples/agents/README.md) |
+| Add a task and qualify its judge | [Tasks and evaluation](docs/tasks.md) |
+| Understand run plans, inference limits, and scoring | [Running](docs/running.md) |
+| Prepare PDK/EDA resources or troubleshoot tools | [Tools](docs/tools.md) |
+| Apply operator admission and restricted export | [Admission](docs/admission.md) |
+| Understand CI/CD and release triggers | [Contributing](CONTRIBUTING.md#ci-cd) |
+| Contribute or report a problem | [CONTRIBUTING.md](CONTRIBUTING.md) |
+
+Framework checks need no Docker images, PDK, or model credentials. CI runs lint, unit tests, and local documentation-link checks. The manual [Public EDA preview](.github/workflows/public-eda.yml) workflow exercises the public task in real containers.
+
+## FAQ
+
+<details>
+<summary><strong>Do I need a model key to run the benchmark?</strong></summary>
+
+No. The public quick start uses a deterministic offline probe and the published reference. A model key is needed only when you configure a real inference endpoint for your own Agent run.
+
+</details>
+
+<details>
+<summary><strong>Does passing DRC/LVS mean the task passed?</strong></summary>
+
+No. DRC/LVS establish physical validity under the selected rules. Task success also requires the task's geometry constraints and post-layout performance limits.
+
+</details>
+
+<details>
+<summary><strong>Can I use an Agent other than Codex?</strong></summary>
+
+Yes. Any CLI that follows the session contract can be configured with its command, reviewed files, resources, and budget. The Codex adapter is optional.
+
+</details>
+
+<details>
+<summary><strong>Does a standard Agent receive the reference solution?</strong></summary>
+
+No. The reference GDS and qualification evidence are public for debugging, but standard runs materialize only the task inputs declared by `task.toml`.
+
+</details>
+
+<details>
+<summary><strong>Is there a hosted service or official leaderboard?</strong></summary>
+
+No. This release is a local developer preview. Hosted evaluation, identity authentication, and an official leaderboard are outside its scope.
+
+</details>
+
+<details>
+<summary><strong>Why are there 14 qualification scenarios?</strong></summary>
+
+They exercise the judge's positive, negative, geometry, extraction, performance, and stability paths for the public task. They are qualification cases, not 14 separate benchmark tasks.
+
+</details>
+
+## Preview Status
+
+The current release is a local developer preview with one public task, its qualification materials, a Codex CLI adapter, a controlled Responses gateway, configurable EDA backends, and local batch statistics. The next milestones are a configured real-model baseline, same-semantic process feedback, and a second public task from another circuit family. APIs and report schemas may change during the preview.
+
+The framework is licensed under [MIT](LICENSE). The public `academy-tgate` task retains its [Apache-2.0 license](tasks/academy-tgate/LICENSE). Submodules, tools, and dependencies retain their own licenses and notices; source and resource preparation are described in the [tool guide](docs/tools.md#external-sources).
+
+<p align="center">
+<a href="README_CN.md">阅读中文文档 →</a>
+</p>

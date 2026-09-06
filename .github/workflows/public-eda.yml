@@ -1,0 +1,25 @@
+name: Public EDA preview
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-preview:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: '0.11.2'
+          python-version: '3.12'
+      - run: uv run --locked python scripts/public_preview.py quickstart --output build/runs/preview
+      - run: bash tests/integration/test_toolchain.sh tools
+      - run: bash tests/integration/test_build_context.sh
+      - run: uv run --locked python scripts/public_preview.py qualify --prepared build/runs/preview/prepared --output build/runs/preview-qualification
+      - run: uv run --locked pytest tests/integration/test_batch.py tests/integration/test_admission_cli.py tests/integration/test_session.py tests/integration/test_codex.py
+        env:
+          LAYOUT_BENCH_TEST_IMAGE: layout-bench-tools:local
+      - run: git diff --exit-code

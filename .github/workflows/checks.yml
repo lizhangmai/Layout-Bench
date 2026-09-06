@@ -1,0 +1,73 @@
+name: Framework checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: checks-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        python: ['3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: '0.11.2'
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run --locked ruff check .
+      - run: uv run --locked python scripts/check_docs.py
+      - run: uv run --locked pytest -m unit
+      - run: git diff --exit-code
+
+  package:
+    name: Build package
+    needs: checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: '0.11.2'
+          python-version: '3.12'
+          enable-cache: true
+      - run: uv sync --locked
+      - name: Build distributions
+        run: uv build --out-dir build/dist
+      - name: Install wheel smoke test
+        run: |
+          package_venv="$RUNNER_TEMP/layout-bench-package"
+          python -m venv "$package_venv"
+          "$package_venv/bin/python" -m pip install --no-deps build/dist/*.whl
+          "$package_venv/bin/python" - <<'PY'
+          from importlib.resources import files
+
+          import benchmarking
+
+          assert files("benchmarking").joinpath("model_configs.yaml").is_file()
+          assert files("benchmarking").joinpath("sg13g2_view.json").is_file()
+          print(benchmarking.__doc__)
+          PY
+      - name: Upload distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: layout-bench-distributions-${{ github.sha }}
+          path: build/dist/*
+          if-no-files-found: error
+          retention-days: 14

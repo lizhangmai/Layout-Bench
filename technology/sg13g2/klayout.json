@@ -1,0 +1,504 @@
+{
+  "schema_version": 1,
+  "source": {
+    "repository": "https://github.com/IHP-GmbH/IHP-Open-PDK",
+    "commit": "5e6d592e4002946a4616f798c357f0f3c06cf3b6"
+  },
+  "files": {
+    "LICENSE": {
+      "path": "LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/python/sg13g2_pycell_lib/sg13g2_tech_mod.json": {
+      "path": "ihp-sg13g2/libs.tech/klayout/python/sg13g2_pycell_lib/sg13g2_tech_mod.json",
+      "sha256": "229029e23785f3ae58c9645d47acfe326c56f0ec41d940bf9383c7063380f9ff",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc",
+      "sha256": "22a570bfb43d564b7ce3de9d7df0795197be79f86c8a484b4959932c8dd75961",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/README.md": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/README.md",
+      "sha256": "ba78ff1dadf627d569e2062d7ded6af6d0f5667db6ab54bac1e02f9e509ee3b3",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/antenna.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/antenna.drc",
+      "sha256": "e3e925d918d2d4e2067751326122fd1a9be9bc3cb4fa10a8aca2fc9349975362",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_16_metal1.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_16_metal1.drc",
+      "sha256": "82a0ffa3d6412e88de6caf103c3b1eb1a4cf09b6cfa1857da8c67740f56c5ed0",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_17_metaln.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_17_metaln.drc",
+      "sha256": "0023b4dfc61eb71e14d2d4b3b003078d3f8121c732445ad80a9bca187279fb6e",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_18_metalnfiller.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_18_metalnfiller.drc",
+      "sha256": "75db77192540e65fa5065a614b6872a90d967447b5a3dade0e0d2cc1630ee83d",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_19_via1.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_19_via1.drc",
+      "sha256": "d86d04e1f8cda3c045dc8caafe85cec64bde15413d0ab521765021153a59ec0e",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_20_vian.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_20_vian.drc",
+      "sha256": "769a1169bf187d88c14e989dd7be8e3e3204cd72edb2a3d70eb45c943a56e2bd",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_21_topvia1.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_21_topvia1.drc",
+      "sha256": "2a749744b68134b5fd9686dcdf6180a0d3acbed5ecdb1e4d5ac8499f8071e813",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_22_topmetal1.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_22_topmetal1.drc",
+      "sha256": "907319b08f719536f8487c326ca54d55a2fa0ffea0156c3277ab8b073e4a3c60",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_23_topmetal1filler.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_23_topmetal1filler.drc",
+      "sha256": "0a3bf97c0a34cd5be5cefb3259994f53800a16ba86f69d54aa80e7aa366375fa",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_24_topvia2.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_24_topvia2.drc",
+      "sha256": "0d5124c2fd6ddefe7161bb55c82cd738db6236feaa7bb39901f08c77145021d1",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_25_topmetal2.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_25_topmetal2.drc",
+      "sha256": "356c09fdb4963e8157b9ee60efabf0d521474cd8c70a8ae17b4a2cd61eaff42e",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_26_topmetal2filler.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_26_topmetal2filler.drc",
+      "sha256": "da26c6b473924538a0d9fc3e98b1fb77d5496c494de7d3738520d5daed39793e",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_27_passiv.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/5_27_passiv.drc",
+      "sha256": "eb6565030fddb0789be4f4fadb4c4fa3ed690f0d52f83c4b8bfe6780298a3574",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/6_10_sealring.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/6_10_sealring.drc",
+      "sha256": "15802b4d6e32ceb262c1a0c042660f667cf93f804491d73151c4a24de05aa5d4",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/6_11_mim.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/6_11_mim.drc",
+      "sha256": "0b41a9e4ff1342940920ff6763093aff39f986a8b2f7bfcf2b5dad47fa9da40d",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/6_9_copperpillar.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/6_9_copperpillar.drc",
+      "sha256": "4ff342d047743695f3ce5c2a9daddd011752489097b7337c24401de2b56e4bbb",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/6_9_pad.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/6_9_pad.drc",
+      "sha256": "a9a8f450ea73bff364a2c6312575038ef023577d28d1196563d5a834a2790047",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/6_9_solderbump.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/6_9_solderbump.drc",
+      "sha256": "57931abfc4d186fd6ae9b54a6c1683679de6f34b21ab225abdb098d7f3aeb9cb",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/7_3_metalslits.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/7_3_metalslits.drc",
+      "sha256": "51457f1a8c6e312e9dbb39a65adf8fe716f57978a4a213f038b2473ae4bb8e4c",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/9_1_lbe.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/beol/9_1_lbe.drc",
+      "sha256": "c501e565e2bc172143e048c19bc8c36813972e8604c307977112b1e1791cf2af",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/density.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/density.drc",
+      "sha256": "ef143b293fbbb1722f590d59cd3d942fec5bde6ae216e8a8224d46b87010f8dd",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/5_10_psd.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/5_10_psd.drc",
+      "sha256": "66ef753d801e82ab43e930d46f90fe9b4c84085ce62f71e7ea502acac5ab3d62",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/5_14_cont.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/5_14_cont.drc",
+      "sha256": "1f541374c9b12f74bf806d2013e87aacc368535edec07e0c55661f6b4a7b821f",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/5_15_contbar.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/5_15_contbar.drc",
+      "sha256": "83dee69ea9f0949d0bacf78fedaa9073d312d20ead432ba6ce628ded6d1553b3",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/5_1_nwell.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/5_1_nwell.drc",
+      "sha256": "7f0d27bd5507fbc530d55f5b7b2e1adeb65b39294b76b1c85530bc3e9338035d",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/5_2_pwellblock.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/5_2_pwellblock.drc",
+      "sha256": "3dfb01b5b353013f6b322ab0ff20d52d3325f925504e7cd6e85a0615792d60d7",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/5_3_nbulay.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/5_3_nbulay.drc",
+      "sha256": "31a92ec448a6948d7400850f2bc37bb5a7590c0f7cce787ce46c731022edb5cb",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/5_5_activ.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/5_5_activ.drc",
+      "sha256": "ab899d25d0a1dbef1a6a6b327353c80ae84331273e0ed0f239497727cf7fec6c",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/5_6_activfiller.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/5_6_activfiller.drc",
+      "sha256": "c48ec245d0bf36dac15e55db4865b05e6cee96c258607d75e386bc8e3fcf783d",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/5_7_thickgateox.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/5_7_thickgateox.drc",
+      "sha256": "aa42686a8d1468f549afcbaea2311cb38c893c0cc1d11b5a09a488af76d64ae0",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/5_8_gatpoly.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/5_8_gatpoly.drc",
+      "sha256": "19154ca2432427086fa8fbee0941d8875126d3345487018d833b02025de65529",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/5_9_gatpolyfiller.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/5_9_gatpolyfiller.drc",
+      "sha256": "288a02299408399ccd94573200948cf01bfb3500915c021d2bedaa355bd2016f",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/6_1_npnsubstratetie.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/6_1_npnsubstratetie.drc",
+      "sha256": "4826fe274df4f16f8310bee5f3933375fa8a675de691283ae28675fb512e6bfc",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/6_7_schottkydiode.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/6_7_schottkydiode.drc",
+      "sha256": "7e48869e6d92679f5a877f02a7c48f9ca77826fc1121cfc290eb962fd71e8052",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/7_2_latchup.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/feol/7_2_latchup.drc",
+      "sha256": "e1bf94abb6be10d243c84b0f2c71dcce29020e0941087e32113e5f4a8606b931",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/forbidden/3_2_forbidden.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/forbidden/3_2_forbidden.drc",
+      "sha256": "1e4aba916a0ebbddc58533cf641401f12da8da4959387f693d4e278786cd0486",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/geometry/3_1_offgrid.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/geometry/3_1_offgrid.drc",
+      "sha256": "dc5eb236c1229efb48df98b256a1b3fd3b08cb793db021e4fee889756f292f1d",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/geometry/3_2_angle.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/geometry/3_2_angle.drc",
+      "sha256": "f1a4d08eb5c2b617d04cf73013700a450a3668dae9b5293c0d4c7d988d73efb4",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/layers_def.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/layers_def.drc",
+      "sha256": "a71a4f6250b0220a5608c6d6cc6ef7a9b0a4a8f3f2820208216630528e163147",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/pin/7_4_pin.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/pin/7_4_pin.drc",
+      "sha256": "508ee712c468f14bd5458b276af3449fcfd167707fc0efb72e27e13189fe5742",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/sg13g2_maximal.drc": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/sg13g2_maximal.drc",
+      "sha256": "d12e1947f570ce16f04dfd94769f2c38fdbda3920c5f7479272ef517864eae4b",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/sg13g2.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/sg13g2.lvs",
+      "sha256": "866c32c88e6e3fbf25fefaf2c19bb710cfce74645a313d91ec06ae05aa051c10",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/README.md": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/README.md",
+      "sha256": "50bccaaf677b9648ceb472189c41c013230488c9871765dff039d20fb68e501b",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/bjt_connections.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/bjt_connections.lvs",
+      "sha256": "0b3f536a25d8b8d5b37dc5eeb8e1bc8554e78694bb4398f6dd48ac3d9e528c8c",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/bjt_derivations.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/bjt_derivations.lvs",
+      "sha256": "03fa1f8a2d22639d4e5e478fb89cdc818de8a45ee81fed7a2c799b95b5a94c0b",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/bjt_extraction.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/bjt_extraction.lvs",
+      "sha256": "8989e8263a6de8cb40077b5995b559fb938025fd991a3e4f7a52a7ab89d524a3",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/cap_cmomf_connections.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/cap_cmomf_connections.lvs",
+      "sha256": "6d62d634122eb8fe78f4f4382e9d1353d88c67aa6ce225ed46a76722d89fd80f",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/cap_cmomf_derivations.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/cap_cmomf_derivations.lvs",
+      "sha256": "061c5e94be5cef7074f311d60196a2f39298978648f57151c18d3ac9f71caa1c",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/cap_cmomi_connections.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/cap_cmomi_connections.lvs",
+      "sha256": "87bbea2850a7594859ddddae0b0db56bc4642bd0edc61ee7e89bef935fc8216b",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/cap_cmomi_derivations.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/cap_cmomi_derivations.lvs",
+      "sha256": "291f94fdd77012f381a6e0bc9eaa030889f01d8365a24f536d033f692b697786",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/cap_connections.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/cap_connections.lvs",
+      "sha256": "adba1f9e036ec47b6f431615c1538073aafbab51087ba57dee6b0080699face6",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/cap_derivations.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/cap_derivations.lvs",
+      "sha256": "2122ca992df4983e32dda8e85fdffabab2bc90eed0cebc1372c4069c78ef1157",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/cap_extraction.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/cap_extraction.lvs",
+      "sha256": "ae5cd8746f7dd4772c7fa618ed09bf009bd394d801a19928ea3c9c0d6ab5b226",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/custom_bjt_extractor.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/custom_bjt_extractor.lvs",
+      "sha256": "0cd07122454e4ffefb702861e1c11bdc0cef779a9564649462bbb750d9b4229b",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/custom_classes.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/custom_classes.lvs",
+      "sha256": "65eb31e73784b6d5df279b6e9f4a0beca378b4c0ddccc105f6c4312faf8215b1",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/custom_combiner.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/custom_combiner.lvs",
+      "sha256": "2e9f341023b96ab64ef83110d0a57d5f8be8a6906e67db60edbb62cfadeed56d",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/custom_devices.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/custom_devices.lvs",
+      "sha256": "b062c2ed0bb15a41fd21b38e5e6e74a1a5cf3abf463f8535b946a2f662453b63",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/custom_extractor.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/custom_extractor.lvs",
+      "sha256": "6bde15ff3d3702eac7ab372c74b21752c179b66c21c076350d258397986fc8ba",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/custom_isolbox_extractor.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/custom_isolbox_extractor.lvs",
+      "sha256": "1ca2293fa3c5c45f04c15e277b0b1fa0ac21735e0504911269580e4afd77499e",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/custom_mim_extractor.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/custom_mim_extractor.lvs",
+      "sha256": "2e4a47be7bf2ec9ba87611e2ab32e97d5369f726ded328d2e291d94e845f40dd",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/custom_mom_extractor.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/custom_mom_extractor.lvs",
+      "sha256": "c59d8439058eb434ec0feb2ea495f6e78e5fcbefd51072e50db4b47254624ca7",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/custom_moscap_extractor.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/custom_moscap_extractor.lvs",
+      "sha256": "47ab35e77bcf6bdc807ca93ec8b9b5fd9ebabfb7ba5a3c4214a311f560998255",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/custom_reader.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/custom_reader.lvs",
+      "sha256": "c71b6713d8a62055d3d8e9e75a7f5f78140001bf76e3fa573b9883fab5e49f06",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/custom_writer.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/custom_writer.lvs",
+      "sha256": "bada63cfda80316f64ffbd1f6ed2a9cc06cd337b7244fe7d608ae4a20dfc0c36",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/devices_connections.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/devices_connections.lvs",
+      "sha256": "f8ddc90801d104b0a517ca90773c7f03b13b95f4bac95b77ebcf96f53513801b",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/diode_connections.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/diode_connections.lvs",
+      "sha256": "a55896d567a14240ae33faa8799daed545b06bd777245c3731fa4c632e9833f3",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/diode_derivations.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/diode_derivations.lvs",
+      "sha256": "aa366ee04f0ab5030131d12d26e421c9bdf7dc4d7b0840f0ac43309557b411bf",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/diode_extraction.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/diode_extraction.lvs",
+      "sha256": "9d060ddb655bf8fce7363aabb02800ffe8138b745aa9cff724b34c248770e006",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/esd_connections.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/esd_connections.lvs",
+      "sha256": "cdd0aad08c99bfdda7f38ced6a87531192bb4e2051e84c8fb6a6cb35f782f27c",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/esd_derivations.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/esd_derivations.lvs",
+      "sha256": "b1c584735c3228bb6abb178da577d1495debb15669748f5879c9261710757ffd",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/esd_extraction.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/esd_extraction.lvs",
+      "sha256": "93a26d226548c5a4b871f5016de21ce812eca1d561af781f2909521659d82a86",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/general_connections.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/general_connections.lvs",
+      "sha256": "bb61656b3564cf08558b83cf27d09854049eb30b5b7ade6610045d43c4b53e97",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/general_derivations.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/general_derivations.lvs",
+      "sha256": "d386598b10809388bfa690644b5a6a8f49c532b9d04caf9d2d014f4de12db043",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/globals.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/globals.lvs",
+      "sha256": "170fe4fd4b796a1a4db9626506c304fb5c01716070a0ae1903166d75470ed758",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/ind_connections.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/ind_connections.lvs",
+      "sha256": "05682e9e05c6a18bc67b512276e0d6b5bb90c051e4982dab44a7a3bc34a33b92",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/ind_derivations.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/ind_derivations.lvs",
+      "sha256": "af116ba0df67f771852bc4f6e68e480ce3fb356aced52348636b0171512c3da5",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/ind_extraction.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/ind_extraction.lvs",
+      "sha256": "bcf182be57689e2571d3748973bad31b4e084837faf3cbcc3a9a72c6acc63a2a",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/layers_definitions.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/layers_definitions.lvs",
+      "sha256": "2165a344d178eff60c2c79ad73108d74b8a1d2b1a5183e8b3492aa249887e58c",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/mos_connections.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/mos_connections.lvs",
+      "sha256": "f53e17c1f315f49fc973b8ec949ae343e2bb99c2862a51acdaa3f37f49907770",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/mos_derivations.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/mos_derivations.lvs",
+      "sha256": "ec4ea7cd367ad32d83ebb64234967b13c3dc4c0482570722e8c0a48135b90828",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/mos_extraction.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/mos_extraction.lvs",
+      "sha256": "dea4df60fced945fb182e2d2e511a73b6b2863d70acfbbb9875e8535bc0caa49",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/res_connections.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/res_connections.lvs",
+      "sha256": "a42d02de14a62c239850946bd0f1831408b9076ee43c5a38bb261c72659bc448",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/res_derivations.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/res_derivations.lvs",
+      "sha256": "3c32e371d71ddbb7190769db6aac4676d65f75eff1ca994fbf720ceb06255754",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/res_extraction.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/res_extraction.lvs",
+      "sha256": "f3913114d4eafc36f6baf8c47a5de4867270e41955572af7f25c5f498ccec4b1",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/rfmos_connections.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/rfmos_connections.lvs",
+      "sha256": "88d8335742119b8b88811f408defb789cc8fbde2c910c1deb33d9a4837a5b2d3",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/rfmos_derivations.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/rfmos_derivations.lvs",
+      "sha256": "5ae022be71ec90487ebf4636820563bc665815dfc12a36068b331d9571f54677",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/rfmos_extraction.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/rfmos_extraction.lvs",
+      "sha256": "114bafea13d39aff60411442efb768f45b9460068b0fa25f85e36762ee89e3cd",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/rfmos_model_mapping.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/rfmos_model_mapping.lvs",
+      "sha256": "effbefbe9c0007bc2df0d23e1ebb7585487a6bf6dc0a7e11c4167765fee8d33f",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/sram_integration.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/sram_integration.lvs",
+      "sha256": "447e02305b8896fde8b3ce71de31a686775953695322b88298f04949b4f123de",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/tap_connections.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/tap_connections.lvs",
+      "sha256": "b78c5b3cf4e328c915d52f210c6457790ec7ef56eb08d88dedb825ca3bc59b3b",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/tap_derivations.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/tap_derivations.lvs",
+      "sha256": "b6e9ff382b6f8c392ab699d09832ea7e0ad120bc1b35b51a778e8b188b0ce6c2",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/tap_extraction.lvs": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/lvs/rule_decks/tap_extraction.lvs",
+      "sha256": "e17c779eacdcab3bfa2287ca265d7836dde0e9e7fec4b4e7bf79bf2b2dd9120b",
+      "format": "text"
+    },
+    "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/sg13g2_tech_default.json": {
+      "path": "ihp-sg13g2/libs.tech/klayout/tech/drc/rule_decks/sg13g2_tech_default.json",
+      "sha256": "07930b016cdffe14c2cb82b47fbec193643347607db6d44aa1abfdece056cd2f",
+      "format": "text"
+    }
+  },
+  "generated": {
+    "drc.json": {
+      "content": "{\n  \"deck\": \"ihp-sg13g2/libs.tech/klayout/tech/drc/ihp-sg13g2.drc\",\n  \"variables\": {\n    \"run_mode\": \"flat\",\n    \"threads\": \"1\",\n    \"tables\": \"main\",\n    \"precheck_drc\": \"false\"\n  },\n  \"scope\": \"Upstream main DRC including FEOL, BEOL, pins, geometry, forbidden and recommended rules; excludes separate density and antenna decks.\",\n  \"required_categories\": [\n    \"'Act.a'\",\n    \"'Gat.a'\",\n    \"'Cnt.a'\",\n    \"'M1.a'\",\n    \"'M1.b'\",\n    \"'Pin.a'\",\n    \"'LU.b'\",\n    \"'forbidden.nodrc'\",\n    \"metal1_drw_Offgrid\",\n    \"metal1_drw_Acute\"\n  ]\n}\n",
+      "format": "json"
+    },
+    "lvs.json": {
+      "content": "{\n  \"deck\": \"ihp-sg13g2/libs.tech/klayout/tech/lvs/sg13g2.lvs\",\n  \"variables\": {\n    \"run_mode\": \"flat\",\n    \"top_lvl_pins\": \"true\",\n    \"no_simplify\": \"true\",\n    \"combine_devices\": \"true\",\n    \"disable_tap_extraction\": \"true\",\n    \"ignore_top_ports_mismatch\": \"false\"\n  },\n  \"scope\": \"Upstream flat device/parameter/connectivity LVS with strict named top ports; physical taps connect bulk but are not schematic devices.\",\n  \"layer_names\": {\n    \"metal1\": \"metal1_con\"\n  }\n}\n",
+      "format": "json"
+    }
+  }
+}

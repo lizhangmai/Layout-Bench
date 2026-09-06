@@ -1,0 +1,59 @@
+# Analytically checkable simulator qualification; no GDS/DRC/LVS claim.
+schema_version = 1
+mode = "characterization"
+
+[[jobs]]
+id = "step_nominal"
+stage = "simulate"
+operation = "circuit.simulate"
+inputs = { deck = "input:transient", dut = "input:dut" }
+outputs = { waveform = "ngspice-raw" }
+[jobs.parameters]
+measurements = { t50 = "s" }
+values = { r_series = 1000.0, c_load = 1e-9 }
+exports = { waveform = "transient.raw" }
+
+[[jobs]]
+id = "step_large_r"
+stage = "simulate"
+operation = "circuit.simulate"
+inputs = { deck = "input:transient", dut = "input:dut" }
+[jobs.parameters]
+measurements = { t50 = "s" }
+values = { r_series = 2000.0, c_load = 1e-9 }
+
+[[jobs]]
+id = "ac_nominal"
+stage = "simulate"
+operation = "circuit.simulate"
+inputs = { deck = "input:ac", dut = "input:dut" }
+[jobs.parameters]
+measurements = { bandwidth = "Hz" }
+values = { r_series = 1000.0, c_load = 1e-9 }
+
+[[jobs]]
+id = "ac_large_r"
+stage = "simulate"
+operation = "circuit.simulate"
+inputs = { deck = "input:ac", dut = "input:dut" }
+[jobs.parameters]
+measurements = { bandwidth = "Hz" }
+values = { r_series = 2000.0, c_load = 1e-9 }
+
+[[metrics]]
+id = "step_time"
+category = "performance"
+observations = ["step_nominal:t50", "step_large_r:t50"]
+unit = "s"
+direction = "minimize"
+aggregation = "max"
+upper = 2e-6
+
+[[metrics]]
+id = "bandwidth"
+category = "performance"
+observations = ["ac_nominal:bandwidth", "ac_large_r:bandwidth"]
+unit = "Hz"
+direction = "maximize"
+aggregation = "min"
+lower = 70000.0

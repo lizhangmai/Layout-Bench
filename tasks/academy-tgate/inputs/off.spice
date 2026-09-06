@@ -1,0 +1,18 @@
+* Off-state current with input high and output clamped to ground.
+.include parameters.spice
+.lib cornerMOSlv.lib mos_tt
+.include dut.spice
+.temp {temperature_c}
+Vdd vdd 0 1.2
+Vctrl ctrl 0 0
+Vbar bar 0 1.2
+Vinput vin 0 1.2
+Vclamp vout 0 0
+Xdut vout vin bar ctrl 0 vdd T_gate
+.control
+op
+let off_current = abs(i(Vclamp))
+print off_current
+quit
+.endc
+.end

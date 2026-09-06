@@ -1,0 +1,60 @@
+schema_version = 1
+mode = "post_layout"
+
+[[jobs]]
+id = "parasitics"
+stage = "extract"
+operation = "layout.extract_capacitance"
+requires = ["artifact", "drc", "lvs"]
+inputs = { layout = "candidate", task = "task" }
+outputs = { netlist = "spice" }
+parameters = { top_cell = "MOS_SWITCH", ports = ["D", "G", "S", "B"] }
+
+[[jobs]]
+id = "transient"
+stage = "simulate"
+operation = "circuit.simulate"
+inputs = { deck = "input:transient", dut = "job:parasitics:netlist" }
+outputs = { waveform = "ngspice-raw" }
+parameters = { measurements = { delay = "s", low_voltage = "V" }, exports = { waveform = "transient.raw" } }
+
+[[metrics]]
+id = "fall_delay"
+category = "performance"
+observations = ["transient:delay"]
+unit = "s"
+direction = "minimize"
+aggregation = "max"
+upper = 1e-10
+lower = 0
+
+[[metrics]]
+id = "low_voltage"
+category = "performance"
+observations = ["transient:low_voltage"]
+unit = "V"
+direction = "minimize"
+aggregation = "max"
+lower = 0
+upper = 0.2
+
+[[jobs]]
+id = "artifact"
+stage = "check"
+operation = "layout.artifact"
+gate = "artifact"
+inputs = { layout = "candidate", task = "task" }
+
+[[jobs]]
+id = "drc"
+stage = "check"
+operation = "layout.drc"
+gate = "drc"
+inputs = { layout = "candidate", task = "task" }
+
+[[jobs]]
+id = "lvs"
+stage = "check"
+operation = "layout.lvs"
+gate = "lvs"
+inputs = { layout = "candidate", task = "task", netlist = "input:netlist" }

@@ -1,0 +1,22 @@
+{
+  "tool": {
+    "image_id": "sha256:5d3baf6a88421dc9393c908edba452cd87428823d1e5fbaefc2f63846975216a",
+    "tool_version": "KLayout 0.30.11",
+    "timeout_seconds": 60.0,
+    "execution_sha256": "eb365e992fde54cb7f769021e4fd107192d56e069e9e72480fafa9495bc361d9"
+  },
+  "command": [
+    "python",
+    "layout.py",
+    "reference.gds",
+    "--n-width",
+    "1u"
+  ],
+  "source_sha256": "1a3750c2b28caf0df6a2a932a079325d562d512b474b22b08d43812d3cfa8c90",
+  "primitive_view_sha256": "081e75fe1aeebc00202c0ec37f25909958d7fdcb01ed3196ccb58a9e9134d221",
+  "output": {
+    "sha256": "7faa7b83f307fbc38a6e168c967b1da10e3982ff48c21b55088bb7a35d2e3ee0",
+    "format": "gds",
+    "bytes": 9084
+  }
+}

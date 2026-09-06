@@ -1,0 +1,12 @@
+Divider operating point
+.include dut.spice
+Vdrive in 0 DC 1
+Xdut in out 0 DIVIDER
+.control
+op
+let ratio = v(out)/v(in)
+let power = -v(in)*i(Vdrive)
+print ratio power
+quit
+.endc
+.end

@@ -1,0 +1,26 @@
+schema_version = 1
+mode = "characterization"
+
+[[jobs]]
+id = "parasitics"
+stage = "extract"
+operation = "layout.extract_capacitance"
+inputs = { layout = "input:layout" }
+outputs = { netlist = "spice" }
+parameters = { top_cell = "MOS_SWITCH", ports = ["D", "G", "S", "B"] }
+
+[[jobs]]
+id = "transient"
+stage = "simulate"
+operation = "circuit.simulate"
+inputs = { deck = "input:transient", dut = "job:parasitics:netlist" }
+outputs = { waveform = "ngspice-raw" }
+parameters = { measurements = { delay = "s" }, exports = { waveform = "transient.raw" } }
+
+[[metrics]]
+id = "fall_delay"
+category = "performance"
+observations = ["transient:delay"]
+unit = "s"
+direction = "minimize"
+aggregation = "max"

@@ -1,0 +1,23 @@
+schema_version = 1
+
+[backends.extraction]
+type = "magic-capacitance-docker"
+[backends.extraction.settings]
+image = "layout-bench-extractor:local"
+support = "build/support/sg13g2-magic"
+technology = "magic/ihp-sg13g2.tech"
+tech_name = "ihp-sg13g2"
+style = "ngspice()"
+capacitance_threshold_ff = 0.0
+timeout_seconds = 60
+
+[backends.spice]
+type = "ngspice-docker"
+[backends.spice.settings]
+image = "layout-bench-simulator:local"
+support = "build/support/sg13g2-mos-models"
+timeout_seconds = 30
+
+[bindings]
+"layout.extract_capacitance" = "extraction"
+"circuit.simulate" = "spice"

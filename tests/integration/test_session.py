@@ -1,0 +1,260 @@
+"""Real isolated sessions. Scripted clients verify protocol, not model ability."""
+
+import json
+import os
+import subprocess
+import sys
+import tempfile
+import time
+from dataclasses import replace
+from pathlib import Path
+
+import pytest
+
+from benchmarking.agent import run_agent
+from benchmarking.environment import prepare_pdk_bundle
+from benchmarking.files import Asset
+from benchmarking.model_config import RunConfig
+from benchmarking.prepare_support import prepare_support
+from benchmarking.recorder import RecordingError, RunRecorder, recover_submissions
+from benchmarking.session import DockerSession, task_message
+from benchmarking.tasks import load_task
+from benchmarking.toolchains import load_toolchain
+
+IMAGE = os.environ.get("LAYOUT_BENCH_TEST_IMAGE", "layout-bench-evaluator:local")
+
+pytestmark = pytest.mark.integration
+ROOT = Path(__file__).resolve().parents[2]
+TASK = ROOT / "tasks/academy-tgate/task.toml"
+PREAMBLE = '''import json, os, subprocess, time
+from pathlib import Path
+task = json.loads(Path('/protocol/task.json').read_text())
+output = Path(task['output']['path'])
+output.parent.mkdir(parents=True, exist_ok=True)
+def submit():
+    p = subprocess.run(['python', '-I', '/protocol/submit.py'], capture_output=True, text=True)
+    print(p.stdout, flush=True)
+    return json.loads(p.stdout)
+'''
+
+
+def configuration(code, seconds=10):
+    return RunConfig("protocol-test", IMAGE, ("python", "/agent/cli.py"),
+                     seconds, 256, 1, 32, 16, {"cli.py": Asset((PREAMBLE+code).encode(), "python")},
+                     {}, Asset(b"test-only programmatic configuration", "text"))
+
+
+def execute(code, seconds=10, task=None):
+    task = task or load_task(TASK)
+    config = configuration(code, seconds)
+    return DockerSession(config.image).run(task, config, {}, task_message(task, config))
+
+
+def test_isolation_last_submission_and_unsubmitted_mutation(monkeypatch):
+    monkeypatch.setenv("LB_HOST_SECRET", "must-not-enter-container")
+    result = execute('''
+assert not Path('/task/reference').exists()
+assert not Path('/task/qualification').exists()
+assert not Path('/var/run/docker.sock').exists()
+assert 'LB_HOST_SECRET' not in os.environ
+assert sorted(p.name for p in Path('/workspace').iterdir()) == ['output']
+assert os.getuid() != 0
+assert Path("/protocol/control.sock").stat().st_mode & 0o777 == 0o600
+for path in ['/task/new', '/protocol/new', '/agent/new', '/etc/new']:
+    try:
+        Path(path).write_text('forbidden')
+    except OSError:
+        pass
+    else:
+        raise AssertionError(path)
+import socket
+with socket.socket() as s:
+    s.settimeout(.1)
+    assert s.connect_ex(('1.1.1.1', 443)) != 0
+output.write_bytes(b'first')
+assert submit()['accepted']
+output.write_bytes(b'second')
+assert submit()['accepted']
+output.write_bytes(b'not submitted')
+''')
+    assert result.termination == "completed", result.console.content
+    assert result.candidate.content == b"second"
+    assert len(result.submissions) == 2
+    assert result.environment["network"] == "none"
+
+
+@pytest.mark.parametrize(("code", "termination", "content"), [
+    ("output.write_bytes(b'unsubmitted')", "completed", None),
+    ("output.write_bytes(b'accepted'); submit(); raise RuntimeError('agent failure')", "agent_error", b"accepted"),
+    ("output.write_bytes(b'accepted'); submit(); time.sleep(30)", "budget_exhausted", b"accepted"),
+    ("time.sleep(30)", "budget_exhausted", None),
+])
+def test_stop_and_submission_are_independent(code, termination, content):
+    result = execute(code, seconds=3)
+    assert result.termination == termination, result.console.content
+    assert (result.candidate.content if result.candidate is not None else None) == content
+    assert result.elapsed_seconds < 6
+
+
+def test_invalid_submissions_do_not_replace_last_accepted():
+    task = load_task(TASK)
+    task = replace(task, output=replace(task.output, max_bytes=16))
+    result = execute('''
+output.write_bytes(b'good'); assert submit()['accepted']
+output.write_bytes(b'x'*17); assert not submit()['accepted']
+output.unlink(); output.symlink_to('/task/inputs/circuit.spice'); assert not submit()['accepted']
+output.unlink(); os.mkfifo(output); assert not submit()['accepted']
+output.unlink(); output.parent.rmdir()
+output.parent.symlink_to('/task'); assert not submit()['accepted']
+''', task=task)
+    assert result.termination == "completed", result.console.content
+    assert result.candidate.content == b"good"
+    assert [r["accepted"] for r in result.submissions] == [True, False, False, False, False]
+
+
+def test_workspace_and_log_limits():
+    result = execute('''
+try:
+    with open('/workspace/fill', 'wb') as f:
+        for _ in range(40): f.write(b'x'*1024*1024)
+except OSError:
+    pass
+else:
+    raise AssertionError('workspace limit not enforced')
+print('y'*100000)
+''')
+    assert result.termination == "completed", result.console.content
+    assert result.console_truncated and len(result.console.content) == 65536
+
+
+def test_scripted_generation_submission_and_real_postlayout_evaluation(tmp_path):
+    pdk = ROOT / "third_party/IHP-Open-PDK"
+    for profile in ("magic", "mos-models", "klayout"):
+        prepare_support(pdk, ROOT/f"technology/sg13g2/{profile}.json", tmp_path/profile,
+                        compiler_image=os.environ.get("LAYOUT_BENCH_TEST_IMAGE", "layout-bench-model-compiler:local"))
+    resources = dict(prepare_pdk_bundle(pdk, tmp_path/"resources").files)
+    task = load_task(ROOT/"examples/sg13g2/checked-switch/task.toml")
+    toolchain_text = (ROOT/"examples/sg13g2/checked-switch/toolchain.toml").read_text()
+    for name in ("magic", "mos-models", "klayout"):
+        toolchain_text = toolchain_text.replace(f"build/support/sg13g2-{name}", str(tmp_path/name))
+    toolchain = tmp_path/"toolchain.toml"
+    if "LAYOUT_BENCH_TEST_IMAGE" in os.environ:
+        for role in ("evaluator", "extractor", "simulator"):
+            toolchain_text = toolchain_text.replace(f'"layout-bench-{role}:local"', json.dumps(IMAGE))
+    toolchain.write_text(toolchain_text)
+    config = configuration('''
+subprocess.run(['python', '/agent/generate.py', str(output)], check=True)
+assert submit()['accepted']
+output.write_bytes(b'post-submission corruption')
+''', seconds=30)
+    config = replace(config, memory_mb=1024,
+                     files={**config.files, "generate.py": Asset((ROOT/"examples/sg13g2/make_checked_switch.py").read_bytes(), "python")},
+                     environment={"KLAYOUT": "1", "PYTHONPATH":
+                         "/resources/ihp-sg13g2/libs.tech/klayout/python:"
+                         "/resources/ihp-sg13g2/libs.tech/klayout/python/pycell4klayout-api/source/python"})
+    report = run_agent(task, config, resources, load_toolchain(toolchain), tmp_path/"run")
+    assert report["termination"] == "completed", report
+    assert report["task_success"] is True, report
+    frozen = (tmp_path/"run"/report["candidate"]["path"]).read_bytes()
+    assert frozen != b'post-submission corruption'
+    evaluation = json.loads((tmp_path/"run/evaluation/report.json").read_text())
+    assert evaluation["inputs"]["candidate"]["sha256"] == report["candidate"]["sha256"]
+    assert report["usage"]["input_tokens"] is None
+
+
+def test_complete_console_and_failed_acceptance_persistence(tmp_path, monkeypatch):
+    task = load_task(TASK)
+    config = configuration("print('x'*100000); output.write_bytes(b'good'); submit()")
+    recorder = RunRecorder(tmp_path / "run")
+    result = DockerSession(config.image).run(task, config, {}, task_message(task, config), recorder=recorder)
+    assert result.termination == "completed"
+    journal = [json.loads(line) for line in (recorder.root / "events.jsonl").read_text().splitlines()]
+    chunks = [e["data"] for e in journal if e["kind"] == "console.chunk"]
+    content = bytearray()
+    for chunk in chunks:
+        assert chunk["offset"] == len(content)
+        content.extend((recorder.root / chunk["content"]["path"]).read_bytes())
+    assert content.startswith(b'x'*100000 + b'\n')
+    assert b'"accepted": true' in content
+    assert result.console_truncated and len(result.console.content) == 65536
+    assert recover_submissions(recorder.root)["candidate"]["sha256"] == result.candidate.sha256
+
+    failed = RunRecorder(tmp_path / "failed")
+    original = failed.event
+    def reject(kind, **data):
+        if kind == "submission":
+            raise RecordingError("injected storage failure")
+        return original(kind, **data)
+    monkeypatch.setattr(failed, "event", reject)
+    result = DockerSession(config.image).run(task, config, {}, task_message(task, config), recorder=failed)
+    assert result.termination == "infrastructure_error"
+    assert result.candidate is None
+    assert b'"accepted": true' not in result.console.content
+    assert recover_submissions(failed.root)["candidate"] is None
+
+
+def test_killed_host_retains_acknowledged_candidate(tmp_path):
+    # Run the actual host/session in a child, then kill it after the CLI observed its receipt.
+    run = tmp_path / "run"
+    code = """
+import sys
+from pathlib import Path
+from benchmarking.agent import run_agent
+from benchmarking.tasks import load_task
+from tests.integration.test_session import TASK, configuration
+config = configuration("output.write_bytes(b'durable'); assert submit()['accepted']; print('ACK_OBSERVED', flush=True); time.sleep(60)", seconds=60)
+task = load_task(TASK)
+run_agent(task, config, {}, {job.operation: object() for job in task.evaluation.jobs}, Path(sys.argv[1]))
+"""
+    staging = tempfile.TemporaryDirectory(prefix="lb-crash-")
+    process = subprocess.Popen([sys.executable, "-c", code, str(run)],
+                               env={**os.environ, "TMPDIR": staging.name}, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    cid = None
+    try:
+        deadline = time.monotonic() + 15
+        acknowledged = False
+        while time.monotonic() < deadline and process.poll() is None:
+            journal = run / "events.jsonl"
+            if journal.exists():
+                for line in journal.read_bytes().splitlines(keepends=True):
+                    if not line.endswith(b'\n'):
+                        continue
+                    event = json.loads(line)
+                    if event["kind"] == "session.created":
+                        cid = event["data"]["container_id"]
+                    if event["kind"] == "console.chunk":
+                        acknowledged |= b'ACK_OBSERVED' in (run / event["data"]["content"]["path"]).read_bytes()
+            if acknowledged:
+                break
+            time.sleep(.05)
+        assert acknowledged, process.stderr.read() if process.poll() is not None else "No durable receipt"
+        process.kill()
+        process.wait(timeout=5)
+        recovered = recover_submissions(run)
+        assert (run / recovered["candidate"]["path"]).read_bytes() == b"durable"
+        assert json.loads((run / "run.json").read_text())["phase"] == "running"
+        command = subprocess.run([sys.executable, "main.py", "recover", str(run)], capture_output=True, check=True)
+        assert json.loads(command.stdout)["candidate"] == recovered["candidate"]
+        # The bind source's parent is private on the host; only individual inputs are mounted.
+        temporary = list(Path(staging.name).glob("lb-session-*"))
+        assert len(temporary) == 1 and temporary[0].stat().st_mode & 0o777 == 0o700
+    finally:
+        if process.poll() is None:
+            process.kill()
+        process.communicate(timeout=5)
+        if cid:
+            subprocess.run(["docker", "rm", "-f", cid], check=True, capture_output=True, timeout=30)
+        staging.cleanup()
+
+
+def test_console_storage_ceiling_stops_with_incomplete_evidence(tmp_path, monkeypatch):
+    monkeypatch.setattr("benchmarking.session.MAX_CONSOLE_BYTES", 8192)
+    task = load_task(TASK)
+    config = configuration("print('x'*100000, flush=True); time.sleep(30)")
+    recorder = RunRecorder(tmp_path / "run")
+    result = DockerSession(config.image).run(task, config, {}, task_message(task, config), recorder=recorder)
+    assert result.termination == "infrastructure_error"
+    assert result.environment["console_limit_bytes"] == 8192
+    journal = [json.loads(line) for line in (recorder.root / "events.jsonl").read_text().splitlines()]
+    assert any(e["kind"] == "console.limit" for e in journal)
+    assert journal[-1]["data"]["console_complete"] is False

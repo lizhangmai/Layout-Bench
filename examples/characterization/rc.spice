@@ -1,0 +1,5 @@
+* Synthetic RC circuit for simulator qualification, not a layout benchmark task.
+.subckt RC in out gnd
+Rseries in out {r_series}
+Cload out gnd {c_load}
+.ends RC

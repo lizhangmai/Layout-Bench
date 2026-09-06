@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "source": {
+    "repository": "https://github.com/IHP-GmbH/IHP-Open-PDK",
+    "commit": "5e6d592e4002946a4616f798c357f0f3c06cf3b6"
+  },
+  "files": {
+    "LICENSE": {
+      "path": "LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "format": "text"
+    },
+    "magic/ihp-sg13g2.tech": {
+      "path": "ihp-sg13g2/libs.tech/magic/ihp-sg13g2.tech",
+      "sha256": "0a0e1666da3fa38d7faefe340576102ddc558727a3f6f7f666e92f50a1dc568d",
+      "format": "text"
+    },
+    "magic/ihp-sg13g2-cifin.tech": {
+      "path": "ihp-sg13g2/libs.tech/magic/ihp-sg13g2-cifin.tech",
+      "sha256": "d1ac75da97a8ef3c944f1088086f8e47a46f5a04024d3570b93e2e2617587ec1",
+      "format": "text"
+    },
+    "magic/ihp-sg13g2-cifout.tech": {
+      "path": "ihp-sg13g2/libs.tech/magic/ihp-sg13g2-cifout.tech",
+      "sha256": "e27c499850864e66ef3b8063132bdcf0a002925592bd60d871447fb3759eaa37",
+      "format": "text"
+    },
+    "magic/ihp-sg13g2-drc.tech": {
+      "path": "ihp-sg13g2/libs.tech/magic/ihp-sg13g2-drc.tech",
+      "sha256": "bec75c6c8aeb9720edcdfdcf1e2c132d9be4af42801dd61b45715d6c6ec68402",
+      "format": "text"
+    },
+    "magic/ihp-sg13g2-extract.tech": {
+      "path": "ihp-sg13g2/libs.tech/magic/ihp-sg13g2-extract.tech",
+      "sha256": "1b57f6763dfd4d1ad3c6a897883bf1f62ffe91031a97765a0666bfaf2012be68",
+      "format": "text"
+    },
+    "magic/README.md": {
+      "path": "ihp-sg13g2/libs.tech/magic/README.md",
+      "sha256": "f493a31c6bdb3c28fbf50c50ab5a05361343a303d3db8861939e1c652758c82a",
+      "format": "text"
+    },
+    "magic/RELEASE_NOTES.md": {
+      "path": "ihp-sg13g2/libs.tech/magic/RELEASE_NOTES.md",
+      "sha256": "af7e13564b4df517e1787b17e521ef0f7d91a5405d0edc3e4bd6e49bfe930ae6",
+      "format": "text"
+    }
+  }
+}

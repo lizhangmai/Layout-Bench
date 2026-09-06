@@ -1,0 +1,12 @@
+RC step response
+.include parameters.spice
+.include dut.spice
+Vdrive in 0 PULSE(0 1 0 1n 1n 20u 40u)
+Xdut in out 0 RC
+.control
+tran 1n 10u
+meas tran t50 WHEN v(out)=0.5 RISE=1
+write transient.raw v(in) v(out)
+quit
+.endc
+.end

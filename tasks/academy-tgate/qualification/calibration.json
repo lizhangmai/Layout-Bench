@@ -1,0 +1,421 @@
+{
+  "schema_version": 1,
+  "task_sha256": "311a61bba9ae7bab81ee533b05093ba931b776bcba060103b999d2eff89caa23",
+  "environment": "sg13g2-klayout-main-magic-c-v1",
+  "preparation": {
+    "task_sha256": "311a61bba9ae7bab81ee533b05093ba931b776bcba060103b999d2eff89caa23",
+    "source_sha256": "173d8ad93008a527e08da56956183aa802abfd7c3bfa14b4ce3f534fe5d342d9",
+    "writer_sha256": "abbfa61bd90d5d3bae6c9754eeb23639abba18edbc2c67c1a4fd0831fb4153db",
+    "support_sha256": "caf43cf2d8ddfdd80a6133fa61c37ea181641c485ab06ba14d7f4161916c2a2b",
+    "output": {
+      "sha256": "ce5ec632a4051293813cf982b7b5a2dca181da5eb0b8b017939b3a06eefc9105",
+      "format": "spice",
+      "bytes": 344
+    },
+    "tool": {
+      "image_id": "sha256:5d3baf6a88421dc9393c908edba452cd87428823d1e5fbaefc2f63846975216a",
+      "tool_version": "KLayout 0.30.11",
+      "timeout_seconds": 60.0,
+      "execution_sha256": "eb365e992fde54cb7f769021e4fd107192d56e069e9e72480fafa9495bc361d9"
+    }
+  },
+  "pre_layout": {
+    "engine_sha256": {
+      "evaluate.py": "ec04ba9924020e26b8e6020c557df6857b5a6184ca9fd5444d943da11c0143ad",
+      "evaluation.py": "7db06919d68c3d5d99f55abd590de0c45940fbc882daa7de84600a0dc5f40409",
+      "files.py": "c865ae8b2807882b7afdf8632590b755038f863c99d18cc57502b06be538dab7"
+    },
+    "backends": {
+      "circuit.simulate": {
+        "adapter": "ngspice-docker",
+        "adapter_sha256": "58f7112e57db0f6de578440b69943ed90066a9539dce4fa4d0a3374569d231b1",
+        "image_id": "sha256:5d3baf6a88421dc9393c908edba452cd87428823d1e5fbaefc2f63846975216a",
+        "tool_version": "******\n** ngspice-42 : Circuit level simulation program\n** Compiled with KLU Direct Linear Solver\n** The U. C. Berkeley CAD Group\n** Copyright 1985-1994, Regents of the University of California.\n** Copyright 2001-2023, The ngspice team.\n** Please get your ngspice manual from https://ngspice.sourceforge.io/docs.html\n** Please file your bug-reports at http://ngspice.sourceforge.net/bugrep.html\n** Creation Date: Sun Mar 31 20:15:14 UTC 2024\n******",
+        "timeout_seconds": 30.0,
+        "execution_sha256": "eb365e992fde54cb7f769021e4fd107192d56e069e9e72480fafa9495bc361d9",
+        "support_sha256": "f18380fad603e00d3747d819e51337d17c2f64fcafe10354df1108e31b4686cd"
+      }
+    },
+    "report_sha256": "22384c3687f9db8314f00d66fddaa11f73a56fcf81c3ca5915b066d7f45d5706",
+    "metrics": {
+      "on_resistance": {
+        "category": "performance",
+        "unit": "ohm",
+        "direction": "minimize",
+        "lower": 0.0,
+        "upper": 6000.0,
+        "aggregation": "max",
+        "value": 5098.123,
+        "status": "passed",
+        "observations": {
+          "on_27_2:on_resistance": {
+            "status": "passed",
+            "value": 1041.513
+          },
+          "on_27_6:on_resistance": {
+            "status": "passed",
+            "value": 5098.123
+          },
+          "on_27_10:on_resistance": {
+            "status": "passed",
+            "value": 1352.089
+          },
+          "on_125_2:on_resistance": {
+            "status": "passed",
+            "value": 1190.728
+          },
+          "on_125_6:on_resistance": {
+            "status": "passed",
+            "value": 3393.839
+          },
+          "on_125_10:on_resistance": {
+            "status": "passed",
+            "value": 1419.207
+          }
+        }
+      },
+      "off_current": {
+        "category": "performance",
+        "unit": "A",
+        "direction": "minimize",
+        "lower": 0.0,
+        "upper": 1e-08,
+        "aggregation": "max",
+        "value": 6.498769e-09,
+        "status": "passed",
+        "observations": {
+          "off_27:off_current": {
+            "status": "passed",
+            "value": 1.082883e-10
+          },
+          "off_125:off_current": {
+            "status": "passed",
+            "value": 6.498769e-09
+          }
+        }
+      },
+      "rise_delay_20": {
+        "category": "performance",
+        "unit": "s",
+        "direction": "minimize",
+        "lower": 0.0,
+        "upper": 5e-11,
+        "aggregation": "max",
+        "value": 3.725921e-11,
+        "status": "passed",
+        "observations": {
+          "transient_27_20:rise_delay": {
+            "status": "passed",
+            "value": 3.725921e-11
+          },
+          "transient_125_20:rise_delay": {
+            "status": "passed",
+            "value": 3.550373e-11
+          }
+        }
+      },
+      "fall_delay_20": {
+        "category": "performance",
+        "unit": "s",
+        "direction": "minimize",
+        "lower": 0.0,
+        "upper": 5e-11,
+        "aggregation": "max",
+        "value": 3.724255e-11,
+        "status": "passed",
+        "observations": {
+          "transient_27_20:fall_delay": {
+            "status": "passed",
+            "value": 3.724255e-11
+          },
+          "transient_125_20:fall_delay": {
+            "status": "passed",
+            "value": 3.612699e-11
+          }
+        }
+      },
+      "sample_error_20": {
+        "category": "performance",
+        "unit": "V",
+        "direction": "minimize",
+        "lower": 0.0,
+        "upper": 0.0001,
+        "aggregation": "max",
+        "value": 4.316882e-08,
+        "status": "passed",
+        "observations": {
+          "transient_27_20:sample_error": {
+            "status": "passed",
+            "value": 1.287553e-08
+          },
+          "transient_125_20:sample_error": {
+            "status": "passed",
+            "value": 4.316882e-08
+          }
+        }
+      },
+      "rise_delay_100": {
+        "category": "performance",
+        "unit": "s",
+        "direction": "minimize",
+        "lower": 0.0,
+        "upper": 2e-10,
+        "aggregation": "max",
+        "value": 1.644807e-10,
+        "status": "passed",
+        "observations": {
+          "transient_27_100:rise_delay": {
+            "status": "passed",
+            "value": 1.644807e-10
+          },
+          "transient_125_100:rise_delay": {
+            "status": "passed",
+            "value": 1.563566e-10
+          }
+        }
+      },
+      "fall_delay_100": {
+        "category": "performance",
+        "unit": "s",
+        "direction": "minimize",
+        "lower": 0.0,
+        "upper": 2e-10,
+        "aggregation": "max",
+        "value": 1.622692e-10,
+        "status": "passed",
+        "observations": {
+          "transient_27_100:fall_delay": {
+            "status": "passed",
+            "value": 1.622692e-10
+          },
+          "transient_125_100:fall_delay": {
+            "status": "passed",
+            "value": 1.57642e-10
+          }
+        }
+      },
+      "sample_error_100": {
+        "category": "performance",
+        "unit": "V",
+        "direction": "minimize",
+        "lower": 0.0,
+        "upper": 0.012,
+        "aggregation": "max",
+        "value": 0.008242011,
+        "status": "passed",
+        "observations": {
+          "transient_27_100:sample_error": {
+            "status": "passed",
+            "value": 0.007729223
+          },
+          "transient_125_100:sample_error": {
+            "status": "passed",
+            "value": 0.008242011
+          }
+        }
+      }
+    }
+  },
+  "post_layout": {
+    "candidate": {
+      "sha256": "7faa7b83f307fbc38a6e168c967b1da10e3982ff48c21b55088bb7a35d2e3ee0",
+      "format": "gds",
+      "bytes": 9084
+    },
+    "report_sha256": "f47a6e81646fe0fbf8cb751e34a0f7ba8f45ab79650356d47beff4b5a612ace1",
+    "metrics": {
+      "on_resistance": {
+        "category": "performance",
+        "unit": "ohm",
+        "direction": "minimize",
+        "lower": 0.0,
+        "upper": 6000.0,
+        "aggregation": "max",
+        "value": 5098.123,
+        "status": "passed",
+        "observations": {
+          "on_27_2:on_resistance": {
+            "status": "passed",
+            "value": 1041.513
+          },
+          "on_27_6:on_resistance": {
+            "status": "passed",
+            "value": 5098.123
+          },
+          "on_27_10:on_resistance": {
+            "status": "passed",
+            "value": 1352.089
+          },
+          "on_125_2:on_resistance": {
+            "status": "passed",
+            "value": 1190.728
+          },
+          "on_125_6:on_resistance": {
+            "status": "passed",
+            "value": 3393.839
+          },
+          "on_125_10:on_resistance": {
+            "status": "passed",
+            "value": 1419.207
+          }
+        }
+      },
+      "off_current": {
+        "category": "performance",
+        "unit": "A",
+        "direction": "minimize",
+        "lower": 0.0,
+        "upper": 1e-08,
+        "aggregation": "max",
+        "value": 6.498769e-09,
+        "status": "passed",
+        "observations": {
+          "off_27:off_current": {
+            "status": "passed",
+            "value": 1.082883e-10
+          },
+          "off_125:off_current": {
+            "status": "passed",
+            "value": 6.498769e-09
+          }
+        }
+      },
+      "rise_delay_20": {
+        "category": "performance",
+        "unit": "s",
+        "direction": "minimize",
+        "lower": 0.0,
+        "upper": 5e-11,
+        "aggregation": "max",
+        "value": 3.906042e-11,
+        "status": "passed",
+        "observations": {
+          "transient_27_20:rise_delay": {
+            "status": "passed",
+            "value": 3.906042e-11
+          },
+          "transient_125_20:rise_delay": {
+            "status": "passed",
+            "value": 3.718831e-11
+          }
+        }
+      },
+      "fall_delay_20": {
+        "category": "performance",
+        "unit": "s",
+        "direction": "minimize",
+        "lower": 0.0,
+        "upper": 5e-11,
+        "aggregation": "max",
+        "value": 3.900073e-11,
+        "status": "passed",
+        "observations": {
+          "transient_27_20:fall_delay": {
+            "status": "passed",
+            "value": 3.900073e-11
+          },
+          "transient_125_20:fall_delay": {
+            "status": "passed",
+            "value": 3.781932e-11
+          }
+        }
+      },
+      "sample_error_20": {
+        "category": "performance",
+        "unit": "V",
+        "direction": "minimize",
+        "lower": 0.0,
+        "upper": 0.0001,
+        "aggregation": "max",
+        "value": 4.29658e-08,
+        "status": "passed",
+        "observations": {
+          "transient_27_20:sample_error": {
+            "status": "passed",
+            "value": 1.295559e-08
+          },
+          "transient_125_20:sample_error": {
+            "status": "passed",
+            "value": 4.29658e-08
+          }
+        }
+      },
+      "rise_delay_100": {
+        "category": "performance",
+        "unit": "s",
+        "direction": "minimize",
+        "lower": 0.0,
+        "upper": 2e-10,
+        "aggregation": "max",
+        "value": 1.662933e-10,
+        "status": "passed",
+        "observations": {
+          "transient_27_100:rise_delay": {
+            "status": "passed",
+            "value": 1.662933e-10
+          },
+          "transient_125_100:rise_delay": {
+            "status": "passed",
+            "value": 1.580483e-10
+          }
+        }
+      },
+      "fall_delay_100": {
+        "category": "performance",
+        "unit": "s",
+        "direction": "minimize",
+        "lower": 0.0,
+        "upper": 2e-10,
+        "aggregation": "max",
+        "value": 1.640386e-10,
+        "status": "passed",
+        "observations": {
+          "transient_27_100:fall_delay": {
+            "status": "passed",
+            "value": 1.640386e-10
+          },
+          "transient_125_100:fall_delay": {
+            "status": "passed",
+            "value": 1.59346e-10
+          }
+        }
+      },
+      "sample_error_100": {
+        "category": "performance",
+        "unit": "V",
+        "direction": "minimize",
+        "lower": 0.0,
+        "upper": 0.012,
+        "aggregation": "max",
+        "value": 0.008897485,
+        "status": "passed",
+        "observations": {
+          "transient_27_100:sample_error": {
+            "status": "passed",
+            "value": 0.008375539
+          },
+          "transient_125_100:sample_error": {
+            "status": "passed",
+            "value": 0.008897485
+          }
+        }
+      },
+      "area": {
+        "category": "physical",
+        "unit": "um2",
+        "direction": "minimize",
+        "lower": null,
+        "upper": null,
+        "aggregation": "max",
+        "value": 118.125,
+        "status": "passed",
+        "observations": {
+          "geometry:area": {
+            "status": "passed",
+            "value": 118.125
+          }
+        }
+      }
+    }
+  }
+}

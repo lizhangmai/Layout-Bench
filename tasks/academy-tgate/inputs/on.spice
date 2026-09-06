@@ -1,0 +1,18 @@
+* DC incremental load drop through an enabled transmission gate.
+.include parameters.spice
+.lib cornerMOSlv.lib mos_tt
+.include dut.spice
+.temp {temperature_c}
+Vdd vdd 0 1.2
+Vctrl ctrl 0 1.2
+Vbar bar 0 0
+Vinput vin 0 {signal_level}
+Iload vout 0 1u
+Xdut vout vin bar ctrl 0 vdd T_gate
+.control
+op
+let on_resistance = (v(vin)-v(vout))/1e-6
+print on_resistance
+quit
+.endc
+.end

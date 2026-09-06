@@ -1,0 +1,23 @@
+# Python environments and repository-local generated outputs
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+/build/
+/dist/
+
+# Legacy and tool caches
+/.cache/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Local credentials and settings
+.env
+.env.*
+auth.json
+
+# Generated run artifacts
+/results/

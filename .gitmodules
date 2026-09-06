@@ -1,0 +1,9 @@
+[submodule "third_party/IHP-Open-PDK"]
+	path = third_party/IHP-Open-PDK
+	url = https://github.com/IHP-GmbH/IHP-Open-PDK.git
+[submodule "third_party/IHP-AnalogAcademy"]
+	path = third_party/IHP-AnalogAcademy
+	url = https://github.com/IHP-GmbH/IHP-AnalogAcademy.git
+[submodule "third_party/TO_Apr2025"]
+	path = third_party/TO_Apr2025
+	url = https://github.com/IHP-GmbH/TO_Apr2025.git

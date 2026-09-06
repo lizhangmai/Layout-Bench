@@ -1,0 +1,21 @@
+* Enabled transmission gate, 0.2-to-1.0 V input, 10 ps edges, capacitive load.
+.include parameters.spice
+.lib cornerMOSlv.lib mos_tt
+.include dut.spice
+.temp {temperature_c}
+Vdd vdd 0 1.2
+Vctrl ctrl 0 1.2
+Vbar bar 0 0
+Vinput vin 0 pulse(0.2 1.0 1n 10p 10p 2n 4n)
+Cload vout 0 {load_f}
+Xdut vout vin bar ctrl 0 vdd T_gate
+.control
+tran 1p 4n
+meas tran rise_delay trig v(vin) val=0.6 rise=1 targ v(vout) val=0.6 rise=1
+meas tran fall_delay trig v(vin) val=0.6 fall=1 targ v(vout) val=0.6 fall=1
+let tracking_error = abs(v(vin)-v(vout))
+meas tran sample_error find tracking_error at=1.8n
+write transient.raw v(vin) v(vout)
+quit
+.endc
+.end

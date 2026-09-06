@@ -1,0 +1,11 @@
+* Measure the capacitance of the actual extracted GDS netlist.
+.include dut.spice
+Xdut p 0 PLATE
+Vdrive p 0 ac 1
+.control
+ac lin 1 1Meg 1Meg
+let capacitance = mag(i(vdrive)) / (6.283185307179586 * 1e6)
+print capacitance
+quit
+.endc
+.end

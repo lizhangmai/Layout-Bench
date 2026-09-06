@@ -1,0 +1,36 @@
+schema_version = 1
+mode = "characterization"
+
+[[jobs]]
+id = "on"
+stage = "simulate"
+operation = "circuit.simulate"
+inputs = { deck = "input:dc" }
+parameters = { values = { gate_bias = 1.2 }, measurements = { drain_current = "A" } }
+
+[[jobs]]
+id = "off"
+stage = "simulate"
+operation = "circuit.simulate"
+inputs = { deck = "input:dc" }
+parameters = { values = { gate_bias = 0.0 }, measurements = { drain_current = "A" } }
+
+[[metrics]]
+id = "on_current"
+category = "performance"
+observations = ["on:drain_current"]
+unit = "A"
+direction = "maximize"
+aggregation = "min"
+lower = 1e-5
+upper = 0.01
+
+[[metrics]]
+id = "off_current"
+category = "performance"
+observations = ["off:drain_current"]
+unit = "A"
+direction = "minimize"
+aggregation = "max"
+lower = 0.0
+upper = 1e-8

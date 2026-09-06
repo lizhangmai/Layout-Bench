@@ -1,0 +1,125 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ghcr.io/${{ github.repository }}
+
+jobs:
+  package:
+    name: Build Python distributions
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: '0.11.2'
+          python-version: '3.12'
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run --locked ruff check .
+      - run: uv run --locked python scripts/check_docs.py
+      - run: uv run --locked pytest -m unit
+      - name: Check release tag
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        run: |
+          version="$(uv run --locked python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          test "$GITHUB_REF_NAME" = "v${version}" || {
+            echo "Tag $GITHUB_REF_NAME does not match project version $version" >&2
+            exit 1
+          }
+      - name: Build distributions
+        run: uv build --out-dir build/dist
+      - name: Install wheel smoke test
+        run: |
+          package_venv="$RUNNER_TEMP/layout-bench-package"
+          python -m venv "$package_venv"
+          "$package_venv/bin/python" -m pip install --no-deps build/dist/*.whl
+          "$package_venv/bin/python" - <<'PY'
+          from importlib.resources import files
+
+          import benchmarking
+
+          assert files("benchmarking").joinpath("model_configs.yaml").is_file()
+          assert files("benchmarking").joinpath("sg13g2_view.json").is_file()
+          print(benchmarking.__doc__)
+          PY
+      - name: Upload distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: layout-bench-release-${{ github.sha }}
+          path: build/dist/*
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish release and container image
+    needs: package
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Download distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: layout-bench-release-${{ github.sha }}
+          path: build/dist
+      - name: Validate Docker build context
+        run: bash tests/integration/test_build_context.sh
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=tag
+            type=pep440,pattern={{version}}
+            type=pep440,pattern={{major}}.{{minor}}
+            type=sha,prefix=sha-
+            type=raw,value=latest
+      - name: Build and publish tools image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile
+          target: tools
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max,ignore-error=true
+          provenance: false
+          sbom: false
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "$GITHUB_REF_NAME" build/dist/* --verify-tag --generate-notes

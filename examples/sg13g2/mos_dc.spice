@@ -1,0 +1,13 @@
+* Independent model-load and DC sanity check; no layout score.
+.include parameters.spice
+.lib cornerMOSlv.lib mos_tt
+Vdrain d 0 1.2
+Vgate g 0 {gate_bias}
+Xdevice d g 0 0 sg13_lv_nmos w=1u l=0.2u
+.control
+op
+let drain_current = -i(vdrain)
+print drain_current
+quit
+.endc
+.end

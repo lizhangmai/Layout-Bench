@@ -1,0 +1,6 @@
+{
+  "schema_version": 1,
+  "purpose": "backend_integration_fixture",
+  "hard": [],
+  "note": "No task-specific geometry requirements. Physical gates and test-only performance limits are in evaluation.toml."
+}

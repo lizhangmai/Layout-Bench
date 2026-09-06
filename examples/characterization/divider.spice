@@ -1,0 +1,5 @@
+* Synthetic resistor divider; independent of PDK and layout benchmark tasks.
+.subckt DIVIDER in out gnd
+Rtop in out 1000
+Rbottom out gnd 1000
+.ends DIVIDER
