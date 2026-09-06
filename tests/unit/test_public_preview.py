@@ -65,3 +65,73 @@ def test_existing_evidence_rejected_before_build_or_pdk_update(preview, tmp_path
     with pytest.raises(ValueError, match="Output already exists"):
         preview.quickstart(tmp_path, preview.IMAGE, "default", False)
     assert evidence.read_text() == "retained evidence"
+
+
+def _populate_required_pdk(root, preview, *, complete=True):
+    pdk = root / preview.PDK_PATH
+    pdk.mkdir(parents=True)
+    (pdk / ".git").write_text("gitdir: synthetic\n")
+    for relative, marker in preview.PDK_REQUIRED_SUBMODULES.items():
+        path = pdk / relative
+        path.mkdir(parents=True)
+        if complete:
+            (path / marker).parent.mkdir(parents=True, exist_ok=True)
+            (path / marker).write_bytes(b"synthetic")
+    return pdk
+
+
+def test_pdk_update_does_not_recurse_into_optional_nested_submodules(preview, tmp_path, monkeypatch):
+    root = tmp_path / "checkout"
+    pdk = _populate_required_pdk(root, preview)
+    optional = pdk / "ihp-sg13g2/libs.tech/digital"
+    optional.mkdir(parents=True)
+    (optional / "README").write_text("untracked optional checkout")
+    monkeypatch.setattr(preview, "ROOT", root)
+    commands = []
+    monkeypatch.setattr(preview, "call", lambda *args, **kwargs: commands.append(args))
+
+    preview.ensure_pdk()
+
+    assert commands == [("git", "submodule", "update", "--init", "--depth", "1",
+                         "third_party/IHP-Open-PDK")]
+
+
+def test_pdk_update_explains_incomplete_non_git_nested_directory(preview, tmp_path, monkeypatch):
+    root = tmp_path / "checkout"
+    pdk = _populate_required_pdk(root, preview, complete=False)
+    nested = pdk / next(iter(preview.PDK_REQUIRED_SUBMODULES))
+    (nested / "untracked.txt").write_text("partial checkout")
+    monkeypatch.setattr(preview, "ROOT", root)
+    commands = []
+    monkeypatch.setattr(preview, "call", lambda *args, **kwargs: commands.append(args))
+
+    with pytest.raises(ValueError, match="non-empty directory without Git metadata") as error:
+        preview.ensure_pdk()
+
+    assert "git -C third_party/IHP-Open-PDK submodule update --init --depth 1" in str(error.value)
+    assert not any("--recursive" in command for args in commands for command in args)
+
+
+def test_pdk_update_initializes_only_missing_required_nested_submodules(preview, tmp_path, monkeypatch):
+    root = tmp_path / "checkout"
+    pdk = _populate_required_pdk(root, preview, complete=False)
+    monkeypatch.setattr(preview, "ROOT", root)
+    commands = []
+
+    def update(*args, **kwargs):
+        commands.append(args)
+        if args[1:3] == ("-C", pdk):
+            for relative in args[8:]:
+                relative = Path(relative)
+                marker = preview.PDK_REQUIRED_SUBMODULES[relative]
+                target = pdk / relative / marker
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(b"synthetic")
+
+    monkeypatch.setattr(preview, "call", update)
+    preview.ensure_pdk()
+
+    assert commands[0][-1] == "third_party/IHP-Open-PDK"
+    assert commands[1][:7] == ("git", "-C", pdk, "submodule", "update", "--init", "--depth")
+    assert set(commands[1][8:]) == {str(path) for path in preview.PDK_REQUIRED_SUBMODULES}
+    assert "--recursive" not in commands[1]

@@ -228,7 +228,11 @@ def execute_plan(plan, destination, *, runner=run_agent, session_factory=DockerS
             recorder.save(batch, filename="batch.json")
             if entry["state"] != "infrastructure_error":
                 break
-    summary = summarize_batch(recorder.root)
+    # The batch report is still running while the provisional statistics are
+    # computed; ``finish`` seals the event journal and publishes the final
+    # phase immediately afterwards. External callers must only summarize a
+    # finished batch.
+    summary = summarize_batch(recorder.root, allow_in_progress=True)
     batch.update(summary=summary, termination="completed", outcome="complete" if summary["complete"] else "incomplete")
     recorder.finish(batch, filename="batch.json", kind="batch.finished")
     atomic_write(recorder.root / "summary.json", json_asset(summary).content)

@@ -26,6 +26,8 @@ MAX_BODY = 8 * 1024 * 1024
 MAX_RESPONSE = 16 * 1024 * 1024
 INFERENCE_SOCKET = "/protocol/inference.sock"
 LEGACY_INFERENCE_SOCKET = "/protocol/model.sock"
+GENERIC_HTTP_ERROR = b'{"error":"Inference upstream rejected request"}'
+GENERIC_RESPONSE_ERROR = b'{"error":"Inference response failed validation"}'
 
 
 @dataclass(frozen=True)
@@ -69,18 +71,21 @@ def _validate_responses_request(path, body, model):
     data = json.loads(body)
     if not isinstance(data, dict) or data.get("model") != model:
         raise ValueError("Request model differs from the fixed profile")
-    # Remote tools and externally hosted inputs bypass the declared tool environment.
-    def inspect(value):
+    # Remote resources in the model input bypass the declared tool environment.
+    # Do not walk the whole request here: function-tool JSON schemas are ordinary
+    # user data and may legitimately use names such as ``file_id`` or
+    # ``image_url`` for their own arguments.
+    def inspect_input(value):
         if isinstance(value, dict):
             for key, item in value.items():
                 if key in {"file_id", "file_url", "container_id"}:
                     raise ValueError("Remote resource references are disabled")
                 if key == "image_url" and (not isinstance(item, str) or not item.startswith("data:")):
                     raise ValueError("Only inline images are allowed")
-                inspect(item)
+                inspect_input(item)
         elif isinstance(value, list):
             for item in value:
-                inspect(item)
+                inspect_input(item)
 
     def check_tools(tools):
         if not isinstance(tools, list):
@@ -91,12 +96,16 @@ def _validate_responses_request(path, body, model):
             if tool["type"] == "namespace":
                 check_tools(tool.get("tools", []))
 
-    inspect(data)
+    inspect_input(data.get("input", []))
     check_tools(data.get("tools", []))
     if data.get("background") or data.get("conversation") or data.get("previous_response_id"):
         raise ValueError("Only stateless foreground inference is allowed")
     if path == "/responses":
         data["store"] = False
+    else:
+        # Compaction has no declared persistence control.  In particular, do
+        # not forward a caller-provided ``store=true`` to an upstream service.
+        data.pop("store", None)
     return json.dumps(data, separators=(",", ":")).encode()
 
 
@@ -326,11 +335,18 @@ class InferenceGateway:
                 if self.recorder:
                     event["response"] = self.recorder.archive(Asset(response, "text"))
                 if 200 <= status < 300:
-                    event.update(self.wire_adapter.response_semantics(path, content_type, response))
+                    try:
+                        semantics = self.wire_adapter.response_semantics(path, content_type, response)
+                    except Exception:  # noqa: BLE001 -- keep the upstream status and hide malformed bodies
+                        event["outcome"] = "protocol_or_transport_error"
+                        result = status, "application/json", GENERIC_RESPONSE_ERROR
+                    else:
+                        event.update(semantics)
+                        result = status, content_type, response
                 else:
                     event["outcome"] = "http_error"
+                    result = status, "application/json", GENERIC_HTTP_ERROR
                 event["content_type"] = content_type
-                result = status, content_type, response
             except RecordingError:
                 raise
             except Exception:  # noqa: BLE001 -- never expose transport exceptions or credential-bearing bodies
@@ -362,7 +378,7 @@ class InferenceGateway:
                     status, kind, response = gateway.request(header["path"], body)
                     self.wfile.write(json.dumps({"status": status, "type": kind, "bytes": len(response)}).encode()+b"\n")
                     self.wfile.write(response)
-                except (OSError, ValueError, KeyError, TypeError):
+                except (OSError, ValueError, KeyError, TypeError, RecursionError):
                     return
 
         class Server(socketserver.ThreadingUnixStreamServer):
@@ -417,7 +433,12 @@ class InferenceGateway:
             groups = [e["usage"].get(group) if isinstance(e["usage"], dict) else None for e in self.events]
             values = [g.get(key) if isinstance(g, dict) else None for g in groups]
             usage[field] = sum(values) if values and all(type(v) is int and v >= 0 for v in values) else None
-        return {**self.public, "requests": copy.deepcopy(self.events), "usage": usage,
+        # A configured profile is not evidence that a model was contacted.
+        # Denied requests never enter ``events``; only a forwarded request is
+        # enough to classify a run as a model/protocol run.
+        run_kind = ("offline_cli_development" if not self.events else
+                    "model_protocol_test" if self.is_test else "model_cli_development")
+        return {**self.public, "run_kind": run_kind, "requests": copy.deepcopy(self.events), "usage": usage,
                 "denied_requests": self.denied, "limit_reached": self.limit_reached,
                 "shutdown_incomplete": self.shutdown_incomplete,
                 "infrastructure_error": self.shutdown_incomplete or any(e["outcome"] not in {"completed", "budget_truncated",

@@ -185,6 +185,40 @@ def test_tool_error_is_not_a_circuit_failure(tmp_path, inputs, bindings):
     assert report["jobs"]["lvs"]["status"] == "passed"
 
 
+def test_known_gate_failure_is_not_hidden_by_unrelated_tool_error(tmp_path, inputs, bindings):
+    bindings["check"] = Checks(reject="drc", crash="lvs")
+    report = evaluate(tmp_path, inputs, bindings)
+    assert report["jobs"]["drc"]["status"] == "failed"
+    assert report["jobs"]["lvs"]["status"] == "error"
+    assert report["outcome"] == "failed"
+    assert report["physical_valid"] is False
+    assert report["task_success"] is False
+
+
+def test_known_metric_failure_is_not_hidden_by_unrelated_tool_error(tmp_path, inputs, bindings):
+    class MixedSimulator(Simulator):
+        def run(self, job, inputs):
+            if job.id == "nominal":
+                raise RuntimeError("Synthetic simulator error")
+            return super().run(job, inputs)
+
+    raw = PLAN + b'''\n[[metrics]]
+id = "slow_limit"
+category = "performance"
+observations = ["slow:delay"]
+unit = "s"
+direction = "minimize"
+aggregation = "max"
+upper = 2.0
+'''
+    bindings["response"] = MixedSimulator()
+    report = evaluate(tmp_path, inputs, bindings, raw)
+    assert report["metrics"]["slow_limit"]["status"] == "failed"
+    assert report["metrics"]["delay"]["status"] == "blocked"
+    assert report["outcome"] == "failed"
+    assert report["task_success"] is False
+
+
 @pytest.mark.parametrize("simulator", [Simulator(unit="ms"), Simulator(missing=True), Simulator(factor=float("nan")), Simulator(factor=float("inf"))])
 def test_missing_nonfinite_or_wrong_unit_never_passes(tmp_path, inputs, bindings, simulator):
     bindings["response"] = simulator
@@ -231,6 +265,16 @@ def test_untrusted_backend_cannot_claim_success_without_declared_output(tmp_path
     report = evaluate(tmp_path, inputs, bindings)
     assert report["jobs"]["parasitics"]["status"] == "error"
     assert report["task_success"] is None
+
+
+def test_evaluation_evidence_uses_restricted_permissions(tmp_path, inputs, bindings):
+    evaluate(tmp_path, inputs, bindings)
+    root = tmp_path / "report"
+    assert root.stat().st_mode & 0o777 == 0o700
+    assert (root / "artifacts").stat().st_mode & 0o777 == 0o700
+    assert (root / "report.json").stat().st_mode & 0o777 == 0o600
+    archived = next((root / "artifacts").iterdir())
+    assert archived.stat().st_mode & 0o777 == 0o400
 
 
 def test_plan_parameters_are_immutable():

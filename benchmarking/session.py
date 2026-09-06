@@ -15,12 +15,95 @@ from .recorder import RecordingError
 from .recording import SessionResult
 
 MAX_CONSOLE_BYTES = 64 * 1024 * 1024
+PDK_RESOURCE_KIND = "reviewed-pdk-view"
+PDK_RESOURCE_FILES = (
+    "ihp-sg13g2/libs.tech/klayout/python/sg13g2_pycell_lib/__init__.py",
+    "ihp-sg13g2/libs.tech/klayout/python/pycell4klayout-api/source/python/cni/box.py",
+    "ihp-sg13g2/libs.tech/klayout/python/pypreprocessor/pypreprocessor/__init__.py",
+)
+PDK_RESOURCE_ENVIRONMENT = {
+    "KLAYOUT": "1",
+    "PYTHONPATH": ("/resources/ihp-sg13g2/libs.tech/klayout/python:"
+                    "/resources/ihp-sg13g2/libs.tech/klayout/python/pycell4klayout-api/source/python"),
+}
+
+
+def _resource_manifest(resources):
+    manifest = resources.get("manifest.json")
+    if manifest is None:
+        return None
+    if not isinstance(manifest, Asset):
+        raise TypeError("Resource manifest must be an Asset")
+    try:
+        value = json.loads(manifest.content)
+    except (TypeError, ValueError) as error:
+        raise ValueError("Resource manifest is not valid JSON") from error
+    if not isinstance(value, dict):
+        raise TypeError("Resource manifest must be a JSON object")
+    return value
+
+
+def resource_environment(resources):
+    """Return the safe, container-local environment for a reviewed PDK bundle.
+
+    The bundle is content-addressed before it reaches this function.  The
+    provenance marker lets ordinary support bundles remain unchanged, while
+    the file markers also support callers that already loaded a Bundle and
+    passed only its ``files`` mapping.  No task or reference material is
+    inferred or added here.
+    """
+    manifest = _resource_manifest(resources)
+    provenance = manifest.get("provenance", {}) if manifest else {}
+    if not isinstance(provenance, dict):
+        raise TypeError("Resource manifest provenance must be an object")
+    pdk = provenance.get("kind") == PDK_RESOURCE_KIND or any(
+        name in resources for name in PDK_RESOURCE_FILES
+    )
+    if not pdk:
+        return {}
+    missing = [name for name in PDK_RESOURCE_FILES if name not in resources]
+    if missing:
+        message = ("PDK resource bundle is incomplete; missing " + ", ".join(missing) +
+                   ". Recreate it with `public_preview.py prepare --output <new-dir>`.")
+        raise ValueError(message)
+    return dict(PDK_RESOURCE_ENVIRONMENT)
+
+
+def resource_preflight(resources):
+    """Describe mounted resource checks without exposing task/reference files."""
+    environment = resource_environment(resources)
+    result = {"schema_version": 1, "mount": "/resources", "environment": environment,
+              "bundles": [], "python_imports": []}
+    if environment:
+        manifest = _resource_manifest(resources)
+        provenance = manifest.get("provenance", {}) if manifest else {}
+        result["bundles"].append({"kind": PDK_RESOURCE_KIND,
+                                  "view_sha256": provenance.get("view_sha256")})
+        result["python_imports"] = ["klayout", "pya", "sg13g2_pycell_lib"]
+        result["command"] = ["python", "-c", "import klayout, pya, sg13g2_pycell_lib"]
+    return result
+
+
+def _agent_environment(config, resources):
+    """Merge automatic resource paths with explicitly configured public values."""
+    environment = dict(config.environment)
+    pdk = resource_environment(resources)
+    if not pdk:
+        return environment
+    if "KLAYOUT" in environment and environment["KLAYOUT"] != pdk["KLAYOUT"]:
+        raise ValueError("A reviewed PDK resource bundle requires KLAYOUT=1")
+    paths = pdk["PYTHONPATH"].split(":")
+    paths.extend(value for value in environment.get("PYTHONPATH", "").split(":") if value)
+    environment["PYTHONPATH"] = ":".join(dict.fromkeys(paths))
+    environment.setdefault("KLAYOUT", pdk["KLAYOUT"])
+    return environment
 
 
 def task_message(task, config):
     return ("Generate a GDS layout implementing the authoritative netlist and all task requirements.\n"
             "Read /protocol/task.json for input paths, top cell, output path and limits.\n"
             "Read /protocol/harness.json for the session protocol and declared capabilities.\n"
+            "Read /protocol/resources.json for reviewed resource paths and the optional import preflight.\n"
             "Task inputs are read-only in /task; reviewed resources are in /resources.\n"
             "The writable /workspace starts empty. Available tools come from the recorded image.\n"
             f"Wall-clock budget: {config.wall_seconds:g} seconds, including your tool calls.\n"
@@ -58,12 +141,15 @@ class DockerSession:
         termination, reason, code = "infrastructure_error", "", None
         started = None
         elapsed = 0.0
+        agent_environment = _agent_environment(config, resources)
+        resource_info = resource_preflight(resources)
         identity = {"image_id": self.image_id, "network": "none", "read_only_root": True,
                     "harness": config.harness.identity(),
                     "memory_mb": config.memory_mb, "cpus": config.cpus, "pids": config.pids,
                     "workspace_mb": config.workspace_mb, "tmp_mb": 64, "shm_mb": 16,
                     "user": f"{uid}:{gid}", "wall_seconds": config.wall_seconds,
                     "console_limit_bytes": console_limit,
+                    "resource_environment": resource_info["environment"],
                     "source_sha256": Asset(Path(__file__).read_bytes(), "python").sha256}
 
         def drain(stream):
@@ -97,6 +183,7 @@ class DockerSession:
                 "task.json": Asset(json.dumps(task.description()).encode(), "json"),
                 "prompt.txt": Asset(message.encode(), "text"),
                 "harness.json": Asset(json.dumps(config.harness.identity(), sort_keys=True).encode(), "json"),
+                "resources.json": Asset(json.dumps(resource_info, sort_keys=True).encode(), "json"),
                 **{name: Asset(Path(__file__).with_name(name).read_bytes(), "python")
                    for name in ("snapshot.py", "submit.py")}}}
             if inference:
@@ -126,9 +213,9 @@ class DockerSession:
                 legacy_socket.symlink_to(Path(INFERENCE_SOCKET).name)
             mounts = [arg for name in ("task", "agent", "resources", "protocol")
                       for arg in ("--mount", f"type=bind,src={root/name},dst=/{name},readonly")]
-            env = [arg for k, v in config.environment.items() for arg in ("--env", f"{k}={v}")]
+            env = [arg for k, v in agent_environment.items() for arg in ("--env", f"{k}={v}")]
             # Agent-specific loader/locale settings must not affect the trusted reader.
-            reader_env = [arg for k in config.environment for arg in ("--env", f"{k}=")]
+            reader_env = [arg for k in agent_environment for arg in ("--env", f"{k}=")]
             cid, process, reader = None, None, None
             try:
                 cid = subprocess.check_output([

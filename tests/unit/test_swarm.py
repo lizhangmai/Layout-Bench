@@ -108,6 +108,8 @@ def test_cross_product_family_weights_and_recomputed_evidence(tmp_path):
     assert groups[0]["task_equal_success_rate"] == pytest.approx(2/3)
     assert groups[1]["success_rate"] == 0
     assert groups[0]["tasks"]["t0"]["successful_metrics"]["delay"] == [{"value": 3, "unit": "s"}]*2
+    assert groups[0]["tasks"]["t2"]["failure_modes"] == {"no_submission": 2}
+    assert groups[1]["failure_modes"] == {"no_submission": 6}
     assert groups[0]["resources"]["measured"]["input_tokens"]["sum"] is None
     assert groups[0]["resources"]["measured"]["wall_seconds"]["sum"] == 6
     assert summarize_batch(tmp_path / "run") == batch["summary"]
@@ -146,6 +148,33 @@ def test_exhausted_replacements_keep_main_rate_missing(tmp_path):
     group = batch["summary"]["groups"][0]
     assert group["success_rate"] is None and group["tasks"]["t0"]["missing"] == 2
     assert group["infrastructure_errors"] == 4
+
+
+def test_configured_inference_without_forwarded_request_is_labeled_offline(tmp_path):
+    from benchmarking.inference import ResponsesGateway
+
+    path = make_plan(tmp_path / "input", repetitions=1, tasks=1, agents=1)
+    (path.parent / "inference.toml").write_text('''schema_version = 1
+base_url = "https://example.invalid/v1"
+model = "synthetic-model"
+api_key_env = "UNUSED"
+max_requests = 1
+request_timeout_seconds = 5
+''')
+    path.write_text(path.read_text() + 'inference = "inference.toml"\n')
+
+    def gateway(profile):
+        return ResponsesGateway(
+            profile,
+            transport=lambda *args: (200, "application/json", b'{"status":"completed"}'),
+        )
+
+    batch = execute(path, tmp_path / "run", gateway_factory=gateway)
+    group = batch["summary"]["groups"][0]
+    assert group["run_kind"] == "offline_cli_development"
+    assert group["configured_run_kind"] == "model_protocol_test"
+    assert group["inference_requests"] == 0
+    assert group["inference_unused_runs"] == 1
 
 
 def test_evaluator_error_does_not_trigger_new_agent_attempt(tmp_path):
@@ -204,6 +233,54 @@ def test_tampered_run_is_not_silently_counted(tmp_path):
         summarize_batch(tmp_path / "run")
 
 
+def _replace_evaluation_report(run_root, batch, mutate):
+    """Rewrite all local references after a deliberate evidence mutation."""
+    attempt = batch["attempts"][0]
+    attempt_root = run_root / attempt["path"]
+    evaluation_path = attempt_root / "evaluation/report.json"
+    evaluation = json.loads(evaluation_path.read_text())
+    mutate(evaluation, attempt_root / "evaluation")
+    evaluation_path.write_text(json.dumps(evaluation, indent=2) + "\n")
+    evaluation_ref = {**Asset(evaluation_path.read_bytes(), "json").identity(),
+                      "path": "evaluation/report.json"}
+    run_path = attempt_root
+    report = json.loads((run_path / "run.json").read_text())
+    report["evaluation"].update(sha256=evaluation_ref["sha256"], bytes=evaluation_ref["bytes"])
+    (run_path / "run.json").write_text(json.dumps(report, indent=2) + "\n")
+    report_ref = {**Asset((run_path / "run.json").read_bytes(), "json").identity(),
+                  "path": attempt["report"]["path"]}
+    attempt["report"] = report_ref
+    (run_root / "batch.json").write_text(json.dumps(batch, indent=2) + "\n")
+
+
+def test_replaced_evaluation_plan_is_not_silently_counted(tmp_path):
+    path = make_plan(tmp_path / "input", tasks=1, agents=1)
+    batch = execute(path, tmp_path / "run")
+
+    def replace_plan(evaluation, evaluation_root):
+        alternate = Asset(PLAN + b"\n", "toml")
+        artifact = evaluation_root / "artifacts" / alternate.sha256
+        artifact.write_bytes(alternate.content)
+        artifact.chmod(0o400)
+        evaluation["plan"] = {**alternate.identity(), "path": f"artifacts/{alternate.sha256}"}
+
+    _replace_evaluation_report(tmp_path / "run", batch, replace_plan)
+    with pytest.raises(ValueError, match="Evaluation plan"):
+        summarize_batch(tmp_path / "run")
+
+
+def test_replaced_evaluation_input_is_not_silently_counted(tmp_path):
+    path = make_plan(tmp_path / "input", tasks=1, agents=1)
+    batch = execute(path, tmp_path / "run")
+
+    def replace_input(evaluation, _evaluation_root):
+        evaluation["inputs"]["input:netlist"] = evaluation["inputs"]["candidate"]
+
+    _replace_evaluation_report(tmp_path / "run", batch, replace_input)
+    with pytest.raises(ValueError, match="Evaluation inputs"):
+        summarize_batch(tmp_path / "run")
+
+
 def test_wilson_intervals_include_extreme_outcome_uncertainty():
     assert wilson(0, 0) is None
     assert wilson(0, 3)[1] == pytest.approx(.5614970317550454)
@@ -245,6 +322,28 @@ def test_partial_batch_does_not_silently_shrink_denominator(tmp_path):
     assert group["tasks"]["t0"]["missing"] == 1
     assert group["tasks"]["t0"]["observed_success_rate"] == 1
     assert group["success_rate"] is None and summary["complete"] is False
+
+
+def test_unfinished_batch_cannot_be_summarized_as_complete(tmp_path):
+    path = make_plan(tmp_path / "input", tasks=1, agents=1)
+    batch = execute(path, tmp_path / "run")
+    batch["phase"] = "running"
+    batch["summary"] = None
+    (tmp_path / "run" / "batch.json").write_text(json.dumps(batch, indent=2) + "\n")
+    with pytest.raises(ValueError, match="not finished"):
+        summarize_batch(tmp_path / "run")
+
+
+def test_interrupted_batch_can_only_be_summarized_when_coverage_is_incomplete(tmp_path):
+    path = make_plan(tmp_path / "input", tasks=1, agents=1)
+    batch = execute(path, tmp_path / "run")
+    batch["phase"] = "running"
+    batch["summary"] = None
+    (tmp_path / "run" / "batch.json").write_text(json.dumps(batch, indent=2) + "\n")
+    # Clearing the summary must not make a fully covered, unsealed batch look
+    # like a final score.
+    with pytest.raises(ValueError, match="not finished"):
+        summarize_batch(tmp_path / "run")
 
 
 def test_mutated_runtime_environment_stops_the_batch(tmp_path):

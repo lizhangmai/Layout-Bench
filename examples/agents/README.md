@@ -16,4 +16,4 @@ uv run --locked python main.py run tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_AD
 
 统一镜像的 quickstart 只生成通用协议探针配置。其他 harness 直接提供自己的 `command`、`files` 和 `[harness]` 元数据即可；Layout-Bench 不选择或安装特定 Agent framework。
 
-复制 [inference.example.toml](inference.example.toml) 到本地配置，填写真实端点、模型和主机密钥变量名，然后执行根 [README 的模型命令](../../README.md#run-your-agent)。密钥不写入配置文件或 harness 环境。推理请求限制、用量与错误语义见[推理配置](../../docs/running.md#model-inference)，无凭据验证命令见 [CONTRIBUTING](../../CONTRIBUTING.md#verification)。
+复制 [inference.example.toml](inference.example.toml) 到本地配置，填写真实端点、模型和主机密钥变量名。付费请求前可运行 `uv run --locked python main.py inference-check <profile.toml> --agent <agent.toml>` 做无请求预检；然后执行根 [README 的模型命令](../../README.md#run-your-agent)。密钥不写入配置文件或 harness 环境。推理请求限制、用量与错误语义见[推理配置](../../docs/running.md#model-inference)。

@@ -34,7 +34,8 @@ The script preserves existing `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` variab
 |---|---|
 | Docker command is missing or cannot reach the daemon | Install/start Docker first and ensure the current user can run `docker version`; `doctor` checks this before downloading and preparing |
 | Native ARM, macOS, or Windows environment | Use a Linux x86-64 host; the current tool image is fixed to amd64 and other platforms are unvalidated |
-| `PDK missing` or a pinned source file is absent | Run `quickstart` to initialize the PDK, or run `git submodule update --init --recursive --depth 1 third_party/IHP-Open-PDK`; when a source digest differs, inspect local changes and the recorded commit and keep the hash check enabled |
+| `PDK missing` or a pinned source file is absent | Run `quickstart` to initialize the PDK and the required nested KLayout Python dependencies, or run `git submodule update --init --depth 1 third_party/IHP-Open-PDK` followed by `git -C third_party/IHP-Open-PDK submodule update --init --depth 1 ihp-sg13g2/libs.tech/klayout/python/pycell4klayout-api ihp-sg13g2/libs.tech/klayout/python/pypreprocessor`; when a source digest differs, inspect local changes and the recorded commit and keep the hash check enabled |
+| A required nested PDK directory is non-empty but has no Git metadata | Do not run recursive update over it. Move the partial directory aside, then run the targeted nested-submodule command above; if its reviewed marker files are complete, `quickstart` reuses it and `prepare` verifies the content |
 | `No such image` or image validation fails during preparation | Run `quickstart` or `build`; when naming an image manually, pass `--image` to `prepare` |
 | A `build/...` support bundle is missing | Complete `prepare` first. The preview script creates separate tool configurations; older configurations that still use `.cache/sg13g2-*` remain supported when those paths are supplied explicitly |
 | Output directory already exists | Choose a new `--output` path; logs produced by failed steps remain in the old directory for diagnosis |
@@ -46,10 +47,13 @@ The script preserves existing `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` variab
 
 ## Upstream and Process Resources
 
-The addresses in `third_party/` are declared by [.gitmodules](../.gitmodules), and versions are fixed by Git submodule references; nested dependencies use the commits recorded upstream. The public preview needs only the PDK. Course and tapeout materials are optional sources for investigation. See the [task guide](tasks.md#asset-rights) for source, license, and distribution requirements; retain licenses with each upstream and component. Do not put a complete checkout in Agent mounts or the common image.
+The addresses in `third_party/` are declared by [.gitmodules](../.gitmodules), and versions are fixed by Git submodule references; nested dependencies use the commits recorded upstream. The public preview needs the PDK and its two KLayout Python dependencies used by the reviewed view. Digital, openEMS, Palace, course, and tapeout materials are optional sources for investigation. See the [task guide](tasks.md#asset-rights) for source, license, and distribution requirements; retain licenses with each upstream and component. Do not put a complete checkout in Agent mounts or the common image.
 
 ```bash
-git submodule update --init --recursive --depth 1 third_party/IHP-Open-PDK
+git submodule update --init --depth 1 third_party/IHP-Open-PDK
+git -C third_party/IHP-Open-PDK submodule update --init --depth 1 \
+  ihp-sg13g2/libs.tech/klayout/python/pycell4klayout-api \
+  ihp-sg13g2/libs.tech/klayout/python/pypreprocessor
 git submodule status --recursive
 ```
 
@@ -59,7 +63,7 @@ To update an upstream, fetch it in the target submodule, choose an official comm
 |---|---|
 | PDK view | `benchmarking.environment` prepares primitives, callbacks, layer tables, rules, and licenses using the per-file digests in [sg13g2_view.json](../benchmarking/sg13g2_view.json); `--bundle` generates the Agent resource bundle |
 | Tool support bundle | `benchmarking.prepare_support` follows the [technology/sg13g2](../technology/sg13g2) manifests to prepare Magic, MOS models, and KLayout rules; compile models in a separate container |
-| Frozen bundle | `manifest.json` binds files, sources, and the actual build environment; loading rejects modifications, missing or extra files, and symlinks, while backends consume byte snapshots |
+| Frozen bundle | `manifest.json` binds files, sources, and the actual build environment; loading rejects modifications, missing or extra files, and symlinks, while backends consume byte snapshots. A reviewed PDK bundle is auto-detected by sessions; `/protocol/resources.json` publishes its container-local import paths and a preflight import command without adding task or reference files |
 
 Keep originals byte-for-byte as supplied upstream and register framework-generated startup settings separately in the manifest. Preserve the license notices for components such as PSP models, PyCell, and pypreprocessor. The PDK view currently validates only basic MOS/tap primitives; importing a tool or device does not qualify every parameter or process rule.
 

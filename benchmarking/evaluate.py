@@ -95,15 +95,17 @@ def run_evaluation(plan: EvaluationPlan, inputs: dict[str, Asset],
     destination = destination.absolute()
     if destination.exists() or destination.is_symlink():
         raise FileExistsError(f"Evaluation destination already exists: {destination}")
-    destination.mkdir(parents=True)
+    destination.mkdir(parents=True, mode=0o700)
+    destination.chmod(0o700)
     artifact_root = destination / "artifacts"
-    artifact_root.mkdir()
+    artifact_root.mkdir(mode=0o700)
+    artifact_root.chmod(0o700)
 
     def archive(asset: Asset) -> dict:
         path = artifact_root / asset.sha256
         if not path.exists():
             path.write_bytes(asset.content)
-            path.chmod(0o444)
+            path.chmod(0o400)
         return {**asset.identity(), "path": f"artifacts/{asset.sha256}"}
 
     report = {
@@ -182,7 +184,11 @@ def run_evaluation(plan: EvaluationPlan, inputs: dict[str, Asset],
                   else False if "failed" in requirements
                   else True if all(s == "passed" for s in requirements) else None)
     statuses = [r.status for r in results.values()] + [m["status"] for m in report["metrics"].values()]
-    outcome = ("error" if "error" in statuses else "failed" if "failed" in statuses
+    # A completed check or metric rejection is a conclusive negative result,
+    # even if an unrelated adapter also failed.  Keep an evaluator error as
+    # the outcome only when no part of the candidate is known to be invalid;
+    # otherwise callers must not drop the known-bad candidate from statistics.
+    outcome = ("failed" if "failed" in statuses else "error" if "error" in statuses
                else "incomplete" if "blocked" in statuses else "passed")
     task_success = None
     if plan.mode == "post_layout":
@@ -191,5 +197,7 @@ def run_evaluation(plan: EvaluationPlan, inputs: dict[str, Asset],
     report.update(outcome=outcome, physical_valid=physical_valid, specs_pass=specs_pass,
                   task_success=task_success,
                   quality_eligible=task_success is True)
-    (destination / "report.json").write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")
+    report_path = destination / "report.json"
+    report_path.write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")
+    report_path.chmod(0o600)
     return report

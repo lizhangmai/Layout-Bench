@@ -11,6 +11,7 @@ from pathlib import Path
 from statistics import NormalDist
 
 from .admission import restore_policy
+from .evaluation import parse_evaluation
 from .files import Asset, read_file
 from .recorder import recover_submissions
 
@@ -51,6 +52,143 @@ def _resources(reports):
     return result
 
 
+def _read_archived_asset(root, reference, label):
+    """Read and verify an archive reference from a trusted run directory."""
+    if not isinstance(reference, dict) or set(reference) != {"sha256", "format", "bytes", "path"}:
+        raise ValueError(f"Invalid {label} archive reference")
+    if reference["path"] != f"artifacts/{reference['sha256']}":
+        raise ValueError(f"Invalid {label} archive path")
+    try:
+        raw = read_file(root, reference["path"])
+        identity = Asset(raw, reference["format"]).identity()
+    except (KeyError, OSError, TypeError, ValueError) as error:
+        raise ValueError(f"Invalid {label} archive") from error
+    expected = {key: reference[key] for key in ("sha256", "format", "bytes")}
+    if identity != expected:
+        raise ValueError(f"{label} archive integrity mismatch")
+    return raw
+
+
+def _verify_evaluation_inputs(root, run_root, evaluation, report, task):
+    """Verify the evaluator consumed the frozen plan and declared task inputs.
+
+    The independent evaluator writes its own content-addressed copies. Merely
+    checking the evaluation report's digest does not establish that its plan
+    and inputs are the ones frozen in the batch manifest, so verify both the
+    references and their bytes here.
+    """
+    task_inputs = task.get("inputs")
+    frozen_plan_ref = task_inputs.get("evaluation") if isinstance(task_inputs, dict) else None
+    if frozen_plan_ref is None:
+        raise ValueError("Task has no frozen evaluation plan")
+    frozen_plan = _read_archived_asset(root, frozen_plan_ref, "frozen evaluation plan")
+    if frozen_plan_ref.get("format") != "toml":
+        raise ValueError("Frozen evaluation plan has the wrong format")
+
+    plan_ref = evaluation.get("plan")
+    if not isinstance(plan_ref, dict):
+        raise TypeError("Evaluation report has no plan archive")
+    # The path is local to each run directory, but the content identity must
+    # exactly equal the task input frozen in execution.json.
+    if {key: plan_ref.get(key) for key in ("sha256", "format", "bytes")} != {
+            key: frozen_plan_ref.get(key) for key in ("sha256", "format", "bytes")}:
+        raise ValueError("Evaluation plan differs from the frozen task plan")
+    evaluated_plan = _read_archived_asset(run_root, plan_ref, "evaluation plan")
+    if evaluated_plan != frozen_plan:
+        raise ValueError("Evaluation plan differs from the frozen task plan")
+    try:
+        external_inputs = parse_evaluation(frozen_plan).external_inputs()
+    except (TypeError, ValueError) as error:
+        raise ValueError("Frozen evaluation plan is invalid") from error
+
+    expected = {}
+    for reference in sorted(external_inputs):
+        if reference == "candidate":
+            expected[reference] = report.get("candidate")
+        elif reference == "task":
+            expected[reference] = task.get("description")
+        elif reference.startswith("input:"):
+            role = reference.removeprefix("input:")
+            expected[reference] = task_inputs.get(role)
+        else:  # parse_evaluation currently rejects this, keep the boundary explicit.
+            raise ValueError(f"Unsupported evaluation input reference: {reference}")
+        if expected[reference] is None:
+            raise ValueError(f"Evaluation input is not frozen: {reference}")
+    actual = evaluation.get("inputs")
+    if actual != expected:
+        raise ValueError("Evaluation inputs differ from the frozen task inputs")
+    for reference, archive in actual.items():
+        _read_archived_asset(run_root, archive, f"evaluation input {reference}")
+    return evaluated_plan
+
+
+def _failure_modes(report, evaluation):
+    """Return conclusive model failure causes for one measured attempt."""
+    modes = Counter()
+    if report.get("outcome") == "no_submission":
+        modes["no_submission"] += 1
+        return modes
+    if report.get("task_success") is not False:
+        return modes
+    if evaluation is None:
+        modes["task_failure_without_evaluation"] += 1
+        return modes
+    for job_id, job in evaluation.get("jobs", {}).items():
+        if job.get("status") == "failed":
+            modes[f"job:{job.get('gate') or job.get('stage')}:{job_id}"] += 1
+        elif job.get("status") == "error":
+            # This can coexist with a conclusive failure elsewhere. Preserve
+            # it as a diagnostic cause without turning the attempt into an
+            # evaluation-only sample.
+            modes[f"evaluation_error:job:{job_id}"] += 1
+    for metric_id, metric in evaluation.get("metrics", {}).items():
+        if metric.get("status") == "failed":
+            modes[f"metric:{metric_id}"] += 1
+        elif metric.get("status") == "error":
+            modes[f"evaluation_error:metric:{metric_id}"] += 1
+    return modes
+
+
+def _run_kind_matches(report, agent):
+    """Allow a configured inference profile to record that it was unused."""
+    actual = report.get("run_kind")
+    configured = agent["run_kind"]
+    if agent.get("inference") is None:
+        return actual == "offline_cli_development"
+    return actual in {"offline_cli_development", configured}
+
+
+def _verify_batch_events(root, batch):
+    """Validate journal structure; a finished batch also binds its bytes."""
+    events = batch.get("events")
+    if (not isinstance(events, dict) or events.get("schema_version") != 1
+            or events.get("path") != "events.jsonl"):
+        raise ValueError("Batch event journal reference is missing")
+    try:
+        raw = read_file(root, events["path"])
+    except (KeyError, OSError, TypeError, ValueError) as error:
+        raise ValueError("Batch event journal is unavailable") from error
+    finished = batch.get("phase") == "finished"
+    if finished:
+        identity = Asset(raw, "jsonl").identity()
+        if any(events.get(key) != value for key, value in identity.items()):
+            raise ValueError("Batch event journal integrity mismatch")
+    expected_sequence = 1
+    for line in raw.splitlines(keepends=True):
+        if not line.endswith(b"\n"):
+            if finished:
+                raise ValueError("Finished batch event journal has an incomplete tail")
+            break
+        try:
+            event = json.loads(line)
+        except (TypeError, ValueError) as error:
+            raise ValueError("Batch event journal contains invalid JSON") from error
+        if (not isinstance(event, dict) or event.get("schema_version") != 1
+                or event.get("sequence") != expected_sequence):
+            raise ValueError("Batch event journal sequence is invalid")
+        expected_sequence += 1
+
+
 def verify_run(root, entry, manifest, execution_sha):
     report = _read_json(root, entry["report"])
     expected = {key: entry[key] for key in ("slot_id", "task_id", "configuration_id", "repeat", "attempt")}
@@ -58,7 +196,7 @@ def verify_run(root, entry, manifest, execution_sha):
     task, agent = manifest["tasks"][entry["task_id"]], manifest["agents"][entry["configuration_id"]]
     if (report.get("schema_version") != 2 or report.get("phase") != "finished"
             or report.get("execution") != expected or report.get("task_sha256") != task["task_sha256"]
-            or report.get("run_kind") != agent["run_kind"] or report.get("agent_id") != agent["agent_id"]
+            or not _run_kind_matches(report, agent) or report.get("agent_id") != agent["agent_id"]
             or report.get("harness") != agent["harness"]
             or report.get("configuration", {}).get("sha256") != agent["source"]["sha256"]
             or report.get("command") != agent["command"] or report.get("public_environment") != agent["environment"]
@@ -78,13 +216,19 @@ def verify_run(root, entry, manifest, execution_sha):
     if agent["inference"]:
         if report.get("inference_profile", {}).get("sha256") != agent["inference"]["source"]["sha256"]:
             raise ValueError("Run inference profile differs from plan")
-        if any(report.get("inference", {}).get(key) != value for key, value in agent["inference"]["identity"].items()):
+        actual_inference = report.get("inference")
+        if not isinstance(actual_inference, dict) or actual_inference.get("run_kind") != report.get("run_kind"):
+            raise ValueError("Run inference usage identity is missing or inconsistent")
+        if any(actual_inference.get(key) != value for key, value in agent["inference"]["identity"].items()):
             raise ValueError("Actual inference endpoint/model differs from plan")
     elif "inference" in report:
         raise ValueError("Offline plan unexpectedly used inference")
     run_root = (root / entry["report"]["path"]).parent
     events = report.get("events")
-    if not events or any(events[key] != value for key, value in Asset(read_file(run_root, events["path"]), "jsonl").identity().items()):
+    if (not isinstance(events, dict) or events.get("schema_version") != 1
+            or events.get("path") != "events.jsonl"
+            or any(events.get(key) != value for key, value in
+                   Asset(read_file(run_root, events["path"]), "jsonl").identity().items())):
         raise ValueError("Run event journal integrity mismatch")
     recovered = recover_submissions(run_root)
     if recovered["candidate"] != report.get("candidate"):
@@ -100,21 +244,32 @@ def verify_run(root, entry, manifest, execution_sha):
             if digest != manifest["framework"]["files"]["benchmarking/" + name]["sha256"]:
                 raise ValueError("Evaluation implementation differs from frozen framework")
         expected_backends = {op: task["backends"][op] for op in task["operations"]}
-        if (evaluation.get("task_sha256") != task["task_sha256"] or evaluation["backends"] != expected_backends
-                or evaluation["inputs"]["candidate"]["sha256"] != report["candidate"]["sha256"]):
+        if (evaluation.get("task_sha256") != task["task_sha256"] or evaluation["backends"] != expected_backends):
             raise ValueError("Evaluation does not match its task, candidate or toolchain")
+        _verify_evaluation_inputs(root, run_root, evaluation, report, task)
     return report, evaluation
 
 
-def summarize_batch(destination):
+def summarize_batch(destination, *, allow_in_progress=False):
+    """Verify a finished batch and recompute its statistics.
+
+    ``execute_plan`` asks for one provisional summary immediately before it
+    seals the batch journal.  That internal call opts into the in-progress
+    state; public summaries may inspect an interrupted, incomplete batch for
+    diagnosis, but cannot treat an unsealed complete batch as scoreable.
+    """
     root = Path(destination).absolute()
     batch = json.loads(read_file(root, "batch.json"))
     if batch.get("schema_version") != 1 or batch.get("run_kind") != "local_batch_development":
         raise ValueError("Unsupported batch report")
-    if batch.get("phase") == "finished":
-        events = batch["events"]
-        if any(events[key] != value for key, value in Asset(read_file(root, events["path"]), "jsonl").identity().items()):
-            raise ValueError("Batch event journal integrity mismatch")
+    if batch.get("phase") not in {"running", "finished"}:
+        raise ValueError("Batch is not executable")
+    # During execute_plan the runner computes a provisional summary before
+    # sealing batch.json. A persisted summary on a non-finished record is
+    # therefore an inconsistent/stale final record, not a scoreable batch.
+    if batch.get("phase") != "finished" and batch.get("summary") is not None:
+        raise ValueError("Batch has an unsealed summary")
+    _verify_batch_events(root, batch)
     manifest = _read_json(root, batch["execution"])
     if manifest.get("schema_version") != 1 or manifest.get("run_kind") != "local_batch_development":
         raise ValueError("Unsupported execution manifest")
@@ -174,6 +329,7 @@ def summarize_batch(destination):
             task_ids = [key for key, task in manifest["tasks"].items() if task["environment_group"] == environment]
             families = Counter(manifest["tasks"][key]["family"] for key in task_ids)
             per_task, all_attempts, measured = {}, [], []
+            group_failure_modes = Counter()
             for task_id in task_ids:
                 selected = [s for s in slots.values() if s["task_id"] == task_id and s["configuration_id"] == config_id]
                 observed = [results[s["slot_id"]] for s in selected if s["slot_id"] in results]
@@ -184,7 +340,9 @@ def summarize_batch(destination):
                 physical = sum(e["physical_valid"] is True for _, e in observed if e)
                 missing = len(selected)-len(observed)
                 metrics = defaultdict(list)
+                failure_modes = Counter()
                 for report, evaluation in observed:
+                    failure_modes.update(_failure_modes(report, evaluation))
                     if report["task_success"] and evaluation:
                         for name, metric in evaluation["metrics"].items():
                             if type(metric["value"]) in {int, float} and math.isfinite(metric["value"]):
@@ -197,11 +355,23 @@ def summarize_batch(destination):
                     "observed_success_rate": successes/len(observed) if observed else None,
                     "observed_wilson95": wilson(successes, len(observed)),
                     "weight": 1/(len(families)*families[manifest["tasks"][task_id]["family"]]),
-                    "successful_metrics": dict(metrics)}
+                    "successful_metrics": dict(metrics),
+                    "failure_modes": dict(failure_modes)}
+                group_failure_modes.update(failure_modes)
             complete = all(t["missing"] == 0 for t in per_task.values())
             finished_attempts = sum(e["state"] != "running" for e, _, _ in all_attempts)
+            reported = [r for _, r, _ in all_attempts if r]
+            actual_run_kinds = Counter(r.get("run_kind") for r in reported if r.get("run_kind"))
+            actual_run_kind = (next(iter(actual_run_kinds)) if len(actual_run_kinds) == 1
+                               else "mixed" if actual_run_kinds else agent["run_kind"])
+            inference_requests = sum(len((r.get("inference") or {}).get("requests", [])) for r in reported)
+            inference_denied = sum((r.get("inference") or {}).get("denied_requests", 0) for r in reported)
+            inference_unused = sum(1 for r in reported
+                                   if r.get("inference") is not None
+                                   and not (r.get("inference") or {}).get("requests"))
             groups.append({
-                "configuration_id": config_id, "run_kind": agent["run_kind"],
+                "configuration_id": config_id, "run_kind": actual_run_kind,
+                "configured_run_kind": agent["run_kind"],
                 "harness": agent["harness"], "environment_group": environment,
                 "environment": manifest["tasks"][task_ids[0]]["environment"],
                 "complete": complete, "tasks": per_task, "family_count": len(families),
@@ -211,6 +381,10 @@ def summarize_batch(destination):
                 "attempts": len(all_attempts), "attempts_finished": finished_attempts,
                 "infrastructure_errors": sum(e["state"] == "infrastructure_error" for e, _, _ in all_attempts),
                 "evaluation_errors": sum(e["state"] == "evaluation_error" for e, _, _ in all_attempts),
+                "failure_modes": dict(group_failure_modes),
+                "inference_requests": inference_requests,
+                "inference_denied_requests": inference_denied,
+                "inference_unused_runs": inference_unused,
                 "infrastructure_error_rate": sum(e["state"] == "infrastructure_error" for e, _, _ in all_attempts)/finished_attempts if finished_attempts else None,
                 "termination_counts": dict(Counter(r["termination"] for r, _ in measured)),
                 "outcome_counts": dict(Counter(r["outcome"] for r, _ in measured)),
@@ -218,7 +392,10 @@ def summarize_batch(destination):
                               "measured": _resources([r for r, _ in measured]),
                               "successful": _resources([r for r, _ in measured if r["task_success"]]),
                               "unsuccessful": _resources([r for r, _ in measured if not r["task_success"]])}})
-    return {"schema_version": 1, "scope": manifest["scope"], "run_kind": "local_batch_development",
+    summary = {"schema_version": 1, "scope": manifest["scope"], "run_kind": "local_batch_development",
             "execution_sha256": batch["execution"]["sha256"], "statistics": manifest["statistics"],
             "statistics_implementation_sha256": Asset(Path(__file__).read_bytes(), "python").sha256,
             "complete": all(group["complete"] for group in groups), "groups": groups}
+    if batch.get("phase") != "finished" and summary["complete"] and not allow_in_progress:
+        raise ValueError("Batch is not finished")
+    return summary

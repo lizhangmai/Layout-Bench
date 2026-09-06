@@ -1,5 +1,6 @@
 """Frozen Agent configuration with a generic harness contract."""
 
+import re
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -7,6 +8,10 @@ from pathlib import Path
 from .evaluation import number
 from .files import Asset, keys, read_file, relative, text
 from .harnesses import HarnessSpec, prepare_harness
+
+_CREDENTIAL_ENVIRONMENT_NAME = re.compile(
+    r"(?:^|_)(?:KEY|TOKEN|SECRET|PASSWORD)$", re.IGNORECASE
+)
 
 
 @dataclass(frozen=True)
@@ -64,6 +69,10 @@ def load_run_config(path: Path) -> RunConfig:
     for key, value in environment.items():
         if not key.isidentifier():
             raise ValueError("Invalid environment variable name")
+        if _CREDENTIAL_ENVIRONMENT_NAME.search(key):
+            raise ValueError(
+                f"Credential-like environment variable is not allowed in public Agent environment: {key}"
+            )
         text(value, "public environment setting")
     return RunConfig(data["id"], data["image"], tuple(data["command"]), number(data["wall_seconds"]),
                      data["memory_mb"], number(data["cpus"]), data["pids"], data["workspace_mb"],

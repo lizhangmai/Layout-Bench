@@ -58,7 +58,7 @@ uv run --python 3.12 --locked python scripts/public_preview.py quickstart --outp
 
 该命令只构建一个 `layout-bench-tools:local` 镜像，获取固定版本的 PDK，准备经过审查的资料，并运行参考解、提交和批量检查。KLayout、ngspice、Qucs-S/Qucsator、Magic、OpenVAF、Xschem 和 Python 包含在这个镜像中；harness runtime 通过统一会话契约由各 harness 自行提供，因此不需要按 EDA 角色拆分镜像。快速开始不会调用模型账户。
 
-首次运行需要下载工具和 PDK，可能耗时数分钟。后续运行会复用 Docker 层和 PDK checkout，同时重新准备已验证的资料和全新工作区。每次运行都应选择新的 `--output` 目录；已有证据不会被覆盖。若要复用已构建的镜像，可使用 `--skip-build`。该命令只初始化 PDK submodule，其他公开资料 submodule 为可选项。
+首次运行需要下载工具和 PDK，可能耗时数分钟。后续运行会复用 Docker 层和 PDK checkout，同时重新准备已验证的资料和全新工作区。每次运行都应选择新的 `--output` 目录；已有证据不会被覆盖。若要复用已构建的镜像，可使用 `--skip-build`。快速开始只初始化 PDK 以及已验证视图所需的两个 KLayout Python 子模块；digital、openEMS 和 Palace 子模块保持可选。若这些必需目录已经有完整文件但没有 Git 元数据，快速开始会复用它们，后续准备阶段仍会逐文件校验哈希。
 
 仓库本地生成的文件统一放在顶层 `build/`：benchmark 运行证据放在 `build/runs/`，手工准备的 PDK 和 EDA 支持包放在 `build/support/`，Python 分发包放在 `build/dist/`。`build/lib/` 和 `build/bdist.*` 是 setuptools 的临时打包目录。该目录已被 Git 忽略；不需要本地报告或已准备资源时可以删除。
 
@@ -92,7 +92,7 @@ uv run --locked python scripts/public_preview.py qualify \
 3. **提交候选版图**：在 `/workspace` 中工作，然后运行 `python -I /protocol/submit.py`，明确提交配置的 GDS。
 4. **评估和比较**：单个候选使用独立评估器；批量测量使用冻结的“任务 × 配置 × 重复次数”计划。
 
-配置的 harness 会收到 `/protocol/prompt.txt`、`/protocol/task.json`、`/protocol/harness.json` 和只读的 `/task` 输入。标准运行不会收到公开参考解。Runner 不解析 harness 内部会话；harness 只需按协议显式提交候选版图。
+配置的 harness 会收到 `/protocol/prompt.txt`、`/protocol/task.json`、`/protocol/harness.json`、`/protocol/resources.json` 和只读的 `/task` 输入。标准运行不会收到公开参考解。Runner 不解析 harness 内部会话；harness 只需按协议显式提交候选版图。挂载经过审查的 PDK 资源包时，Runner 会自动提供容器内的 `KLAYOUT`/`PYTHONPATH`，并在 `/protocol/resources.json` 中给出导入 preflight。
 
 通过主机持有的 gateway 连接模型时，复制 [inference.example.toml](examples/agents/inference.example.toml)，填写端点、模型和主机密钥变量名，再运行自己的 harness 配置：
 
@@ -105,7 +105,13 @@ uv run --locked python main.py run tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_AD
   --output build/runs/my-first-model-run
 ```
 
-该命令会调用你配置的模型；快速开始本身不会调用模型。凭据保留在主机上。当前 gateway 提供 Responses wire family；harness 自己负责适配所需的桥接。当前尚未实现同语义的会话内裁判反馈。
+在消耗请求前，可以先检查 profile、可选的 harness wire 声明和主机凭据；该命令不会联系模型服务：
+
+```bash
+uv run --locked python main.py inference-check build/runs/inference.toml --agent path/to/agent.toml
+```
+
+当 harness 实际转发请求时，该命令会调用你配置的模型；快速开始本身不会调用模型。仅配置 profile 但没有转发请求时，报告会明确标记为离线运行。凭据保留在主机上。当前 gateway 提供 Responses wire family；harness 自己负责适配所需的桥接。当前尚未实现同语义的会话内裁判反馈。
 
 ## 工作原理
 

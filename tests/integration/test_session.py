@@ -147,13 +147,11 @@ assert submit()['accepted']
 output.write_bytes(b'post-submission corruption')
 ''', seconds=30)
     config = replace(config, memory_mb=1024,
-                     files={**config.files, "generate.py": Asset((ROOT/"examples/sg13g2/make_checked_switch.py").read_bytes(), "python")},
-                     environment={"KLAYOUT": "1", "PYTHONPATH":
-                         "/resources/ihp-sg13g2/libs.tech/klayout/python:"
-                         "/resources/ihp-sg13g2/libs.tech/klayout/python/pycell4klayout-api/source/python"})
+                     files={**config.files, "generate.py": Asset((ROOT/"examples/sg13g2/make_checked_switch.py").read_bytes(), "python")})
     report = run_agent(task, config, resources, load_toolchain(toolchain), tmp_path/"run")
     assert report["termination"] == "completed", report
     assert report["task_success"] is True, report
+    assert report["environment"]["resource_environment"]["KLAYOUT"] == "1"
     frozen = (tmp_path/"run"/report["candidate"]["path"]).read_bytes()
     assert frozen != b'post-submission corruption'
     evaluation = json.loads((tmp_path/"run/evaluation/report.json").read_text())

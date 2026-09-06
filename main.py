@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -22,6 +23,53 @@ from benchmarking.report import summarize_batch
 from benchmarking.swarm import execute_plan, load_plan
 from benchmarking.tasks import load_task
 from benchmarking.toolchains import load_toolchain
+
+
+def _run_summary(report, output):
+    """Return a compact, actionable summary for the ``run`` command.
+
+    The durable evaluation report remains the source of truth.  The command
+    line should nevertheless tell a first-time user which gate failed without
+    requiring them to open a second JSON file manually.
+    """
+    summary = {"report": str(output / "run.json"),
+               **{key: report[key] for key in
+                  ("termination", "outcome", "task_success", "candidate")}}
+    if report.get("inference") is not None:
+        summary["inference_requests"] = len(report["inference"].get("requests", []))
+    evaluation_path = output / "evaluation/report.json"
+    if not evaluation_path.is_file():
+        return summary
+    try:
+        evaluation = json.loads(evaluation_path.read_text())
+    except (OSError, ValueError):
+        return summary
+    failures = []
+    for job_id, job in evaluation.get("jobs", {}).items():
+        if job.get("status") in {"failed", "error"}:
+            failures.append({"kind": "job", "id": job_id, "status": job["status"],
+                             "reason": job.get("reason")})
+    for metric_id, metric in evaluation.get("metrics", {}).items():
+        if metric.get("status") in {"failed", "error"}:
+            failures.append({"kind": "metric", "id": metric_id, "status": metric["status"],
+                             "reason": metric.get("reason")})
+    if failures:
+        summary["failures"] = failures
+    return summary
+
+
+def _inference_preflight(profile, config, credential_present):
+    """Describe a model profile without making a provider request."""
+    return {
+        "status": "ready" if credential_present else "missing_credential",
+        "model_call": False,
+        "endpoint": profile.base_url,
+        "model": profile.model,
+        "wire_api": profile.wire_api,
+        "credential_env": profile.api_key_env,
+        "credential_present": credential_present,
+        "harness": config.harness.identity() if config else None,
+    }
 
 
 def main() -> None:
@@ -54,6 +102,11 @@ def main() -> None:
     batch_parser.add_argument("--policy-sha256", help="Trusted operator's policy digest")
     summary_parser = subcommands.add_parser("summarize", help="Verify and recompute internal batch statistics")
     summary_parser.add_argument("directory", type=Path)
+    inference_parser = subcommands.add_parser(
+        "inference-check", help="Validate an inference profile and host credential without making a model call"
+    )
+    inference_parser.add_argument("profile", type=Path)
+    inference_parser.add_argument("--agent", type=Path, help="Optional harness configuration to check wire compatibility")
     export_parser = subcommands.add_parser("export", help="Emit only preapproved aggregate fields from an admitted batch")
     export_parser.add_argument("directory", type=Path)
     export_parser.add_argument("--policy-sha256", required=True, help="Trusted operator's original policy digest")
@@ -87,6 +140,16 @@ def main() -> None:
         if args.command == "recover":
             print(json.dumps(recover_submissions(args.directory), indent=2, allow_nan=False))
             return
+        if args.command == "inference-check":
+            profile = load_inference_config(args.profile)
+            config = load_run_config(args.agent) if args.agent else None
+            if config:
+                validate_harness_wire(config.harness.wire_api, profile.wire_api)
+            result = _inference_preflight(profile, config, bool(os.environ.get(profile.api_key_env)))
+            print(json.dumps(result, indent=2, allow_nan=False))
+            if not result["credential_present"]:
+                parser.exit(1)
+            return
         if args.command == "task":
             task = load_task(args.config)
             if args.materialize:
@@ -105,8 +168,7 @@ def main() -> None:
             report = run_agent(load_task(args.config), config, resources,
                                load_toolchain(args.toolchain), args.output,
                                inference=InferenceGateway(profile) if profile else None)
-            print(json.dumps({"report": str(args.output / "run.json"), **{k: report[k] for k in
-                  ("termination", "outcome", "task_success", "candidate")}}, indent=2))
+            print(json.dumps(_run_summary(report, args.output), indent=2))
             if report["outcome"] != "passed":
                 parser.exit(2 if report["outcome"] in {"error", "incomplete"} else 1)
             return

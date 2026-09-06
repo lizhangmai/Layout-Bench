@@ -15,6 +15,18 @@ TASK = ROOT / "tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_com
 IMAGE = "layout-bench-tools:local"
 RUNS = "build/runs"
 SUPPORT = "build/support"
+PDK_PATH = Path("third_party/IHP-Open-PDK")
+
+# The public PDK contains several optional nested submodules.  The reviewed
+# view only consumes the two Python libraries below; initializing the complete
+# recursive tree is both unnecessary and fragile when a checkout already has
+# unpacked (but untracked) optional directories.
+PDK_REQUIRED_SUBMODULES = {
+    Path("ihp-sg13g2/libs.tech/klayout/python/pycell4klayout-api"):
+        Path("source/python/cni/box.py"),
+    Path("ihp-sg13g2/libs.tech/klayout/python/pypreprocessor"):
+        Path("pypreprocessor/__init__.py"),
+}
 
 
 def call(*command, expected=0, log=None):
@@ -55,13 +67,66 @@ def build(image, network):
          "--build-arg", "NO_PROXY", "--target", "tools", "-t", image, ".")
 
 
+def _git_metadata(path):
+    metadata = path / ".git"
+    return metadata.is_dir() or metadata.is_file()
+
+
+def ensure_pdk():
+    """Initialize only the pinned PDK and nested libraries used by the view.
+
+    A populated directory without Git metadata is common in source archives
+    and cached workspaces.  Git cannot clone a submodule over such a directory,
+    so reuse it when the reviewed files are present and let ``prepare`` verify
+    every byte.  An incomplete directory is rejected before Git is invoked so
+    the user gets a recovery path instead of Git's opaque clone error.
+    """
+    pdk = ROOT / PDK_PATH
+    if not pdk.is_dir():
+        call("git", "submodule", "update", "--init", "--depth", "1", str(PDK_PATH))
+    elif _git_metadata(pdk):
+        # This is intentionally not recursive: optional nested PDK projects
+        # are not part of the reviewed public view.
+        call("git", "submodule", "update", "--init", "--depth", "1", str(PDK_PATH))
+    if not pdk.is_dir():
+        raise ValueError(f"PDK checkout missing after initialization: {pdk}. "
+                         f"Run: git submodule update --init --depth 1 {PDK_PATH}")
+    if not _git_metadata(pdk) and any(
+            not (pdk / relative / marker).is_file()
+            for relative, marker in PDK_REQUIRED_SUBMODULES.items()):
+        raise ValueError(
+            f"PDK checkout {pdk} has no Git metadata and is missing files required by the reviewed view. "
+            f"Use a Git checkout, then run: git submodule update --init --depth 1 {PDK_PATH}")
+
+    missing = []
+    for relative, marker in PDK_REQUIRED_SUBMODULES.items():
+        path = pdk / relative
+        if (path / marker).is_file():
+            continue
+        if path.is_dir() and any(path.iterdir()) and not _git_metadata(path):
+            command = (f"git -C {PDK_PATH} submodule update --init --depth 1 "
+                       f"{relative}")
+            raise ValueError(
+                f"Required PDK dependency {relative} is a non-empty directory without Git metadata "
+                f"and is incomplete. Move it aside (preserving any local files), then run: {command}")
+        missing.append(str(relative))
+    if missing:
+        call("git", "-C", pdk, "submodule", "update", "--init", "--depth", "1", *missing)
+    incomplete = [str(relative) for relative, marker in PDK_REQUIRED_SUBMODULES.items()
+                  if not (pdk / relative / marker).is_file()]
+    if incomplete:
+        command = f"git -C {PDK_PATH} submodule update --init --depth 1 {' '.join(incomplete)}"
+        raise ValueError(f"Required PDK files are still missing: {', '.join(incomplete)}. Run: {command}")
+
+
 def prepare(destination, image=IMAGE):
     from benchmarking.environment import prepare_pdk, prepare_pdk_bundle
     from benchmarking.prepare_support import prepare_support
 
-    pdk = ROOT / "third_party/IHP-Open-PDK"
+    pdk = ROOT / PDK_PATH
     if not (pdk / "ihp-sg13g2").is_dir():
-        raise ValueError("PDK missing. Run: git submodule update --init --recursive --depth 1 third_party/IHP-Open-PDK")
+        raise ValueError("PDK missing. Run quickstart, or initialize it with: "
+                         "git submodule update --init --depth 1 third_party/IHP-Open-PDK")
     # Resolve once: compilation, agents and all judge backends use the same image.
     image_id = subprocess.check_output(["docker", "image", "inspect", "--format", "{{.Id}}", image], text=True).strip()
     destination = new_directory(destination)
@@ -150,7 +215,7 @@ def quickstart(output, image, network, skip_build):
     print(f"Preview directory: {output}", flush=True)
     if not skip_build:
         build(image, network)
-    call("git", "submodule", "update", "--init", "--recursive", "--depth", "1", "third_party/IHP-Open-PDK")
+    ensure_pdk()
     prepare(output / "prepared", image)
     run(output / "prepared", output / "run", False)
     print(f"Ready with the bundled harness example: {output / 'prepared/protocol-probe.toml'}\n"

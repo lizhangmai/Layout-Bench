@@ -55,6 +55,11 @@ def run_agent(task, config, resources, backends, destination: Path, *, inference
         if inference.shutdown_incomplete:
             raise RecordingError("Inference worker did not stop; run evidence remains incomplete")
         report["inference"] = inference.summary()
+        # An inference profile alone does not prove model usage.  A request
+        # that was denied before forwarding must remain an offline probe, while
+        # deterministic transports retain the protocol-test label once they
+        # actually receive a request.
+        report["run_kind"] = report["inference"]["run_kind"]
         report["usage"] = report["inference"]["usage"]
         if report["inference"]["infrastructure_error"]:
             result.termination, result.reason = "infrastructure_error", "Inference service failed; see request statuses"

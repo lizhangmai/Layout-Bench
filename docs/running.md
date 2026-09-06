@@ -22,7 +22,7 @@ The current Agent configuration is schema 1:
 | `files[]` | `path`, `target`, and `sha256`; validate ordinary files at load time, freeze them, and mount them read-only under `/agent` |
 | `environment` | Optional public string settings archived verbatim; never use them for credentials |
 
-For each session, the Runner prepares separate read-only `/task`, `/agent`, `/resources`, and `/protocol` mounts. `/protocol/harness.json` publishes the frozen session protocol and declared capabilities; it does not grant extra authority. With inference configured, `/protocol/inference.json` describes the fixed gateway and `/protocol/inference.sock` is its canonical Unix socket; the former `/protocol/model.sock` path remains a compatibility alias. The Runner does not mount the host repository, Docker socket, or evaluation support directories. `/workspace` is a size-limited tmpfs and starts empty; the root filesystem is read-only, with a fixed 64 MiB `/tmp` and 16 MiB shared memory. Containers run as non-root, with networking disabled, capabilities removed, privilege escalation disabled, and memory (without extra swap), CPU, and process counts limited. The implementation follows Docker's [container run options](https://docs.docker.com/engine/containers/run/) and [run parameter reference](https://docs.docker.com/reference/cli/docker/container/run/). Reject images that declare extra writable volumes so they cannot bypass the workspace limit. An image must provide the read-only `/usr/bin/python3` standard library and support native Unix sockets and file-descriptor reads; rerun isolation tests for every new image.
+For each session, the Runner prepares separate read-only `/task`, `/agent`, `/resources`, and `/protocol` mounts. `/protocol/harness.json` publishes the frozen session protocol and declared capabilities; `/protocol/resources.json` describes only mounted reviewed resources and an optional preflight. When the resource bundle is a reviewed PDK view, the Runner automatically sets container-local `KLAYOUT=1` and prepends the PDK Python paths to `PYTHONPATH`; explicit `PYTHONPATH` entries are retained. It never infers or mounts a reference solution. With inference configured, `/protocol/inference.json` describes the fixed gateway and `/protocol/inference.sock` is its canonical Unix socket; the former `/protocol/model.sock` path remains a compatibility alias. The Runner does not mount the host repository, Docker socket, or evaluation support directories. `/workspace` is a size-limited tmpfs and starts empty; the root filesystem is read-only, with a fixed 64 MiB `/tmp` and 16 MiB shared memory. Containers run as non-root with networking disabled, capabilities removed, privilege escalation disabled, and memory (without extra swap), CPU, and process counts limited. The implementation follows Docker's [container run options](https://docs.docker.com/engine/containers/run/) and [run parameter reference](https://docs.docker.com/reference/cli/docker/container/run/). Reject images that declare extra writable volumes so they cannot bypass the workspace limit. An image must provide the read-only `/usr/bin/python3` standard library and support native Unix sockets and file-descriptor reads; rerun isolation tests for every new image.
 
 <a id="submission"></a>
 
@@ -46,7 +46,14 @@ Use mode `0700` for run directories and the host temporary root, `0600` for even
 
 ## 2. Connect a Model Gateway
 
-Copy [inference.example.toml](../examples/agents/inference.example.toml), fill in your endpoint, model, and host key-variable name, and use the command in [README](../README.md#run-your-agent). Only a command with a real inference configuration contacts the selected model; the public preview and protocol tests do not require a model account.
+Copy [inference.example.toml](../examples/agents/inference.example.toml), fill in your endpoint, model, and host key-variable name, and use the command in [README](../README.md#run-your-agent). Only a `main.py run` command whose harness forwards a request contacts the selected model; the public preview and protocol tests do not require a model account.
+
+Run `uv run --locked python main.py inference-check <profile.toml> [--agent <agent.toml>]`
+before a paid run. This validates the fixed HTTPS profile, credential presence,
+and (when supplied) the harness wire declaration without making a provider
+request. It reports only the credential variable name and a boolean presence
+flag, never the value. It is a compatibility preflight, not a network or
+provider-version guarantee.
 
 A run configuration normally uses `command` and optional `[[files]]`; the session runner does not require a particular Agent framework. The `[harness]` table records protocol metadata only; the harness supplies its own command, bridge, and reviewed files. Model communication and EDA backends are separate; the session does not parse provider sessions or the task circuit.
 
@@ -82,9 +89,16 @@ The current `responses` wire adapter follows the semantics of the [Responses API
 
 | `run_kind` | Meaning |
 |---|---|
-| `offline_cli_development` | An offline program with no inference endpoint configured |
+| `offline_cli_development` | An offline program, or a configured profile with no forwarded inference request |
 | `model_protocol_test` | Protocol validation against a deterministic endpoint; not a model score |
 | `model_cli_development` | Model development run through a real HTTPS gateway; endpoint compatibility and solving effectiveness require concrete measurements |
+
+Configuring an inference profile is not evidence that a model was contacted. A
+profile with only denied or zero forwarded requests is recorded as
+`offline_cli_development`; the run report keeps `inference.requests` empty and
+the batch summary exposes `inference_requests`, `inference_denied_requests`,
+and `inference_unused_runs`. Use these fields when checking that a baseline
+actually exercised the model rather than only running the harness protocol.
 
 <a id="failures"></a>
 
@@ -139,7 +153,7 @@ Replace infrastructure errors according to the [failure classifications](#failur
 
 Group statistics by configuration, task environment, and actual evaluation backend. Within a group, weight families equally and then tasks within each family equally; also report task-equal weighting. If samples are missing, the primary success rate is `null`; retain per-task observed counts, success rates, and `missing` rather than shrinking the planned denominator to make coverage appear complete. For every task, provide raw success counts and a [95% Wilson interval](https://www.itl.nist.gov/div898/handbook/prc/section2/prc241.htm), with non-zero uncertainty even for all-success or all-failure results. With missing samples, an observed interval describes only the observed portion. Weighted summary intervals, family-level generalization intervals, and intervals for differences between configurations are not implemented; those fields are `null`, so they cannot support claims of broad generalization or significant superiority.
 
-Store physical-validity and task-success rates separately. Retain raw metric values and units by task for successful candidates; do not average quality measurements with different scales across tasks. Resource statistics distinguish all attempts (including replacements), valid measurements, and success/failure subsets. When usage is missing, the total is `null`, with known/missing counts and a distribution for the known portion. Keep offline programs and deterministic endpoints labeled `offline_cli_development` and `model_protocol_test`; do not combine them into real model scores.
+Store physical-validity and task-success rates separately. Retain raw metric values and units by task for successful candidates; do not average quality measurements with different scales across tasks. Resource statistics distinguish all attempts (including replacements), valid measurements, and success/failure subsets. Failure causes are retained in per-task and group `failure_modes` counters, while evaluator errors remain diagnostics rather than model failures. When usage is missing, the total is `null`, with known/missing counts and a distribution for the known portion. Keep offline programs and deterministic endpoints labeled `offline_cli_development` and `model_protocol_test`; do not combine them into real model scores.
 
 For task `t`, schedule `n_t` independent repetitions in advance and, after infrastructure replacements are complete, calculate:
 

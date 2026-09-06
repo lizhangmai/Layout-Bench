@@ -57,7 +57,7 @@ uv run --python 3.12 --locked python scripts/public_preview.py quickstart --outp
 
 This builds one `layout-bench-tools:local` image, fetches the pinned PDK, prepares reviewed resources, and runs the reference, submission, and batch checks. KLayout, ngspice, Qucs-S/Qucsator, Magic, OpenVAF, Xschem, and Python are in that image; harness runtimes are supplied by each harness through the common session contract, so no role-specific EDA image is needed. The quick start never calls a model account.
 
-The first run downloads tools and the PDK and may take several minutes. Later runs reuse Docker layers and the PDK checkout while preparing fresh, verified resources and workspaces. Choose a new `--output` directory for each run; existing evidence is never overwritten. Use `--skip-build` to reuse an already built image. Only the PDK submodule is initialized; the other public source submodules are optional.
+The first run downloads tools and the PDK and may take several minutes. Later runs reuse Docker layers and the PDK checkout while preparing fresh, verified resources and workspaces. Choose a new `--output` directory for each run; existing evidence is never overwritten. Use `--skip-build` to reuse an already built image. Quick start initializes the PDK and only the two nested KLayout Python dependencies required by the reviewed view; digital, openEMS, and Palace submodules remain optional. If those required directories already contain complete files without Git metadata, quick start reuses them and the preparation hash checks still verify every file.
 
 Repository-local generated files use one top-level directory: benchmark runs are under `build/runs/`, prepared PDK and EDA bundles under `build/support/`, and Python distributions under `build/dist/`. The `build/lib/` and `build/bdist.*` directories are temporary setuptools staging files. The directory is ignored by Git and can be removed at any time when you do not need its local reports or prepared resources.
 
@@ -93,7 +93,7 @@ The workflow is simple:
 3. **Submit a candidate** — work in `/workspace`, then run `python -I /protocol/submit.py` to submit the configured GDS explicitly.
 4. **Evaluate and compare** — use the independent evaluator for one candidate, or a frozen batch plan for task × configuration × repetition measurements.
 
-The configured harness receives `/protocol/prompt.txt`, `/protocol/task.json`, `/protocol/harness.json`, and read-only `/task` inputs. It does not receive the public reference solution during a standard run. The harness is opaque to the runner: it only needs to produce the session's explicit submission.
+The configured harness receives `/protocol/prompt.txt`, `/protocol/task.json`, `/protocol/harness.json`, `/protocol/resources.json`, and read-only `/task` inputs. It does not receive the public reference solution during a standard run. The harness is opaque to the runner: it only needs to produce the session's explicit submission. When a reviewed PDK bundle is mounted, the runner automatically exposes its container-local `KLAYOUT`/`PYTHONPATH` settings and publishes the import preflight in `/protocol/resources.json`.
 
 To connect a model through the host-owned gateway, copy [inference.example.toml](examples/agents/inference.example.toml), fill in your endpoint, model, and host key-variable name, then run your harness configuration:
 
@@ -106,7 +106,13 @@ uv run --locked python main.py run tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_AD
   --output build/runs/my-first-model-run
 ```
 
-This command calls your configured model; quick start itself never does. Credentials stay on the host. The gateway currently exposes the Responses wire family, while the harness owns any bridge needed by its model client. Same-semantic in-session judge feedback is not implemented yet.
+Before spending a request, validate the profile, optional harness wire declaration, and host credential without contacting the provider:
+
+```bash
+uv run --locked python main.py inference-check build/runs/inference.toml --agent path/to/agent.toml
+```
+
+Once the harness forwards a request, this command calls your configured model; quick start itself never does. A configured profile with no forwarded requests is explicitly labeled offline in the report. Credentials stay on the host. The gateway currently exposes the Responses wire family, while the harness owns any bridge needed by its model client. Same-semantic in-session judge feedback is not implemented yet.
 
 ## How It Works
 

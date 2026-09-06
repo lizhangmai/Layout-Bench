@@ -1,4 +1,5 @@
 import json
+import socket
 import time
 from pathlib import Path
 
@@ -51,6 +52,19 @@ def test_request_bound_usage_and_no_error_body_exposure():
     assert status == 502 and b"secret" not in body
     assert "secret" not in json.dumps(gateway.summary())
     assert gateway.summary()["usage"]["input_tokens"] is None
+
+
+def test_no_forwarded_requests_are_not_classified_as_model_usage():
+    config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 1, 10, Asset(b"profile", "text"))
+    gateway = ResponsesGateway(config, transport=lambda *args: pytest.fail("Denied request was forwarded"))
+    gateway.deadline = time.monotonic()+10
+    assert gateway.request("/responses", b'{"model":"test-model","input":[{"file_id":"remote"}]}')[0] == 400
+    assert gateway.summary()["requests"] == []
+    assert gateway.summary()["run_kind"] == "offline_cli_development"
+
+    gateway._transport = lambda *args: (200, "application/json", b'{"status":"completed"}')
+    assert gateway.request("/responses", b'{"model":"test-model"}')[0] == 200
+    assert gateway.summary()["run_kind"] == "model_protocol_test"
 
 
 def test_credential_stays_out_of_public_identity_and_profile_requires_tls(tmp_path, monkeypatch):
@@ -153,11 +167,62 @@ def test_multiline_sse_and_standalone_compaction():
 
     body = b': keepalive\r\nevent: response.completed\r\ndata: {"type":"response.completed",\r\ndata: "response":{"status":"completed"}}\r\n\r\n'
     assert response_semantics("/responses", "text/event-stream", body)["outcome"] == "completed"
-    request = validate_request("/responses/compact", b'{"model":"test-model","input":[]}', "test-model")
+    request = validate_request("/responses/compact", b'{"model":"test-model","input":[],"store":true}', "test-model")
     assert "store" not in json.loads(request)
     result = response_semantics("/responses/compact", "application/json",
                                 b'{"object":"response.compaction","output":[],"usage":{"input_tokens":1}}')
     assert result["outcome"] == "completed" and result["usage"]["input_tokens"] == 1
+
+
+def test_function_tool_schema_may_use_resource_like_field_names():
+    body = {
+        "model": "test-model",
+        "tools": [{
+            "type": "function",
+            "name": "load_asset",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "file_id": {"type": "string"},
+                    "file_url": {"type": "string"},
+                    "image_url": {"type": "string"},
+                },
+            },
+        }],
+    }
+    request = validate_request("/responses", json.dumps(body).encode(), "test-model")
+    assert json.loads(request)["tools"] == body["tools"]
+
+
+def test_malformed_http_200_response_keeps_upstream_status_and_hides_body():
+    config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 1, 10, Asset(b"profile", "text"))
+    gateway = ResponsesGateway(config, transport=lambda *args: (
+        200, "application/json", b'{"status":"in_progress","secret":"must-not-forward"}'))
+    gateway.deadline = time.monotonic() + 10
+    status, content_type, body = gateway.request("/responses", b'{"model":"test-model"}')
+    assert status == 200
+    assert content_type == "application/json"
+    assert body == b'{"error":"Inference response failed validation"}'
+    event = gateway.summary()["requests"][0]
+    assert event["status"] == 200
+    assert event["outcome"] == "protocol_or_transport_error"
+    assert gateway.summary()["infrastructure_error"]
+
+
+def test_socket_handler_closes_cleanly_on_recursive_json_header(tmp_path):
+    config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 1, 10, Asset(b"profile", "text"))
+    gateway = ResponsesGateway(config, transport=lambda *args: pytest.fail("Malformed header reached gateway"))
+    path = tmp_path / "inference.sock"
+    gateway.start(path, time.monotonic() + 10)
+    try:
+        with socket.socket(socket.AF_UNIX) as client:
+            client.settimeout(2)
+            client.connect(str(path))
+            nested = b"[" * 1000 + b"]" * 1000
+            client.sendall(b'{"bytes":0,"path":' + nested + b'}\n')
+            assert client.recv(1) == b""
+    finally:
+        gateway.stop()
 
 
 def test_request_and_response_persist_before_forwarding(tmp_path, monkeypatch):
