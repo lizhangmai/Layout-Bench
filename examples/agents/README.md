@@ -17,3 +17,14 @@ uv run --locked python main.py run tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_AD
 统一镜像的 quickstart 只生成通用协议探针配置。其他 harness 直接提供自己的 `command`、`files` 和 `[harness]` 元数据即可；Layout-Bench 不选择或安装特定 Agent framework。
 
 复制 [inference.example.toml](inference.example.toml) 到本地配置，填写真实端点、模型和主机密钥变量名。付费请求前可运行 `uv run --locked python main.py inference-check <profile.toml> --agent <agent.toml>` 做无请求预检；然后执行根 [README 的模型命令](../../README.md#run-your-agent)。密钥不写入配置文件或 harness 环境。推理请求限制、用量与错误语义见[推理配置](../../docs/running.md#model-inference)。
+
+如果 harness 需要访问 gateway，可直接把 [inference_bridge.py](inference_bridge.py) 作为 reviewed file 放入 `[[files]]`。它不读取密钥，只实现每次连接一条请求的 framing：发送 `{"path": "/responses", "bytes": N}` 加换行和 N 个 JSON 字节，随后读取同样由 JSON header 与定长 body 组成的响应。最小调用方式是：
+
+```python
+from inference_bridge import InferenceClient
+
+response = InferenceClient().create("Describe the next layout step.")
+print(response.status, response.content_type, response.body)
+```
+
+`create` 和 `compact` 会从 `/protocol/inference.json` 使用冻结的 model；请求仍受 profile 的模型、请求数、超时和 Responses 语义校验约束。桥接器只负责 socket framing，不替代 harness 的上下文、工具循环或提交逻辑。

@@ -87,6 +87,16 @@ Record HTTP status separately from response semantics:
 
 The current `responses` wire adapter follows the semantics of the [Responses API](https://developers.openai.com/api/reference/cli/resources/responses/methods/create); validate compatible endpoints separately. A single truncated response does not force the session to end, so a harness may continue within the remaining budget. Deadline cancellation or an exhausted request quota is a budget stop, and previously accepted candidates are still evaluated. Identify standalone `/responses/compact` results by their independent `response.compaction` object; do not inject its undeclared `store` parameter. A future wire adapter should keep these checks local to its own implementation.
 
+The socket framing is deliberately small and provider-neutral. For each request,
+open a new Unix-socket connection, send one compact JSON line
+`{"path":"/responses","bytes":N}` followed by exactly `N` UTF-8 JSON bytes,
+then read one JSON response line `{"status":S,"type":"...","bytes":M}` and
+exactly `M` response bytes. The only request paths are `/responses` and
+`/responses/compact`; a connection carries one request and one response. The
+reference dependency-free client is [inference_bridge.py](../examples/agents/inference_bridge.py).
+The client must treat status, media type, and body as untrusted and leave
+Responses JSON/SSE semantic handling to the harness or a reviewed adapter.
+
 | `run_kind` | Meaning |
 |---|---|
 | `offline_cli_development` | An offline program, or a configured profile with no forwarded inference request |
