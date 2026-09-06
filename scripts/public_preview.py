@@ -145,11 +145,16 @@ def prepare(destination, image=IMAGE):
             config = config.replace(f'"{prefix}/sg13g2-{old}"', json.dumps(str(destination / name)))
     config = config.replace('"layout-bench-tools:local"', json.dumps(image_id))
     (destination / "toolchain.toml").write_text(config)
-    for name in ("protocol-probe",):
+    examples = {
+        "protocol-probe": ("protocol_probe.py",),
+        "canonical-probe": ("canonical_harness.py", "canonical_probe_adapter.py"),
+    }
+    for name, files in examples.items():
         config = (ROOT / f"examples/agents/{name}.toml").read_text()
         config = config.replace('"layout-bench-tools:local"', json.dumps(image_id))
         (destination / f"{name}.toml").write_text(config)
-    (destination / "protocol_probe.py").write_bytes((ROOT / "examples/agents/protocol_probe.py").read_bytes())
+        for filename in files:
+            (destination / filename).write_bytes((ROOT / "examples/agents" / filename).read_bytes())
     print(f"Prepared public task tools: {destination / 'toolchain.toml'}", flush=True)
 
 
@@ -192,6 +197,14 @@ def run(prepared, output, qualification):
     probe = json.loads((output / "probe/run.json").read_text())
     if probe["termination"] != "completed" or probe["outcome"] != "failed" or not probe["candidate"]:
         raise ValueError("Expected a completed protocol probe with a rejected rectangular layout.")
+    canonical_agent = prepared.absolute() / "canonical-probe.toml"
+    python(ROOT / "main.py", "run", TASK / "task.toml", "--agent", canonical_agent,
+           "--toolchain", toolchain, "--output", output / "canonical-probe", expected=1,
+           log=output / "canonical-probe.log")
+    canonical = json.loads((output / "canonical-probe/run.json").read_text())
+    if (canonical["termination"] != "completed" or canonical["outcome"] != "failed"
+            or not canonical["candidate"]):
+        raise ValueError("Expected a completed canonical probe with a rejected rectangular layout.")
     plan = (ROOT / "examples/plans/protocol-probe.toml").read_text()
     for old, path in (("../../tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/task.toml", TASK / "task.toml"),
                       ("../../tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/qualification/toolchain.toml", toolchain),
@@ -204,7 +217,8 @@ def run(prepared, output, qualification):
     if not batch["summary"]["complete"] or any(g["success_rate"] != 0 for g in batch["summary"]["groups"]):
         raise ValueError("Expected complete batch coverage and zero protocol-probe task successes.")
     summary = {"run_kind": "public_preview_smoke", "task": "academy-tgate", "reference": "passed",
-               "protocol_probe": "expected_failure", "batch": "complete", "model_called": False}
+               "protocol_probe": "expected_failure", "canonical_probe": "expected_failure",
+               "batch": "complete", "model_called": False}
     (output / "preview.json").write_text(json.dumps(summary, indent=2) + "\n")
     print(f"PASS: reference, explicit submission and batch statistics. No model was called. Summary: {output / 'preview.json'}")
 
@@ -218,7 +232,8 @@ def quickstart(output, image, network, skip_build):
     ensure_pdk()
     prepare(output / "prepared", image)
     run(output / "prepared", output / "run", False)
-    print(f"Ready with the bundled harness example: {output / 'prepared/protocol-probe.toml'}\n"
+    print(f"Ready with the bundled harness examples: {output / 'prepared/protocol-probe.toml'} and "
+          f"{output / 'prepared/canonical-probe.toml'}\n"
           f"Reviewed resources: {output / 'prepared/agent-resources'}\n"
           f"Judge configuration: {output / 'prepared/toolchain.toml'}", flush=True)
 

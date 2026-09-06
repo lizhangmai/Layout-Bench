@@ -68,6 +68,7 @@ A successful smoke run ends with `PASS` and writes:
 | `build/runs/preview/run/preview.json` | Reference passed, protocol failure expected, batch complete, and no model called. |
 | `build/runs/preview/run/reference/report.json` | The published reference passes DRC/LVS, geometry, and post-layout limits. |
 | `build/runs/preview/run/probe/run.json` | The offline probe submits a rectangle, then fails task evaluation as expected. |
+| `build/runs/preview/run/canonical-probe/run.json` | The provider-neutral canonical loop executes its deterministic adapter and fails task evaluation as expected. |
 | `build/runs/preview/run/batch/summary.json` | Two independent probe runs, complete coverage, and zero task successes. |
 
 The wrapper exits **0** when these expectations hold. Detailed output stays in `.log` files in the run directory. Individual commands distinguish a rejected layout from an infrastructure error: `main.py run` returns **1** for a rejected layout, while `main.py batch` returns **0** when all scheduled measurements finish, even if every layout fails.
@@ -95,7 +96,7 @@ The workflow is simple:
 
 The configured harness receives `/protocol/prompt.txt`, `/protocol/task.json`, `/protocol/harness.json`, `/protocol/resources.json`, and read-only `/task` inputs. It does not receive the public reference solution during a standard run. The harness is opaque to the runner: it only needs to produce the session's explicit submission. When a reviewed PDK bundle is mounted, the runner automatically exposes its container-local `KLAYOUT`/`PYTHONPATH` settings and publishes the import preflight in `/protocol/resources.json`.
 
-To connect a model through the host-owned gateway, copy [inference.example.toml](examples/agents/inference.example.toml), fill in your endpoint, model, and host key-variable name, then run your harness configuration:
+To connect a model through the host-owned gateway, start from the provider-neutral [canonical harness and adapter contract](examples/agents/README.md#provider-neutral-canonical-harness), then copy [inference.example.toml](examples/agents/inference.example.toml), fill in your endpoint, model, and host key-variable name, and run your harness configuration:
 
 ```bash
 uv run --locked python main.py run tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/task.toml \
@@ -188,7 +189,7 @@ They exercise the judge's positive, negative, geometry, extraction, performance,
 
 ## Preview Status
 
-The current release is a local developer preview with one public task, its qualification materials, a generic executable-harness session protocol, a controlled model gateway, configurable EDA backends, and local batch statistics. The next milestones are a configured real-model baseline, same-semantic process feedback, additional wire adapters, and a second public task from another circuit family. APIs and report schemas may change during the preview.
+The current release is a local developer preview with one public task, its qualification materials, a generic executable-harness session protocol, a provider-neutral canonical managed harness, a controlled model gateway, configurable EDA backends, and local batch statistics. The next milestones are a reviewed real-model adapter, same-semantic process feedback, additional wire adapters, and a second public task from another circuit family. APIs and report schemas may change during the preview.
 
 The framework is licensed under [MIT](LICENSE). The public `academy-tgate` task retains its [Apache-2.0 license](tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/LICENSE). The IHP AnalogAcademy intake records retain the upstream license and per-file notices; submodules, tools, and dependencies retain their own licenses and notices; source and resource preparation are described in the [tool guide](docs/tools.md#external-sources).
 

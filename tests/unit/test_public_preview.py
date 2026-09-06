@@ -54,6 +54,12 @@ def test_one_resolved_image_for_compilation_judge_and_agents(preview, tmp_path, 
     probe = load_run_config(destination / "protocol-probe.toml")
     assert probe.image == identity
     assert probe.files["protocol_probe.py"].content == (ROOT / "examples/agents/protocol_probe.py").read_bytes()
+    canonical = load_run_config(destination / "canonical-probe.toml")
+    assert canonical.image == identity
+    assert canonical.files["canonical_harness.py"].content == (ROOT / "examples/agents/canonical_harness.py").read_bytes()
+    assert canonical.files["canonical_probe_adapter.py"].content == (
+        ROOT / "examples/agents/canonical_probe_adapter.py"
+    ).read_bytes()
     assert (destination / "agent-resources").is_dir()
 
 

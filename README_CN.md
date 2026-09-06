@@ -69,6 +69,7 @@ uv run --python 3.12 --locked python scripts/public_preview.py quickstart --outp
 | `build/runs/preview/run/preview.json` | 参考解通过、协议失败符合预期、批量运行完成，且未调用模型。 |
 | `build/runs/preview/run/reference/report.json` | 发布的参考解通过 DRC/LVS、几何和后仿限值。 |
 | `build/runs/preview/run/probe/run.json` | 离线探针成功提交矩形，然后按预期在任务评估中失败。 |
+| `build/runs/preview/run/canonical-probe/run.json` | 不绑定厂商的标准循环执行确定性 adapter，然后按预期在任务评估中失败。 |
 | `build/runs/preview/run/batch/summary.json` | 两次独立探针运行、样本完整覆盖、任务成功数为 0。 |
 
 当这些预期都满足时，包装脚本返回 **0**。详细输出保存在运行目录的 `.log` 文件中。各命令会区分版图被拒绝和基础设施错误：`main.py run` 在版图被拒绝时返回 **1**；`main.py batch` 在所有计划测量都完成时返回 **0**，即使每个版图都失败。
@@ -94,7 +95,7 @@ uv run --locked python scripts/public_preview.py qualify \
 
 配置的 harness 会收到 `/protocol/prompt.txt`、`/protocol/task.json`、`/protocol/harness.json`、`/protocol/resources.json` 和只读的 `/task` 输入。标准运行不会收到公开参考解。Runner 不解析 harness 内部会话；harness 只需按协议显式提交候选版图。挂载经过审查的 PDK 资源包时，Runner 会自动提供容器内的 `KLAYOUT`/`PYTHONPATH`，并在 `/protocol/resources.json` 中给出导入 preflight。
 
-通过主机持有的 gateway 连接模型时，复制 [inference.example.toml](examples/agents/inference.example.toml)，填写端点、模型和主机密钥变量名，再运行自己的 harness 配置：
+通过主机持有的 gateway 连接模型时，先参考[不绑定厂商的 canonical harness 与适配器契约](examples/agents/README.md#provider-neutral-canonical-harness)，再复制 [inference.example.toml](examples/agents/inference.example.toml)，填写端点、模型和主机密钥变量名，再运行自己的 harness 配置：
 
 ```bash
 uv run --locked python main.py run tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/task.toml \
@@ -187,7 +188,7 @@ DRC/LVS 是物理有效性门槛。任务成功还要求所有硬约束、必需
 
 ## 预览状态
 
-当前版本是本地开发预览，包含一个公开任务及其资格材料、通用可执行 harness 会话协议、受控模型 gateway、可配置 EDA 后端和本地批量统计。下一步计划包括配置真实模型基线、同语义过程反馈、更多 wire adapter，以及来自另一电路家族的第二个公开任务。预览期间 API 和报告 schema 可能变化。
+当前版本是本地开发预览，包含一个公开任务及其资格材料、通用可执行 harness 会话协议、不绑定厂商的标准 managed harness、受控模型 gateway、可配置 EDA 后端和本地批量统计。下一步计划包括审查真实模型适配器、同语义过程反馈、更多 wire adapter，以及来自另一电路家族的第二个公开任务。预览期间 API 和报告 schema 可能变化。
 
 框架采用 [MIT](LICENSE) 许可。公开的 `academy-tgate` 任务保留其 [Apache-2.0 许可](tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/LICENSE)。IHP AnalogAcademy 录入清单保留上游许可和逐文件声明；Submodule、工具和依赖保留各自的许可与声明；来源和资料准备见[工具指南](docs/tools.md#external-sources)。
 

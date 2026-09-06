@@ -72,6 +72,15 @@ must be kept separate in reports when context ownership changes. The harness
 runtime remains outside the benchmark core and is not part of task or judge
 semantics.
 
+The public examples include a provider-neutral `managed` reference harness.
+Its fixed loop owns the prompt, conversation history, bounded `run_command`
+tool, and explicit `submit_layout` tool. A separate adapter process converts a
+provider or local model into the normalized JSONL request/response contract;
+the loop does not import a vendor SDK or choose a model. Use the same harness,
+tool definitions, prompt, and budgets when comparing adapters, and record the
+adapter command and version as part of the Agent configuration. The included
+deterministic adapter is a protocol control only, not a model baseline.
+
 The current host-owned gateway implements the `responses` wire family. A
 harness may provide its own bridge to that socket, while credentials and
 endpoint restrictions remain in the host gateway. Supporting another provider

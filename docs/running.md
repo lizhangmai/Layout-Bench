@@ -55,7 +55,7 @@ request. It reports only the credential variable name and a boolean presence
 flag, never the value. It is a compatibility preflight, not a network or
 provider-version guarantee.
 
-A run configuration normally uses `command` and optional `[[files]]`; the session runner does not require a particular Agent framework. The `[harness]` table records protocol metadata only; the harness supplies its own command, bridge, and reviewed files. Model communication and EDA backends are separate; the session does not parse provider sessions or the task circuit.
+A run configuration normally uses `command` and optional `[[files]]`; the session runner does not require a particular Agent framework. The `[harness]` table records protocol metadata only; the harness supplies its own command, bridge, and reviewed files. The public [canonical harness example](../examples/agents/README.md#provider-neutral-canonical-harness) fixes the conversation and tool loop while a separate adapter translates any model provider into normalized JSONL. Model communication and EDA backends are separate; the session does not parse provider sessions or the task circuit.
 
 `--inference <profile.toml>` selects a schema 1 configuration supplied by the trusted operator:
 
