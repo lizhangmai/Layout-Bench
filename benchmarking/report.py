@@ -339,14 +339,18 @@ def summarize_batch(destination, *, allow_in_progress=False):
                 successes = sum(r["task_success"] for r, _ in observed)
                 physical = sum(e["physical_valid"] is True for _, e in observed if e)
                 missing = len(selected)-len(observed)
-                metrics = defaultdict(list)
+                observed_metrics = defaultdict(list)
+                successful_metrics = defaultdict(list)
                 failure_modes = Counter()
                 for report, evaluation in observed:
                     failure_modes.update(_failure_modes(report, evaluation))
-                    if report["task_success"] and evaluation:
+                    if evaluation:
                         for name, metric in evaluation["metrics"].items():
                             if type(metric["value"]) in {int, float} and math.isfinite(metric["value"]):
-                                metrics[name].append({"value": metric["value"], "unit": metric["unit"]})
+                                value = {"value": metric["value"], "unit": metric["unit"]}
+                                observed_metrics[name].append(value)
+                                if report["task_success"]:
+                                    successful_metrics[name].append(value)
                 per_task[task_id] = {
                     "family": manifest["tasks"][task_id]["family"], "scheduled": len(selected),
                     "measured": len(observed), "missing": missing, "successes": successes,
@@ -355,7 +359,8 @@ def summarize_batch(destination, *, allow_in_progress=False):
                     "observed_success_rate": successes/len(observed) if observed else None,
                     "observed_wilson95": wilson(successes, len(observed)),
                     "weight": 1/(len(families)*families[manifest["tasks"][task_id]["family"]]),
-                    "successful_metrics": dict(metrics),
+                    "observed_metrics": dict(observed_metrics),
+                    "successful_metrics": dict(successful_metrics),
                     "failure_modes": dict(failure_modes)}
                 group_failure_modes.update(failure_modes)
             complete = all(t["missing"] == 0 for t in per_task.values())

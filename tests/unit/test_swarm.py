@@ -121,6 +121,19 @@ def test_cross_product_family_weights_and_recomputed_evidence(tmp_path):
         execute(path, tmp_path / "run")
 
 
+def test_summary_retains_numeric_metrics_for_failed_candidates(tmp_path):
+    path = make_plan(tmp_path / "input", tasks=1, agents=1)
+
+    def failing_metrics(_):
+        return {**backends(None), "response": Simulator(factor=2.0)}
+
+    batch = execute_plan(load_plan(path), tmp_path / "run", session_factory=FakeSession,
+                         toolchain_loader=failing_metrics)
+    task = batch["summary"]["groups"][0]["tasks"]["t0"]
+    assert task["successful_metrics"] == {}
+    assert task["observed_metrics"]["delay"] == [{"value": 6.0, "unit": "s"}] * 2
+
+
 def test_scheduling_is_frozen_and_failures_are_not_extra_samples(tmp_path):
     path = make_plan(tmp_path / "input", tasks=1, agents=1, retries=1)
     calls = []
