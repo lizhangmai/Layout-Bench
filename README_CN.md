@@ -24,7 +24,7 @@
 
 Layout-Bench 在隔离容器中运行 Agent，记录明确提交的 GDS，并使用独立的 EDA 工具评估冻结后的候选版图。DRC/LVS 用于建立物理有效性；完整任务还会检查声明的几何约束和后仿性能限值。
 
-> **开发预览版。** 当前仓库包含一个已资格验证的公开任务 `academy-tgate`、对应参考解和 14 个资格验证场景；IHP AnalogAcademy 的全部电路来源已按模块录入 [`tasks/IHP-AnalogAcademy/`](tasks/IHP-AnalogAcademy/README.md)，其余条目明确标为候选、测试平台或仅来源，待冻结网表、约束、评估和资格材料后才会成为可运行任务。基准仍在扩展，API 和报告 schema 可能变化。
+> **公开预览版。** 当前仓库包含一个已资格验证的公开任务 `academy-tgate`、对应参考解和 14 个资格验证场景；IHP AnalogAcademy 的全部电路来源已按模块录入 [`tasks/IHP-AnalogAcademy/`](tasks/IHP-AnalogAcademy/README.md)，没有专属网表、约束、评估和资格材料的电路仍是目录记录，不是可运行任务。本公开包用于本地、可复现的评测。
 
 ## 为什么选择 Layout-Bench？
 
@@ -125,7 +125,7 @@ Layout-Bench 运行一个四阶段循环：
 
 DRC/LVS 是物理有效性门槛。任务成功还要求所有硬约束、必需的后仿 job 和声明的性能限值全部通过。
 
-<a id="documentation-and-development"></a>
+<a id="documentation"></a>
 
 ## 资源
 
@@ -175,7 +175,7 @@ DRC/LVS 是物理有效性门槛。任务成功还要求所有硬约束、必需
 <details>
 <summary><strong>有托管服务或官方排行榜吗？</strong></summary>
 
-没有。当前版本是本地开发预览。托管评估、身份认证和官方排行榜不在范围内。
+没有。这是本地预览包。托管评估、身份认证和官方排行榜不在范围内。
 
 </details>
 
@@ -186,9 +186,9 @@ DRC/LVS 是物理有效性门槛。任务成功还要求所有硬约束、必需
 
 </details>
 
-## 预览状态
+## 范围
 
-当前版本是本地开发预览，包含一个公开任务及其资格材料、通用可执行 harness 会话协议、不绑定厂商的标准 managed harness、受控模型 gateway、可配置 EDA 后端和本地批量统计。下一步计划包括审查真实模型适配器、同语义过程反馈、更多 wire adapter，以及来自另一电路家族的第二个公开任务。预览期间 API 和报告 schema 可能变化。
+本公开包包含公开任务及资格材料、通用可执行 harness 会话协议、不绑定厂商的 canonical harness 示例、由主机持有的模型 gateway、可配置 EDA 后端和本地批量统计。不包含托管评测、身份认证或官方排行榜。
 
 框架采用 [MIT](LICENSE) 许可。公开的 `academy-tgate` 任务保留其 [Apache-2.0 许可](tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/LICENSE)。IHP AnalogAcademy 录入清单保留上游许可和逐文件声明；Submodule、工具和依赖保留各自的许可与声明；来源和资料准备见[工具指南](docs/tools.md#external-sources)。
 

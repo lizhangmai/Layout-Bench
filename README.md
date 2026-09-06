@@ -23,7 +23,7 @@ Measure whether an agent can turn a circuit netlist, physical constraints, and p
 
 Layout-Bench runs an Agent in an isolated container, records an explicit GDS submission, and evaluates the frozen candidate with independent EDA tools. DRC/LVS establish physical validity; a complete task also checks the declared geometry and post-layout performance limits.
 
-> **Developer preview.** The repository currently ships one qualified public task, `academy-tgate`, its reference solution, and 14 qualification scenarios. The complete IHP AnalogAcademy source intake is [catalogued under `tasks/IHP-AnalogAcademy/`](tasks/IHP-AnalogAcademy/README.md); its other circuits are explicitly typed candidates or supporting/source-only records until they receive task-specific netlists, constraints, evaluation, and qualification. APIs and report schemas may change while the benchmark is being extended.
+> **Public preview.** The repository ships one qualified public task, `academy-tgate`, its reference solution, and 14 qualification scenarios. The complete IHP AnalogAcademy source intake is [catalogued under `tasks/IHP-AnalogAcademy/`](tasks/IHP-AnalogAcademy/README.md); circuits without task-specific netlists, constraints, evaluation, and qualification remain catalog records rather than runnable tasks. This package is intended for local, reproducible evaluation.
 
 ## Why Layout-Bench?
 
@@ -126,7 +126,7 @@ Layout-Bench runs a four-phase loop:
 
 DRC/LVS are physical-validity gates. Task success additionally requires every hard constraint, required post-layout job, and declared performance limit to pass.
 
-<a id="documentation-and-development"></a>
+<a id="documentation"></a>
 
 ## Resources
 
@@ -176,7 +176,7 @@ No. The reference GDS and qualification evidence are public for debugging, but s
 <details>
 <summary><strong>Is there a hosted service or official leaderboard?</strong></summary>
 
-No. This release is a local developer preview. Hosted evaluation, identity authentication, and an official leaderboard are outside its scope.
+No. This is a local preview package. Hosted evaluation, identity authentication, and an official leaderboard are outside its scope.
 
 </details>
 
@@ -187,9 +187,9 @@ They exercise the judge's positive, negative, geometry, extraction, performance,
 
 </details>
 
-## Preview Status
+## Scope
 
-The current release is a local developer preview with one public task, its qualification materials, a generic executable-harness session protocol, a provider-neutral canonical managed harness, a controlled model gateway, configurable EDA backends, and local batch statistics. The next milestones are a reviewed real-model adapter, same-semantic process feedback, additional wire adapters, and a second public task from another circuit family. APIs and report schemas may change during the preview.
+This package includes the public task and its qualification materials, the common executable-harness session protocol, a provider-neutral canonical harness example, a host-owned model gateway, configurable EDA backends, and local batch statistics. It does not include hosted evaluation, identity authentication, or an official leaderboard.
 
 The framework is licensed under [MIT](LICENSE). The public `academy-tgate` task retains its [Apache-2.0 license](tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/LICENSE). The IHP AnalogAcademy intake records retain the upstream license and per-file notices; submodules, tools, and dependencies retain their own licenses and notices; source and resource preparation are described in the [tool guide](docs/tools.md#external-sources).
 

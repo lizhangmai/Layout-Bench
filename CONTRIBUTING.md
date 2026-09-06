@@ -83,7 +83,7 @@ Keep general mechanisms in `benchmarking/`; task-specific preparation and qualif
 
 Task success is defined by that task's declared requirements. A DRC/LVS pass alone is not a successful layout, and a deterministic endpoint test is not a model score. Public reference and qualification materials remain available for debugging but outside standard solver inputs.
 
-Architecture changes update [docs/architecture.md](docs/architecture.md). Update configuration, protocol and operating rules in their owning topic from the [README guide table](README.md#documentation-and-development); each contract has one authoritative location. Keep README onboarding short and task-specific qualification evidence with its task. Private task data and deployment configuration are not developed in this repository.
+Architecture changes update [docs/architecture.md](docs/architecture.md). Update configuration, protocol and operating rules in their owning topic from the [README guide table](README.md#resources); each contract has one authoritative location. Keep README onboarding short and task-specific qualification evidence with its task. Private task data and deployment configuration are not developed in this repository.
 
 ## Reporting a problem
 
