@@ -1,0 +1,12 @@
+schema_version = 1
+id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.xschem_post_layout.testbench.comparator_tb"
+title = "IHP AnalogAcademy: comparator_tb"
+source_checkout = "third_party/IHP-AnalogAcademy"
+source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+source_path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/xschem_post_layout/testbench/comparator_tb.sch"
+source_sha256 = "b67a4ebc34e15e5853b3d58b07793c0dec18d27d74ec866db8a45b2ede174237"
+source_bytes = 33365
+source_format = "xschem"
+role = "testbench"
+status = "supporting-source"
+license = "Apache-2.0 upstream root; file-level notices apply"

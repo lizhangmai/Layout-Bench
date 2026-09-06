@@ -1,0 +1,12 @@
+schema_version = 1
+id = "module_3_8_bit_SAR_ADC.part_3_array_components.switch_array.switch_array"
+title = "IHP AnalogAcademy: switch_array"
+source_checkout = "third_party/IHP-AnalogAcademy"
+source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+source_path = "modules/module_3_8_bit_SAR_ADC/part_3_array_components/switch_array/switch_array.sch"
+source_sha256 = "432564f88e65ac5ec08edcc62c3243512e6284d8a41383bfc8f6f12da29c9dd4"
+source_bytes = 10275
+source_format = "xschem"
+role = "design"
+status = "candidate"
+license = "Apache-2.0 upstream root; file-level notices apply"

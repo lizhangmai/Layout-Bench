@@ -6,12 +6,12 @@ cd "${repo_root}"
 test_tmp="$(mktemp -d "${TMPDIR:-/tmp}/layout-bench-task.XXXXXX")"
 trap 'rm -rf "${test_tmp}"' EXIT
 
-uv run --locked python -m benchmarking.prepare tasks/academy-tgate/source.toml \
+uv run --locked python -m benchmarking.prepare tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/source.toml \
     "${test_tmp}/export" \
     --checkout academy=third_party/IHP-AnalogAcademy \
     --checkout pdk=third_party/IHP-Open-PDK
-cmp "${test_tmp}/export/T_gate.spice" tasks/academy-tgate/inputs/circuit.spice
-uv run --locked python main.py task tasks/academy-tgate/task.toml \
+cmp "${test_tmp}/export/T_gate.spice" tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/inputs/circuit.spice
+uv run --locked python main.py task tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/task.toml \
     --materialize "${test_tmp}/inputs" > "${test_tmp}/task.json"
 uv run --locked python -m benchmarking.environment \
     third_party/IHP-Open-PDK "${test_tmp}/pdk" > /dev/null
@@ -23,7 +23,7 @@ docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges \
     --mount "type=bind,src=${test_tmp}/pdk,dst=/pdk,readonly" \
     --mount "type=bind,src=${test_tmp}/inputs,dst=/task,readonly" \
     --mount "type=bind,src=${test_tmp}/task.json,dst=/task-config.json,readonly" \
-    layout-bench-preparer:local bash -s <<'CHECK'
+    layout-bench-tools:local bash -s <<'CHECK'
 set -eu
 cat > /tmp/check.rb <<'RUBY'
 require 'json'

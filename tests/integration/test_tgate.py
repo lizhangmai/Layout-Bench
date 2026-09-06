@@ -14,7 +14,7 @@ from benchmarking.toolchains import load_toolchain
 
 pytestmark = pytest.mark.integration
 ROOT = Path(__file__).resolve().parents[2]
-TASK = ROOT / 'tasks/academy-tgate'
+TASK = ROOT / 'tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate'
 
 
 def test_public_task_reference_invalid_cases_and_pre_post_measurements(tmp_path):

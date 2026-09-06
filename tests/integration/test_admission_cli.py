@@ -11,7 +11,7 @@ from admission_helpers import SECRET, approve, save_policy
 
 from benchmarking.files import Asset
 
-IMAGE = os.environ.get("LAYOUT_BENCH_TEST_IMAGE", "layout-bench-evaluator:local")
+IMAGE = os.environ.get("LAYOUT_BENCH_TEST_IMAGE", "layout-bench-tools:local")
 
 pytestmark = pytest.mark.integration
 ROOT = Path(__file__).resolve().parents[2]
@@ -54,12 +54,12 @@ upper = 1.0
     (tmp_path / "tools.toml").write_text('''schema_version = 1
 [backends.fixture]
 type = "klayout-docker"
-settings = {image = "layout-bench-evaluator:local", check = "artifact"}
+settings = {image = "layout-bench-tools:local", check = "artifact"}
 [bindings]
 check = "fixture"
 extract = "fixture"
 response = "fixture"
-'''.replace('"layout-bench-evaluator:local"', json.dumps(IMAGE)))
+'''.replace('"layout-bench-tools:local"', json.dumps(IMAGE)))
     plan = '''schema_version = 1
 id = "synthetic-admission-probe"
 scope = "synthetic"

@@ -1,0 +1,12 @@
+schema_version = 1
+id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.algorithm.xschem.sar_logic_tb"
+title = "IHP AnalogAcademy: sar_logic_tb"
+source_checkout = "third_party/IHP-AnalogAcademy"
+source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+source_path = "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/xschem/sar_logic_tb.sch"
+source_sha256 = "e5ec878acc3ab9c90361b6c61e6f0f413961def9cf3e4d9c019b6e32881f2d88"
+source_bytes = 9828
+source_format = "xschem"
+role = "testbench"
+status = "supporting-source"
+license = "Apache-2.0 upstream root; file-level notices apply"

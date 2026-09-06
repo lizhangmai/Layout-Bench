@@ -16,7 +16,7 @@ The host uses Linux x86-64, Git, uv, Python 3.12+, and accessible Docker/BuildKi
 
 `quickstart` chains host checks, image build, PDK initialization, preparation, and smoke validation, and writes `prepared/` and `run/`. It reuses build caches and the pinned upstream checkout, but prepares derived resources and fresh run artifacts again. `--skip-build` reuses an existing image and still binds its actual ID; it does not download an unpublished prebuilt image or overwrite existing output. The script assembles only public examples; use `main.py` and your own tool configuration for custom tasks.
 
-The unified image contains KLayout, Python, ngspice, Magic, OpenVAF, Xschem, and the optional native harness runtime used by the bundled example. Each role still starts a separate container. The image contains no task, PDK, harness source, or credentials; `.dockerignore` allows only dependency declarations and lock files. Install the KLayout CLI and Python API from separate packages and have tool checks confirm that their versions agree. The build does not depend on a local KLayout source tree or private cache.
+The unified image contains KLayout, Python, ngspice, Qucs-S/Qucsator, Magic, OpenVAF, and Xschem. Harness runtimes are deliberately outside this image: a harness supplies its executable and reviewed files, or selects an image that provides them, while the benchmark only requires the common session protocol. Each operation still starts an isolated container, but every EDA operation resolves the same image ID. The image contains no task, PDK, harness source, or credentials; `.dockerignore` allows only dependency declarations and lock files. Install the KLayout CLI and Python API from separate packages and have tool checks confirm that their versions agree. The build does not depend on a local KLayout source tree or private cache.
 
 The build needs access to system packages, tool release sites, and the Python index, and verifies downloaded artifacts against fixed digests. The distribution still resolves base system packages, so the final image identity binds the result; the Dockerfile alone cannot guarantee a byte-for-byte rebuild. To use a host loopback proxy:
 
@@ -67,7 +67,7 @@ Keep originals byte-for-byte as supplied upstream and register framework-generat
 
 ### Prepare a Netlist from a Schematic
 
-`benchmarking.prepare` gives a network-isolated preparation container only the files explicitly listed by `source.toml`, invokes Xschem to export the raw LVS netlist, and saves source digests and diagnostic logs. Arguments include the manifest, output directory, and `--checkout NAME=PATH` for each source. Use the unified image with `--image layout-bench-tools:local`. See the [qualification materials](../tasks/academy-tgate/qualification/README.md#source-reproduction) for the exact re-export command for the public task. See the [task guide](tasks.md) for intake and input-semantics checks.
+`benchmarking.prepare` gives a network-isolated preparation container only the files explicitly listed by `source.toml`, invokes Xschem to export the raw LVS netlist, and saves source digests and diagnostic logs. Arguments include the manifest, output directory, and `--checkout NAME=PATH` for each source. Use the unified image with `--image layout-bench-tools:local`. See the [qualification materials](../tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/qualification/README.md#source-reproduction) for the exact re-export command for the public task. See the [task guide](tasks.md) for intake and input-semantics checks.
 
 ## EDA Backend Contract
 
@@ -77,7 +77,7 @@ The backend extension interface is described in [architecture](architecture.md#e
 
 ngspice writes an input role as `<role>.spice` and uses `deck.spice` as its entry point. The testbench declares analyses and measurements; `parameters.values` generates `parameters.spice`, `parameters.measurements` specifies names and units, and `parameters.exports` names declared artifacts. Exit 0 still requires a complete set of finite measurements. See the [RC](../examples/characterization/rc.toml), [divider](../examples/characterization/divider.toml), and [MOS post-layout](../examples/sg13g2/switch.toml) plan examples.
 
-Magic's `layout.extract_capacitance` takes the top cell and ordered `ports` from trusted configuration; check the port list against the authoritative netlist. Later jobs must reference the extracted netlist exported as-is rather than replacing it with string substitutions or a hand-written netlist. The current flow extracts devices and parasitic capacitance only and records `wire_resistance=false`; it cannot claim complete RC extraction. See the [task qualification materials](../tasks/academy-tgate/qualification/README.md) for the exact conditions and calibration scope.
+Magic's `layout.extract_capacitance` takes the top cell and ordered `ports` from trusted configuration; check the port list against the authoritative netlist. Later jobs must reference the extracted netlist exported as-is rather than replacing it with string substitutions or a hand-written netlist. The current flow extracts devices and parasitic capacitance only and records `wire_resistance=false`; it cannot claim complete RC extraction. See the [task qualification materials](../tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/qualification/README.md) for the exact conditions and calibration scope.
 
 ### KLayout Physical Checks
 
@@ -95,17 +95,26 @@ LVS can export a native `klayout-lvs` database and a JSON binding. The binding r
 
 Magic's SPICE export drops the `!` from `!CONTROL`, causing a collision with `CONTROL`. The extraction adapter first uses KLayout on an isolated GDS copy to give unsafe interface names unique aliases, preserves the original candidate and mapping evidence, and then uses the native SPICE reader to check the count, names, and order of exported ports. It does not rewrite the original task netlist; simulation connects through the declared port order. For pre-layout simulation, the PDK's native reader and the KLayout writer generate model calls from the authoritative netlist; no additional SPICE/CDL parser is introduced.
 
+### Qucs-S and Qucsator
+
+The unified image installs Qucs-S 26.1.1 from the pinned Ubuntu 24.04 amd64 OBS package and builds the official Qucsator 0.0.20 core from commit `e995f9acc71a8c7319286944e4a1692318b9dd80`. The image therefore provides `qucs-s`, `qucsator`, `qucsator_rf`, and `qucsconv` alongside Ngspice. Qucs-S is used headlessly as the `.sch` parser/netlister (`QT_QPA_PLATFORM=offscreen`); the simulator remains an explicit backend.
+
+Xyce is not silently substituted by Qucsator. The upstream project does not publish an Ubuntu-compatible open-source binary; a reproducible Xyce backend needs its own source build (including Trilinos) and is outside this image until that build is pinned and validated. Current IHP MPA schematics that declare Xyce analyses must consequently report the backend as unavailable rather than claiming a completed simulation.
+
 <a id="manual-tools"></a>
 
-## Maintaining Legacy Examples and Role-Specific Images
+## Unified tool image
 
-Some low-level fixtures in the repository still refer to `layout-bench-<target>:local`. They do not consume the quickstart configuration automatically. Build the target used by a fixture when maintaining it:
+The repository publishes and tests one image: `layout-bench-tools:local`. It contains the complete EDA runtime used by preparation, simulation, extraction, and judging, including Qucs-S, Qucsator/QucsatorRF, Ngspice, Xschem, Magic, OpenVAF, and KLayout. Harnesses remain an external seam and are not baked into the image. Each operation still runs in an isolated container invocation, but all EDA invocations resolve the same frozen image ID.
 
-```text
-docker build --target <target> -t layout-bench-<target>:local .
+Build and check that image directly:
+
+```bash
+uv run --locked python scripts/public_preview.py build --image layout-bench-tools:local
+bash tests/integration/test_toolchain.sh
 ```
 
-Available targets are `agent`, `evaluator`, `preparer`, `simulator`, `extractor`, and `model-compiler`. Ordinary users should use the unified image. Prepare the shared support paths for old configurations with the commands below; MOS compilation defaults to the `model-compiler` image:
+Role-specific image tags are not part of the supported workflow. This keeps tool versions and backend availability consistent across preparation, solving, and evaluation. Prepare the shared support paths with the commands below:
 
 ```bash
 uv run --locked python -m benchmarking.environment third_party/IHP-Open-PDK build/support/pdk-view

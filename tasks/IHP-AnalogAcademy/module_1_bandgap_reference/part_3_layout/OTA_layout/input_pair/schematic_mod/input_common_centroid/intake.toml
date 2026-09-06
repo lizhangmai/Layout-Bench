@@ -1,0 +1,12 @@
+schema_version = 1
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.input_pair.schematic_mod.input_common_centroid"
+title = "IHP AnalogAcademy: input_common_centroid"
+source_checkout = "third_party/IHP-AnalogAcademy"
+source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+source_path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/input_pair/schematic_mod/input_common_centroid.sch"
+source_sha256 = "a378667699cf81eff1a49baa7a075836d5641b95836a4063810d06f11a303aef"
+source_bytes = 2981
+source_format = "xschem"
+role = "design"
+status = "candidate"
+license = "Apache-2.0 upstream root; file-level notices apply"

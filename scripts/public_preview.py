@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-TASK = ROOT / "tasks/academy-tgate"
+TASK = ROOT / "tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate"
 IMAGE = "layout-bench-tools:local"
 RUNS = "build/runs"
 SUPPORT = "build/support"
@@ -78,12 +78,11 @@ def prepare(destination, image=IMAGE):
         # repository-wide build/support output namespace.
         for prefix in (SUPPORT, ".cache"):
             config = config.replace(f'"{prefix}/sg13g2-{old}"', json.dumps(str(destination / name)))
-    for target in ("evaluator", "simulator", "extractor"):
-        config = config.replace(f'"layout-bench-{target}:local"', json.dumps(image_id))
+    config = config.replace('"layout-bench-tools:local"', json.dumps(image_id))
     (destination / "toolchain.toml").write_text(config)
-    for name, old_image in (("protocol-probe", "evaluator"), ("codex-sg13g2", "agent")):
+    for name in ("protocol-probe",):
         config = (ROOT / f"examples/agents/{name}.toml").read_text()
-        config = config.replace(f'"layout-bench-{old_image}:local"', json.dumps(image_id))
+        config = config.replace('"layout-bench-tools:local"', json.dumps(image_id))
         (destination / f"{name}.toml").write_text(config)
     (destination / "protocol_probe.py").write_bytes((ROOT / "examples/agents/protocol_probe.py").read_bytes())
     print(f"Prepared public task tools: {destination / 'toolchain.toml'}", flush=True)
@@ -129,8 +128,8 @@ def run(prepared, output, qualification):
     if probe["termination"] != "completed" or probe["outcome"] != "failed" or not probe["candidate"]:
         raise ValueError("Expected a completed protocol probe with a rejected rectangular layout.")
     plan = (ROOT / "examples/plans/protocol-probe.toml").read_text()
-    for old, path in (("../../tasks/academy-tgate/task.toml", TASK / "task.toml"),
-                      ("../../tasks/academy-tgate/qualification/toolchain.toml", toolchain),
+    for old, path in (("../../tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/task.toml", TASK / "task.toml"),
+                      ("../../tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/qualification/toolchain.toml", toolchain),
                       ("../agents/protocol-probe.toml", agent)):
         plan = plan.replace(json.dumps(old), json.dumps(str(path)))
     (output / "plan.toml").write_text(plan)
@@ -154,7 +153,7 @@ def quickstart(output, image, network, skip_build):
     call("git", "submodule", "update", "--init", "--recursive", "--depth", "1", "third_party/IHP-Open-PDK")
     prepare(output / "prepared", image)
     run(output / "prepared", output / "run", False)
-    print(f"Ready with the bundled harness example: {output / 'prepared/codex-sg13g2.toml'}\n"
+    print(f"Ready with the bundled harness example: {output / 'prepared/protocol-probe.toml'}\n"
           f"Reviewed resources: {output / 'prepared/agent-resources'}\n"
           f"Judge configuration: {output / 'prepared/toolchain.toml'}", flush=True)
 

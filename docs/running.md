@@ -48,11 +48,7 @@ Use mode `0700` for run directories and the host temporary root, `0600` for even
 
 Copy [inference.example.toml](../examples/agents/inference.example.toml), fill in your endpoint, model, and host key-variable name, and use the command in [README](../README.md#run-your-agent). Only a command with a real inference configuration contacts the selected model; the public preview and protocol tests do not require a model account.
 
-A run configuration normally uses `command` and optional `[[files]]`; the session runner does not require a particular Agent framework. A built-in harness profile may prepare a command and reviewed files, but it produces the same `layout-session.v1` interface. Model communication and EDA backends are separate; the session does not parse provider sessions or the task circuit.
-
-The legacy top-level `adapter` key is accepted only as a migration path for the bundled profile. New configurations should use `[harness]` or provide their own `command` and `files`.
-
-The optional built-in profile is one example of a native harness: it invokes a pinned non-interactive CLI with an isolated home, ignores host configuration, and uses the outer container for sandboxing and budgets. Other harnesses may provide their own command and bridge; the runner does not require them to reproduce this implementation.
+A run configuration normally uses `command` and optional `[[files]]`; the session runner does not require a particular Agent framework. The `[harness]` table records protocol metadata only; the harness supplies its own command, bridge, and reviewed files. Model communication and EDA backends are separate; the session does not parse provider sessions or the task circuit.
 
 `--inference <profile.toml>` selects a schema 1 configuration supplied by the trusted operator:
 
@@ -114,7 +110,7 @@ uv run --locked python main.py batch build/runs/preview/run/plan.toml --output b
 uv run --locked python main.py summarize build/runs/probe-batch
 ```
 
-This plan repeats an offline rectangle probe and is expected to have a task success rate of 0. To customize it, start from the generated file or [protocol-probe.toml](../examples/plans/protocol-probe.toml). Repository examples refer to old manual tool paths and require preparation according to the [tools guide](tools.md#manual-tools). Batch-plan schema 1 is shown below; unknown fields and versions are rejected:
+This plan repeats an offline rectangle probe and is expected to have a task success rate of 0. To customize it, start from the generated file or [protocol-probe.toml](../examples/plans/protocol-probe.toml); use the single prepared toolchain image described in the [tools guide](tools.md#manual-tools). Batch-plan schema 1 is shown below; unknown fields and versions are rejected:
 
 | Field | Semantics |
 |---|---|

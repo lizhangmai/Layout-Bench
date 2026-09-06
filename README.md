@@ -23,7 +23,7 @@ Measure whether an agent can turn a circuit netlist, physical constraints, and p
 
 Layout-Bench runs an Agent in an isolated container, records an explicit GDS submission, and evaluates the frozen candidate with independent EDA tools. DRC/LVS establish physical validity; a complete task also checks the declared geometry and post-layout performance limits.
 
-> **Developer preview.** The repository currently ships one public task, `academy-tgate`, its reference solution, and 14 qualification scenarios. APIs and report schemas may change while the benchmark is being extended.
+> **Developer preview.** The repository currently ships one qualified public task, `academy-tgate`, its reference solution, and 14 qualification scenarios. The complete IHP AnalogAcademy source intake is [catalogued under `tasks/IHP-AnalogAcademy/`](tasks/IHP-AnalogAcademy/README.md); its other circuits are explicitly typed candidates or supporting/source-only records until they receive task-specific netlists, constraints, evaluation, and qualification. APIs and report schemas may change while the benchmark is being extended.
 
 ## Why Layout-Bench?
 
@@ -55,7 +55,7 @@ cd Layout-Bench
 uv run --python 3.12 --locked python scripts/public_preview.py quickstart --output build/runs/preview
 ```
 
-This builds one `layout-bench-tools:local` image, fetches the pinned PDK, prepares reviewed resources, and runs the reference, submission, and batch checks. KLayout, ngspice, Magic, OpenVAF, Xschem, Python, and the optional native harness runtime are already in that image; no separate Agent image is needed. The quick start never calls a model account.
+This builds one `layout-bench-tools:local` image, fetches the pinned PDK, prepares reviewed resources, and runs the reference, submission, and batch checks. KLayout, ngspice, Qucs-S/Qucsator, Magic, OpenVAF, Xschem, and Python are in that image; harness runtimes are supplied by each harness through the common session contract, so no role-specific EDA image is needed. The quick start never calls a model account.
 
 The first run downloads tools and the PDK and may take several minutes. Later runs reuse Docker layers and the PDK checkout while preparing fresh, verified resources and workspaces. Choose a new `--output` directory for each run; existing evidence is never overwritten. Use `--skip-build` to reuse an already built image. Only the PDK submodule is initialized; the other public source submodules are optional.
 
@@ -80,7 +80,7 @@ uv run --locked python scripts/public_preview.py qualify \
   --output build/runs/preview-qualification
 ```
 
-The [reference solution](tasks/academy-tgate/reference/README.md) and [qualification evidence](tasks/academy-tgate/qualification/README.md) are public for debugging. Standard Agent runs receive only the declared task inputs and never the reference solution.
+The [reference solution](tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/reference/README.md) and [qualification evidence](tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/qualification/README.md) are public for debugging. Standard Agent runs receive only the declared task inputs and never the reference solution.
 
 <a id="run-your-agent"></a>
 
@@ -98,7 +98,7 @@ The configured harness receives `/protocol/prompt.txt`, `/protocol/task.json`, `
 To connect a model through the host-owned gateway, copy [inference.example.toml](examples/agents/inference.example.toml), fill in your endpoint, model, and host key-variable name, then run your harness configuration:
 
 ```bash
-uv run --locked python main.py run tasks/academy-tgate/task.toml \
+uv run --locked python main.py run tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/task.toml \
   --agent path/to/agent.toml \
   --resources build/runs/preview/prepared/agent-resources \
   --toolchain build/runs/preview/prepared/toolchain.toml \
@@ -153,9 +153,9 @@ No. DRC/LVS establish physical validity under the selected rules. Task success a
 </details>
 
 <details>
-<summary><strong>Can I use a harness other than the built-in profile?</strong></summary>
+<summary><strong>Can I use a different harness?</strong></summary>
 
-Yes. Any executable that follows the session protocol can be configured with its command, reviewed files, resources, and budget. Built-in profiles are optional conveniences; the runner does not require a particular Agent framework.
+Yes. Any executable that follows the session protocol can be configured with its command, reviewed files, resources, and budget. The runner does not require or install a particular Agent framework.
 
 </details>
 
@@ -184,7 +184,7 @@ They exercise the judge's positive, negative, geometry, extraction, performance,
 
 The current release is a local developer preview with one public task, its qualification materials, a generic executable-harness session protocol, a controlled model gateway, configurable EDA backends, and local batch statistics. The next milestones are a configured real-model baseline, same-semantic process feedback, additional wire adapters, and a second public task from another circuit family. APIs and report schemas may change during the preview.
 
-The framework is licensed under [MIT](LICENSE). The public `academy-tgate` task retains its [Apache-2.0 license](tasks/academy-tgate/LICENSE). Submodules, tools, and dependencies retain their own licenses and notices; source and resource preparation are described in the [tool guide](docs/tools.md#external-sources).
+The framework is licensed under [MIT](LICENSE). The public `academy-tgate` task retains its [Apache-2.0 license](tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/LICENSE). The IHP AnalogAcademy intake records retain the upstream license and per-file notices; submodules, tools, and dependencies retain their own licenses and notices; source and resource preparation are described in the [tool guide](docs/tools.md#external-sources).
 
 <p align="center">
 <a href="README_CN.md">阅读中文文档 →</a>

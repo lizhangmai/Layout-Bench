@@ -1,0 +1,12 @@
+schema_version = 1
+id = "module_1_bandgap_reference.part_2_full_bgr.schematic.bandgap_reference_temp"
+title = "IHP AnalogAcademy: bandgap_reference_temp"
+source_checkout = "third_party/IHP-AnalogAcademy"
+source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+source_path = "modules/module_1_bandgap_reference/part_2_full_bgr/schematic/bandgap_reference_temp.sch"
+source_sha256 = "df2a7d3f1927f6ff574fafad3e761d7f7615cd78296b619597d0eda0e3ce7088"
+source_bytes = 6153
+source_format = "xschem"
+role = "design"
+status = "candidate"
+license = "Apache-2.0 upstream root; file-level notices apply"

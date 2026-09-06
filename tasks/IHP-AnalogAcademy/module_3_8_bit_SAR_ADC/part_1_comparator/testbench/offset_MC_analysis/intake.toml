@@ -1,0 +1,12 @@
+schema_version = 1
+id = "module_3_8_bit_SAR_ADC.part_1_comparator.testbench.offset_MC_analysis"
+title = "IHP AnalogAcademy: offset_MC_analysis"
+source_checkout = "third_party/IHP-AnalogAcademy"
+source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+source_path = "modules/module_3_8_bit_SAR_ADC/part_1_comparator/testbench/offset_MC_analysis.sch"
+source_sha256 = "d9f288760b3f740636f31f7557bccd6f1eed46f328329d46bc43e3d09588e864"
+source_bytes = 3595
+source_format = "xschem"
+role = "testbench"
+status = "supporting-source"
+license = "Apache-2.0 upstream root; file-level notices apply"

@@ -1,0 +1,12 @@
+schema_version = 1
+id = "module_2_50GHz_MPA.part_3_nonlinear_analysis.schematic.load_pull_2.load_pull_final"
+title = "IHP AnalogAcademy: load_pull_final"
+source_checkout = "third_party/IHP-AnalogAcademy"
+source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+source_path = "modules/module_2_50GHz_MPA/part_3_nonlinear_analysis/schematic/load_pull_2/load_pull_final.sch"
+source_sha256 = "9482f8d3b832d73943cb793689f893664317f01f7b8057ebae40d8ebe2f81c5f"
+source_bytes = 3792
+source_format = "qucs"
+role = "design"
+status = "source-only"
+license = "Apache-2.0 upstream root; file-level notices apply"

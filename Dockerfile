@@ -34,20 +34,22 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 WORKDIR /workspace
 CMD ["bash"]
 
-FROM common AS preparer
+FROM common AS qucsator-build
+ARG QUCSATOR_COMMIT=e995f9acc71a8c7319286944e4a1692318b9dd80
+ARG QUCSATOR_SHA256=ee77425b6714b14ee8ac2ba5c33709c00802fd3cdc1f6519cf5d7df033644964
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends xschem=3.4.4-1 \
+    && apt-get install -y --no-install-recommends build-essential cmake flex bison gperf adms \
     && rm -rf /var/lib/apt/lists/*
-USER ubuntu
-
-FROM common AS evaluator
-USER ubuntu
-
-FROM common AS simulator
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends ngspice=42+ds-3build1 \
-    && rm -rf /var/lib/apt/lists/*
-USER ubuntu
+RUN curl --fail --show-error --silent --location --retry 3 --retry-all-errors --connect-timeout 20 \
+        "https://codeload.github.com/Qucs/qucsator/tar.gz/${QUCSATOR_COMMIT}" \
+        --output /tmp/qucsator.tar.gz \
+    && echo "${QUCSATOR_SHA256}  /tmp/qucsator.tar.gz" | sha256sum --check \
+    && tar -xzf /tmp/qucsator.tar.gz -C /tmp \
+    && cmake -S "/tmp/qucsator-${QUCSATOR_COMMIT}" -B /tmp/qucsator-build \
+        -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/opt/qucsator \
+    && cmake --build /tmp/qucsator-build --parallel 4 \
+    && cmake --install /tmp/qucsator-build \
+    && rm -rf /tmp/qucsator.tar.gz "/tmp/qucsator-${QUCSATOR_COMMIT}" /tmp/qucsator-build
 
 FROM common AS model-compiler
 RUN apt-get update \
@@ -77,35 +79,32 @@ RUN curl --fail --show-error --silent --location --retry 3 --retry-all-errors --
     && make install \
     && install -D LICENSE /opt/magic/share/doc/LICENSE
 
-FROM common AS extractor
-COPY --from=magic-build /opt/magic /opt/magic
-ENV PATH=/opt/magic/bin:${PATH}
-USER ubuntu
-
-FROM common AS agent
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends git jq make ripgrep \
-    && rm -rf /var/lib/apt/lists/*
-RUN curl --fail --show-error --silent --location --retry 3 --retry-all-errors --connect-timeout 20 \
-        https://github.com/openai/codex/releases/download/rust-v0.150.1/codex-package-x86_64-unknown-linux-musl.tar.gz \
-        --output /tmp/codex.tar.gz \
-    && echo '00aba704f029f6dc0d948be407a756e0c97cc840132fd691353b2c6b0a505b17  /tmp/codex.tar.gz' | sha256sum --check \
-    && mkdir -p /opt/codex \
-    && tar -xzf /tmp/codex.tar.gz -C /opt/codex \
-    && rm /tmp/codex.tar.gz \
-    && ln -s /opt/codex/bin/codex /usr/local/bin/codex \
-    && test -x /opt/codex/bin/codex-code-mode-host \
-    && install -d -o ubuntu -g ubuntu /home/ubuntu/.codex
-USER ubuntu
-RUN codex --version
-
-# Default public development environment. Roles still run in separate containers.
-# The narrower targets above remain available for custom toolchain profiles.
-FROM agent AS tools
+# The public development environment is one image. Every preparation, solver,
+# and judge container is an isolated invocation of this same EDA toolchain.
+# Harness runtimes are supplied by the harness (or its selected image); the
+# benchmark image does not install or privilege a particular Agent framework.
+FROM common AS tools
 USER root
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ngspice=42+ds-3build1 xschem=3.4.4-1 binutils \
+    && apt-get install -y --no-install-recommends git jq make ripgrep \
+        ngspice=42+ds-3build1 xschem=3.4.4-1 binutils \
     && rm -rf /var/lib/apt/lists/*
+ARG QUCS_S_VERSION=26.1.1-1
+ARG QUCS_S_SHA256=580c3cf5aa7f99bf76ee49822317633c46649aebec2f64f83fb52a2db8b45fab
+RUN curl --fail --show-error --silent --location --retry 3 --retry-all-errors --connect-timeout 20 \
+        "https://download.opensuse.org/repositories/home:/ra3xdh/xUbuntu_24.04/amd64/qucs-s_${QUCS_S_VERSION}_amd64.deb" \
+        --output /tmp/qucs-s.deb \
+    && echo "${QUCS_S_SHA256}  /tmp/qucs-s.deb" | sha256sum --check \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends /tmp/qucs-s.deb \
+    && rm /tmp/qucs-s.deb \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=qucsator-build /opt/qucsator /opt/qucsator
+ENV PATH=/opt/qucsator/bin:${PATH}
+RUN test -x /usr/bin/qucs-s \
+    && test -x /opt/qucsator/bin/qucsator \
+    && test -x /usr/bin/qucsator_rf \
+    && test -x /opt/qucsator/bin/qucsconv
 COPY --from=model-compiler /usr/local/bin/openvaf /usr/local/bin/openvaf
 COPY --from=model-compiler /usr/local/share/doc/openvaf /usr/local/share/doc/openvaf
 COPY --from=magic-build /opt/magic /opt/magic

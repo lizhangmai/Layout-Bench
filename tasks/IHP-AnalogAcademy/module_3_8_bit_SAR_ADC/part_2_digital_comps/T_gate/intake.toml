@@ -1,0 +1,13 @@
+schema_version = 1
+id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.schematic.T_gate"
+title = "IHP AnalogAcademy: T_gate"
+source_checkout = "third_party/IHP-AnalogAcademy"
+source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+source_path = "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/schematic/T_gate.sch"
+source_sha256 = "c3dc8407942cc88e9cd0ed0fae6549c090a3d753fa95fdf1e97582e5e4a873fd"
+source_bytes = 988
+source_format = "xschem"
+role = "design"
+status = "qualified"
+license = "Apache-2.0 upstream root; file-level notices apply"
+task_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/task.toml"

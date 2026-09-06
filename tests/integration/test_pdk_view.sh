@@ -11,7 +11,7 @@ docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges \
     --mount "type=bind,src=${test_tmp}/pdk,dst=/pdk,readonly" \
     -e PYTHONDONTWRITEBYTECODE=1 -e KLAYOUT=1 \
     -e PYTHONPATH=/pdk/ihp-sg13g2/libs.tech/klayout/python:/pdk/ihp-sg13g2/libs.tech/klayout/python/pycell4klayout-api/source/python \
-    layout-bench-agent:local python - <<'PY'
+    layout-bench-tools:local python - <<'PY'
 import pya
 import sg13g2_pycell_lib
 

@@ -3,7 +3,7 @@
 import pytest
 
 from benchmarking.files import Asset
-from benchmarking.harnesses import SESSION_PROTOCOL, prepare_harness
+from benchmarking.harnesses import SESSION_PROTOCOL
 from benchmarking.model_config import load_run_config
 
 pytestmark = pytest.mark.unit
@@ -75,40 +75,6 @@ mode = "managed"
     assert config.harness.mode == "managed"
 
 
-def test_builtin_codex_profile_is_only_a_harness_preparation(tmp_path):
-    config = load_run_config(
-        _config(
-            tmp_path,
-            '''[harness]
-id = "codex"
-''',
-            command=None,
-        )
-    )
-
-    assert config.command == ("python", "/agent/codex_cli.py")
-    assert config.harness.mode == "native"
-    assert config.harness.wire_api == "responses"
-    assert "codex_cli.py" in config.files
-
-
-def test_legacy_adapter_spelling_is_migrated_without_entering_run_config(tmp_path):
-    path = _config(tmp_path, "")
-    path.write_text(path.read_text().replace("[\"python\", \"/agent/cli.py\"]", "[\"python\", \"/agent/codex_cli.py\"]")
-                     .replace("command = [\"python\", \"/agent/codex_cli.py\"]\n", "adapter = \"codex\"\n"))
-    config = load_run_config(path)
-
-    assert config.harness.id == "codex"
-    assert config.command == ("python", "/agent/codex_cli.py")
-
-
-def test_unknown_legacy_adapter_requires_the_generic_harness_table(tmp_path):
-    path = _config(tmp_path, "")
-    path.write_text(path.read_text().replace("command = [\"python\", \"/agent/cli.py\"]\n", "adapter = \"custom\"\n"))
-    with pytest.raises(ValueError, match="Legacy adapter"):
-        load_run_config(path)
-
-
 @pytest.mark.parametrize("mode", ["", "unsupported"])
 def test_unknown_harness_mode_is_rejected(tmp_path, mode):
     with pytest.raises(ValueError, match="harness.mode"):
@@ -121,11 +87,3 @@ def test_unknown_harness_protocol_is_rejected(tmp_path):
 id = "runner"
 protocol = "other-session.v1"
 '''))
-
-
-def test_harness_preparation_rejects_codex_command_override():
-    with pytest.raises(ValueError, match="supplies its own command"):
-        prepare_harness(
-            {"harness": {"id": "codex"}, "command": ["custom"]},
-            "/tmp",
-        )

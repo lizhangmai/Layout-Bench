@@ -1,0 +1,12 @@
+schema_version = 1
+id = "module_2_50GHz_MPA.part_3_nonlinear_analysis.schematic.compression_1.harmonic_balance"
+title = "IHP AnalogAcademy: harmonic_balance"
+source_checkout = "third_party/IHP-AnalogAcademy"
+source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+source_path = "modules/module_2_50GHz_MPA/part_3_nonlinear_analysis/schematic/compression_1/harmonic_balance.sch"
+source_sha256 = "2e31797a261b106a351e8940ededb4ce4d1be927427e9eb8b855d03acef75819"
+source_bytes = 4216
+source_format = "qucs"
+role = "design"
+status = "source-only"
+license = "Apache-2.0 upstream root; file-level notices apply"

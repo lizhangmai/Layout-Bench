@@ -31,9 +31,9 @@ def context(tmp_path_factory):
     fixtures = generate(root / "view", root / "fixtures")
     backends = {
         "layout.extract_capacitance": MagicCapacitanceDocker(
-            image="layout-bench-extractor:local", support=str(root / "magic"),
+            image="layout-bench-tools:local", support=str(root / "magic"),
             technology="magic/ihp-sg13g2.tech", tech_name="ihp-sg13g2", style="ngspice()"),
-        "circuit.simulate": NgspiceDocker(image="layout-bench-simulator:local", support=str(root / "models")),
+        "circuit.simulate": NgspiceDocker(image="layout-bench-tools:local", support=str(root / "models")),
     }
     return fixtures, backends
 
@@ -92,7 +92,7 @@ assert len(devices) == 1
 x = devices[0]
 assert {p.name(): x.net_for_pin(p.id()).name for p in x.circuit_ref().each_pin()} == {p: p for p in ("D", "G", "S", "B")}
 '''
-        check = DockerTool("layout-bench-extractor:local", ["magic", "--version"], 30).run(
+        check = DockerTool("layout-bench-tools:local", ["magic", "--version"], 30).run(
             ["python", "inspect.py"], {"inspect.py": Asset(inspect, "python"),
                                        "circuit.spice": Asset(stub + extracted, "spice")}, {})
         assert check.returncode == 0 and not check.reason, check.evidence

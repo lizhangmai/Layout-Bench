@@ -1,0 +1,12 @@
+schema_version = 1
+id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.bootstrap_switch.schematic.inverter"
+title = "IHP AnalogAcademy: inverter"
+source_checkout = "third_party/IHP-AnalogAcademy"
+source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+source_path = "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/bootstrap_switch/schematic/inverter.sch"
+source_sha256 = "c6dea75629e5f536948d095a53ad57cd1d5f8062405fca765b98a0d8c45661ba"
+source_bytes = 948
+source_format = "xschem"
+role = "design"
+status = "candidate"
+license = "Apache-2.0 upstream root; file-level notices apply"

@@ -18,7 +18,7 @@ from .files import relative as _relative
 
 
 def export_xschem(manifest: Path, checkouts: dict[str, Path], output: Path,
-                  image: str = "layout-bench-preparer:local") -> None:
+                  image: str = "layout-bench-tools:local") -> None:
     manifest_bytes = manifest.read_bytes()
     spec = tomllib.loads(manifest_bytes.decode("utf-8"))
     _keys(spec, {"tool", "schematic", "netlist", "files"}, set(), "source")
@@ -123,7 +123,7 @@ if __name__ == "__main__":
     parser.add_argument("manifest", type=Path)
     parser.add_argument("output", type=Path, help="New directory for the raw export and provenance")
     parser.add_argument("--checkout", action="append", required=True, metavar="NAME=PATH")
-    parser.add_argument("--image", default="layout-bench-preparer:local")
+    parser.add_argument("--image", default="layout-bench-tools:local")
     args = parser.parse_args()
     checkouts = {}
     for entry in args.checkout:

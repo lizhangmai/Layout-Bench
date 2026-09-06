@@ -1,0 +1,12 @@
+schema_version = 1
+id = "module_2_50GHz_MPA.part_4_layout_EMsims.em_components.core_1.post_layout_sim.schematic.core_pl_sim"
+title = "IHP AnalogAcademy: core_pl_sim"
+source_checkout = "third_party/IHP-AnalogAcademy"
+source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+source_path = "modules/module_2_50GHz_MPA/part_4_layout_EMsims/em_components/core_1/post_layout_sim/schematic/core_pl_sim.sch"
+source_sha256 = "0d18b8af728835890edc4aa087966554830815cc32b9eb3ce6cc296a59336df3"
+source_bytes = 3810
+source_format = "qucs"
+role = "design"
+status = "source-only"
+license = "Apache-2.0 upstream root; file-level notices apply"

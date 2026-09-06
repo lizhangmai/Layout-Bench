@@ -1,6 +1,14 @@
 # Adding Tasks and Validating the Judge
 
-See the complete example in [academy-tgate/task.toml](../tasks/academy-tgate/task.toml). Intake proceeds by checking sources, freezing inputs, defining constraints and an evaluation plan, preparing tool bindings, and then validating with a reference solution and counterexamples. Models, budgets, repetitions, and access policy belong to the outer [run plan](running.md).
+See the complete example in [the IHP AnalogAcademy transmission-gate task](../tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/task.toml). The complete upstream circuit inventory is [catalogued under `tasks/IHP-AnalogAcademy/`](../tasks/IHP-AnalogAcademy/README.md); intake proceeds by checking sources, freezing inputs, defining constraints and an evaluation plan, preparing tool bindings, and then validating with a reference solution and counterexamples. Models, budgets, repetitions, and access policy belong to the outer [run plan](running.md).
+
+The catalog is an intake index, not a shortcut around task qualification. A
+`candidate` record becomes a benchmark task only after its authoritative
+netlist, physical constraints, evaluation plan, and independent qualification
+evidence are frozen. Qucs/RF schematics and testbenches remain explicitly
+typed as `source-only` or `supporting-source`; they are not silently treated as
+`netlist_to_gds` tasks. Each record is bound to the upstream submodule commit
+and source digest, so updating the submodule requires a new intake review.
 
 <a id="task-design"></a>
 
@@ -126,7 +134,7 @@ These tests validate the judge implementation and task measurability; they do no
 
 When a public task is fully entered, provide its reference GDS, generator script, reproduction steps, check configuration, expected results, and counterexamples for key rejection paths. Archive pre-layout/post-layout calibration under the same conditions and record the actual tool identity. Pre-layout simulation cannot replace candidate post-layout simulation, and a witness is not an optimum-quality baseline. Fix families and measurement conditions before comparison; size variants of one template do not constitute independent circuit knowledge.
 
-See the [academy-tgate qualification materials](../tasks/academy-tgate/qualification/README.md) for the example's scope, calibration, and requalification commands. Qualification applies only to the fixed task, tools, rules, and declared conditions; requalify the affected scope after an environment change.
+See the [academy-tgate qualification materials](../tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/qualification/README.md) for the example's scope, calibration, and requalification commands. Qualification applies only to the fixed task, tools, rules, and declared conditions; requalify the affected scope after an environment change.
 
 <a id="input-isolation"></a>
 
@@ -135,6 +143,7 @@ See the [academy-tgate qualification materials](../tasks/academy-tgate/qualifica
 The following historically excluded assets and their copies must stay out of every task release bundle and Agent input:
 
 - The original workspace asset `IHP-AnalogAcademy/modules/module_0_foundations/PEX_Demo/layout/inverter.gds`, including the same asset under `third_party/IHP-AnalogAcademy/`;
+- The historical `third_party/IHP-AnalogAcademy/utils/PEX_Demo/` fixture and all geometry, netlists, reports, scripts, and intermediate artifacts produced by it;
 - Geometry, images, netlists, reports, scripts, and intermediate artifacts produced by that inverter fixture;
 - Historical run records named `local-inverter-unversioned-interface` and their derivatives;
 - Historical candidates and caches or derived files with unknown provenance.

@@ -133,7 +133,7 @@ def test_zero_exit_or_incomplete_deck_never_passes(context, tmp_path, fault):
         files["fixture.drc"] = Asset(script.encode(), "ruby")
     files[f"{mode}.json"] = Asset(json.dumps(settings).encode(), "json")
     publish_bundle(files, {"purpose": "deliberately broken tool configuration"}, tmp_path / "support")
-    backend = KLayoutDocker(image="layout-bench-evaluator:local", check=mode,
+    backend = KLayoutDocker(image="layout-bench-tools:local", check=mode,
                             support=str(tmp_path / "support"), profile=f"{mode}.json")
     report = run_evaluation(task.evaluation, {"candidate": fixtures["valid"], **task.evaluation_inputs()},
                             {**backends, f"layout.{mode}": backend}, tmp_path / "run")

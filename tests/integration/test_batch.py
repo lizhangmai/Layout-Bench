@@ -11,19 +11,19 @@ import pytest
 from benchmarking.files import Asset
 from benchmarking.tasks import load_task
 
-IMAGE = os.environ.get("LAYOUT_BENCH_TEST_IMAGE", "layout-bench-evaluator:local")
+IMAGE = os.environ.get("LAYOUT_BENCH_TEST_IMAGE", "layout-bench-tools:local")
 
 pytestmark = pytest.mark.integration
 ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_cli_batch_fresh_sessions_and_recomputed_summary(tmp_path):
-    task_path = ROOT / "tasks/academy-tgate/task.toml"
+    task_path = ROOT / "tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/task.toml"
     task = load_task(task_path)
     # Nothing is submitted, so these fixture bindings are never invoked as a judge.
-    tools = 'schema_version = 1\n[backends.fixture]\ntype = "klayout-docker"\nsettings = {image = "layout-bench-evaluator:local", check = "artifact"}\n[bindings]\n'
+    tools = 'schema_version = 1\n[backends.fixture]\ntype = "klayout-docker"\nsettings = {image = "layout-bench-tools:local", check = "artifact"}\n[bindings]\n'
     tools += ''.join(f'"{job.operation}" = "fixture"\n' for job in {job.operation: job for job in task.evaluation.jobs}.values())
-    (tmp_path / "tools.toml").write_text(tools.replace('"layout-bench-evaluator:local"', json.dumps(IMAGE)))
+    (tmp_path / "tools.toml").write_text(tools.replace('"layout-bench-tools:local"', json.dumps(IMAGE)))
     script = b'''from pathlib import Path
 assert not Path('/workspace/memory').exists()
 Path('/workspace/memory').write_text('must not reach the next repeat')

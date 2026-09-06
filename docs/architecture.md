@@ -68,9 +68,9 @@ Every run records a `HarnessSpec` with `id`, `version`, `protocol`, `mode`,
 capabilities, and optional `wire_api`. The default `external-cli` profile is
 `opaque`: the benchmark does not inspect or reproduce the harness's internal
 conversation. `managed` and `native` are explicit measurement conditions and
-must be kept separate in reports when context ownership changes. A built-in
-profile is only a launch/file Adapter at this seam; it is not part of task or
-judge semantics.
+must be kept separate in reports when context ownership changes. The harness
+runtime remains outside the benchmark core and is not part of task or judge
+semantics.
 
 The current host-owned gateway implements the `responses` wire family. A
 harness may provide its own bridge to that socket, while credentials and

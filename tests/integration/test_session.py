@@ -21,11 +21,11 @@ from benchmarking.session import DockerSession, task_message
 from benchmarking.tasks import load_task
 from benchmarking.toolchains import load_toolchain
 
-IMAGE = os.environ.get("LAYOUT_BENCH_TEST_IMAGE", "layout-bench-evaluator:local")
+IMAGE = os.environ.get("LAYOUT_BENCH_TEST_IMAGE", "layout-bench-tools:local")
 
 pytestmark = pytest.mark.integration
 ROOT = Path(__file__).resolve().parents[2]
-TASK = ROOT / "tasks/academy-tgate/task.toml"
+TASK = ROOT / "tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/task.toml"
 PREAMBLE = '''import json, os, subprocess, time
 from pathlib import Path
 task = json.loads(Path('/protocol/task.json').read_text())
@@ -131,7 +131,7 @@ def test_scripted_generation_submission_and_real_postlayout_evaluation(tmp_path)
     pdk = ROOT / "third_party/IHP-Open-PDK"
     for profile in ("magic", "mos-models", "klayout"):
         prepare_support(pdk, ROOT/f"technology/sg13g2/{profile}.json", tmp_path/profile,
-                        compiler_image=os.environ.get("LAYOUT_BENCH_TEST_IMAGE", "layout-bench-model-compiler:local"))
+                        compiler_image=os.environ.get("LAYOUT_BENCH_TEST_IMAGE", "layout-bench-tools:local"))
     resources = dict(prepare_pdk_bundle(pdk, tmp_path/"resources").files)
     task = load_task(ROOT/"examples/sg13g2/checked-switch/task.toml")
     toolchain_text = (ROOT/"examples/sg13g2/checked-switch/toolchain.toml").read_text()
@@ -139,8 +139,7 @@ def test_scripted_generation_submission_and_real_postlayout_evaluation(tmp_path)
         toolchain_text = toolchain_text.replace(f"build/support/sg13g2-{name}", str(tmp_path/name))
     toolchain = tmp_path/"toolchain.toml"
     if "LAYOUT_BENCH_TEST_IMAGE" in os.environ:
-        for role in ("evaluator", "extractor", "simulator"):
-            toolchain_text = toolchain_text.replace(f'"layout-bench-{role}:local"', json.dumps(IMAGE))
+        toolchain_text = toolchain_text.replace('"layout-bench-tools:local"', json.dumps(IMAGE))
     toolchain.write_text(toolchain_text)
     config = configuration('''
 subprocess.run(['python', '/agent/generate.py', str(output)], check=True)

@@ -1,0 +1,12 @@
+schema_version = 1
+id = "module_3_8_bit_SAR_ADC.part_4_SAR_ADC.SAR_ADC_tb"
+title = "IHP AnalogAcademy: SAR_ADC_tb"
+source_checkout = "third_party/IHP-AnalogAcademy"
+source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+source_path = "modules/module_3_8_bit_SAR_ADC/part_4_SAR_ADC/SAR_ADC_tb.sch"
+source_sha256 = "2bcf83ed9e801886aa3888e074ecef4f2f1a86d740b925f019eefa3811382380"
+source_bytes = 15493
+source_format = "xschem"
+role = "testbench"
+status = "supporting-source"
+license = "Apache-2.0 upstream root; file-level notices apply"

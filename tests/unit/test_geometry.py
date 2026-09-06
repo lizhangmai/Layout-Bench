@@ -7,7 +7,7 @@ import pytest
 from benchmarking.geometry import validate_constraints
 
 pytestmark = pytest.mark.unit
-DATA = json.loads((Path(__file__).resolve().parents[2] / 'tasks/academy-tgate/inputs/constraints.json').read_text())
+DATA = json.loads((Path(__file__).resolve().parents[2] / 'tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/inputs/constraints.json').read_text())
 
 
 @pytest.mark.parametrize('change', ['unknown', 'negative', 'duplicate', 'wrong_layer', 'unbound_area', 'nan'])

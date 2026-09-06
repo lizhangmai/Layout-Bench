@@ -1,0 +1,12 @@
+schema_version = 1
+id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.nand_gate.testbench.nand_tb"
+title = "IHP AnalogAcademy: nand_tb"
+source_checkout = "third_party/IHP-AnalogAcademy"
+source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+source_path = "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/nand_gate/testbench/nand_tb.sch"
+source_sha256 = "3633625c415e45a66a5359e4b37493c4a08129b32330e88a0c27f4a163f9a563"
+source_bytes = 2574
+source_format = "xschem"
+role = "testbench"
+status = "supporting-source"
+license = "Apache-2.0 upstream root; file-level notices apply"

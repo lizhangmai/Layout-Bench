@@ -1,6 +1,6 @@
 schema_version = 1
 id = "offline-protocol-probe"
-image = "layout-bench-evaluator:local"
+image = "layout-bench-tools:local"
 command = ["python", "/agent/protocol_probe.py"]
 wall_seconds = 15
 memory_mb = 256

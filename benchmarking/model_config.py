@@ -1,4 +1,4 @@
-"""Frozen Agent configuration; harness profiles are optional and generic."""
+"""Frozen Agent configuration with a generic harness contract."""
 
 import tomllib
 from dataclasses import dataclass, field
@@ -31,16 +31,14 @@ def load_run_config(path: Path) -> RunConfig:
     data = tomllib.loads(source.content.decode())
     keys(data, {"schema_version", "id", "image", "wall_seconds", "memory_mb",
                 "cpus", "pids", "workspace_mb"},
-         {"files", "environment", "command", "harness", "adapter"},
+         {"files", "environment", "command", "harness"},
          "run configuration")
     if type(data["schema_version"]) is not int or data["schema_version"] != 1:
         raise ValueError("Unsupported run configuration version")
     for name in ("id", "image"):
         text(data[name], name)
-    prepared_harness = prepare_harness(data, path.parent)
-    files = dict(prepared_harness.files or {})
-    if prepared_harness.command is not None:
-        data["command"] = list(prepared_harness.command)
+    harness = prepare_harness(data)
+    files = {}
     if not isinstance(data.get("command"), list) or not data["command"]:
         raise ValueError("command must be a nonempty argument list")
     for argument in data["command"]:
@@ -69,4 +67,4 @@ def load_run_config(path: Path) -> RunConfig:
         text(value, "public environment setting")
     return RunConfig(data["id"], data["image"], tuple(data["command"]), number(data["wall_seconds"]),
                      data["memory_mb"], number(data["cpus"]), data["pids"], data["workspace_mb"],
-                     files, environment, source, prepared_harness.spec)
+                     files, environment, source, harness)

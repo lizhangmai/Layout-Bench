@@ -1,17 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -eq 0 ]]; then
-    set -- agent evaluator preparer simulator extractor model-compiler
+if [[ $# -gt 1 || ( $# -eq 1 && "$1" != tools ) ]]; then
+    echo 'The toolchain is unified; this check accepts only the tools image.' >&2
+    exit 2
 fi
-for target in "$@"; do
-    case "${target}" in
-        tools|agent|evaluator|preparer|simulator|extractor|model-compiler) ;;
-        *) echo "Unknown toolchain target: ${target}" >&2; exit 2 ;;
-    esac
-    echo "Checking layout-bench-${target}:local"
-    docker run --rm --network none -i "layout-bench-${target}:local" \
-        bash -es -- "${target}" <<'CHECK'
+image="${LAYOUT_BENCH_TEST_IMAGE:-layout-bench-tools:local}"
+echo "Checking unified tool image: ${image}"
+docker run --rm --network none -i "${image}" bash -es <<'CHECK'
+set -euo pipefail
 test "$(id -u)" -ne 0
 python - <<'PY'
 import importlib.util
@@ -29,36 +26,12 @@ print('Python KLayout', pya.__version__)
 PY
 printf '%s\n' 'puts "Embedded Ruby #{RUBY_VERSION}"' > /tmp/runtime.rb
 klayout -b -r /tmp/runtime.rb
-test ! -e /home/ubuntu/.codex/auth.json
-test ! -e /home/ubuntu/.codex/config.toml
-if [[ "$1" == agent || "$1" == tools ]]; then
-    codex --version
-    codex exec --help > /dev/null
-    test -x /opt/codex/bin/codex-code-mode-host
-    test -x /opt/codex/codex-resources/bwrap
-else
-    ! command -v codex
-    test ! -e /opt/codex
-fi
-if [[ "$1" == preparer || "$1" == tools ]]; then
-    xschem --version
-else
-    ! command -v xschem
-fi
-if [[ "$1" == simulator || "$1" == tools ]]; then
-    ngspice --version
-else
-    ! command -v ngspice
-fi
-if [[ "$1" == extractor || "$1" == tools ]]; then
-    test "$(magic --version)" = "8.3.678"
-else
-    ! command -v magic
-fi
-if [[ "$1" == model-compiler || "$1" == tools ]]; then
-    openvaf --version
-else
-    ! command -v openvaf
-fi
+xschem --version
+ngspice --version
+test "$(magic --version)" = "8.3.678"
+openvaf --version
+QT_QPA_PLATFORM=offscreen qucs-s --version
+qucsator --version
+qucsator_rf --version
+qucsconv --version
 CHECK
-done

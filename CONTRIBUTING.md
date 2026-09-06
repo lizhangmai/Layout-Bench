@@ -38,15 +38,16 @@ uv run --locked python scripts/public_preview.py qualify \
   --prepared build/runs/preview/prepared --output build/runs/preview-qualification
 LAYOUT_BENCH_TEST_IMAGE=layout-bench-tools:local uv run --locked pytest \
   tests/integration/test_batch.py tests/integration/test_admission_cli.py \
-  tests/integration/test_session.py tests/integration/test_codex.py
+  tests/integration/test_session.py
 uv run --locked pytest tests/integration/test_inference_https.py
 ```
 
-Use new output directories. The HTTPS test requires host `openssl` and uses local certificates. The native-harness integration test uses a deterministic endpoint; neither invokes a paid model or establishes a model score.
+Use new output directories. The HTTPS test requires host `openssl` and uses local certificates. Harness-specific integration tests require the runtime declared by that harness; the generic session checks above do not invoke a paid model or establish a model score.
 
-The remaining low-level EDA regressions use the [manual tool profiles](docs/tools.md#manual-tools), not the generated preview configuration. Prepare the targets they use before running:
+The remaining low-level EDA regressions use the [unified tool image](docs/tools.md#manual-tools), not the generated preview configuration. Build that image before running:
 
 ```bash
+uv run --locked python scripts/public_preview.py build --image layout-bench-tools:local
 bash tests/integration/test_pdk_view.sh
 bash tests/integration/test_task_preparation.sh
 uv run --locked pytest tests/integration/test_characterization.py \
@@ -72,7 +73,7 @@ Before the first tagged release, allow GitHub Actions to write packages in the r
 
 | Contribution | Start here | Evidence to include |
 |---|---|---|
-| Public task | [Task design](docs/tasks.md#task-design), `tasks/academy-tgate/` | Source and license, explicit input list, executable constraints/metrics, passing witness and rejected counterexamples |
+| Public task | [Task design](docs/tasks.md#task-design), `tasks/IHP-AnalogAcademy/` | Source and license, explicit input list, executable constraints/metrics, passing witness and rejected counterexamples |
 | Harness or wire adapter | [Harness examples](examples/agents/README.md), `benchmarking/model_config.py`, `benchmarking/inference.py` | Frozen command/files, budgets, protocol metadata, and clear result labels |
 | EDA backend | [Architecture](docs/architecture.md#architecture), `benchmarking/toolchains.py` | Tool identity, isolated inputs, structured evidence and tests of passing/failing/error cases |
 | Runner or statistics | `benchmarking/session.py`, `swarm.py`, `report.py` | Relevant lifecycle, evidence-integrity or measurement tests |

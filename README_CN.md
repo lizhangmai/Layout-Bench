@@ -24,7 +24,7 @@
 
 Layout-Bench 在隔离容器中运行 Agent，记录明确提交的 GDS，并使用独立的 EDA 工具评估冻结后的候选版图。DRC/LVS 用于建立物理有效性；完整任务还会检查声明的几何约束和后仿性能限值。
 
-> **开发预览版。** 当前仓库包含一个公开任务 `academy-tgate`、对应参考解和 14 个资格验证场景。基准仍在扩展，API 和报告 schema 可能变化。
+> **开发预览版。** 当前仓库包含一个已资格验证的公开任务 `academy-tgate`、对应参考解和 14 个资格验证场景；IHP AnalogAcademy 的全部电路来源已按模块录入 [`tasks/IHP-AnalogAcademy/`](tasks/IHP-AnalogAcademy/README.md)，其余条目明确标为候选、测试平台或仅来源，待冻结网表、约束、评估和资格材料后才会成为可运行任务。基准仍在扩展，API 和报告 schema 可能变化。
 
 ## 为什么选择 Layout-Bench？
 
@@ -56,7 +56,7 @@ cd Layout-Bench
 uv run --python 3.12 --locked python scripts/public_preview.py quickstart --output build/runs/preview
 ```
 
-该命令只构建一个 `layout-bench-tools:local` 镜像，获取固定版本的 PDK，准备经过审查的资料，并运行参考解、提交和批量检查。KLayout、ngspice、Magic、OpenVAF、Xschem、Python 和可选的 native harness runtime 已包含在镜像中，不需要单独的 Agent 镜像。快速开始不会调用模型账户。
+该命令只构建一个 `layout-bench-tools:local` 镜像，获取固定版本的 PDK，准备经过审查的资料，并运行参考解、提交和批量检查。KLayout、ngspice、Qucs-S/Qucsator、Magic、OpenVAF、Xschem 和 Python 包含在这个镜像中；harness runtime 通过统一会话契约由各 harness 自行提供，因此不需要按 EDA 角色拆分镜像。快速开始不会调用模型账户。
 
 首次运行需要下载工具和 PDK，可能耗时数分钟。后续运行会复用 Docker 层和 PDK checkout，同时重新准备已验证的资料和全新工作区。每次运行都应选择新的 `--output` 目录；已有证据不会被覆盖。若要复用已构建的镜像，可使用 `--skip-build`。该命令只初始化 PDK submodule，其他公开资料 submodule 为可选项。
 
@@ -81,7 +81,7 @@ uv run --locked python scripts/public_preview.py qualify \
   --output build/runs/preview-qualification
 ```
 
-[参考解](tasks/academy-tgate/reference/README.md)和[资格证据](tasks/academy-tgate/qualification/README.md)公开用于调试。标准 Agent 运行只接收声明的任务输入，永远不会挂载参考解。
+[参考解](tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/reference/README.md)和[资格证据](tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/qualification/README.md)公开用于调试。标准 Agent 运行只接收声明的任务输入，永远不会挂载参考解。
 
 ## 如何使用
 
@@ -97,7 +97,7 @@ uv run --locked python scripts/public_preview.py qualify \
 通过主机持有的 gateway 连接模型时，复制 [inference.example.toml](examples/agents/inference.example.toml)，填写端点、模型和主机密钥变量名，再运行自己的 harness 配置：
 
 ```bash
-uv run --locked python main.py run tasks/academy-tgate/task.toml \
+uv run --locked python main.py run tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/task.toml \
   --agent path/to/agent.toml \
   --resources build/runs/preview/prepared/agent-resources \
   --toolchain build/runs/preview/prepared/toolchain.toml \
@@ -183,7 +183,7 @@ DRC/LVS 是物理有效性门槛。任务成功还要求所有硬约束、必需
 
 当前版本是本地开发预览，包含一个公开任务及其资格材料、通用可执行 harness 会话协议、受控模型 gateway、可配置 EDA 后端和本地批量统计。下一步计划包括配置真实模型基线、同语义过程反馈、更多 wire adapter，以及来自另一电路家族的第二个公开任务。预览期间 API 和报告 schema 可能变化。
 
-框架采用 [MIT](LICENSE) 许可。公开的 `academy-tgate` 任务保留其 [Apache-2.0 许可](tasks/academy-tgate/LICENSE)。Submodule、工具和依赖保留各自的许可与声明；来源和资料准备见[工具指南](docs/tools.md#external-sources)。
+框架采用 [MIT](LICENSE) 许可。公开的 `academy-tgate` 任务保留其 [Apache-2.0 许可](tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/LICENSE)。IHP AnalogAcademy 录入清单保留上游许可和逐文件声明；Submodule、工具和依赖保留各自的许可与声明；来源和资料准备见[工具指南](docs/tools.md#external-sources)。
 
 <p align="center">
 <a href="README.md">阅读英文文档 →</a>

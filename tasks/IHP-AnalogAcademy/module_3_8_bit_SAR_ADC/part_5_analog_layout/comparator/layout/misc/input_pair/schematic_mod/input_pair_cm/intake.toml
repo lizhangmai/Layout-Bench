@@ -1,0 +1,12 @@
+schema_version = 1
+id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.layout.misc.input_pair.schematic_mod.input_pair_cm"
+title = "IHP AnalogAcademy: input_pair_cm"
+source_checkout = "third_party/IHP-AnalogAcademy"
+source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+source_path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/misc/input_pair/schematic_mod/input_pair_cm.sch"
+source_sha256 = "d1d7332f1f09f1a02705176c47c1a155a1542aed517d523f89bcf4a0fa2b1598"
+source_bytes = 1062
+source_format = "xschem"
+role = "design"
+status = "candidate"
+license = "Apache-2.0 upstream root; file-level notices apply"

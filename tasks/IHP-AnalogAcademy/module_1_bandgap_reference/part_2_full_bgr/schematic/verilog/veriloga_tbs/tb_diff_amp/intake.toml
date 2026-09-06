@@ -1,0 +1,12 @@
+schema_version = 1
+id = "module_1_bandgap_reference.part_2_full_bgr.schematic.verilog.veriloga_tbs.tb_diff_amp"
+title = "IHP AnalogAcademy: tb_diff_amp"
+source_checkout = "third_party/IHP-AnalogAcademy"
+source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+source_path = "modules/module_1_bandgap_reference/part_2_full_bgr/schematic/verilog/veriloga_tbs/tb_diff_amp.sch"
+source_sha256 = "b34fc859718f1e831a0710ea587c949b8be04c88e26f79699c0e2a46472bc19f"
+source_bytes = 2288
+source_format = "xschem"
+role = "testbench"
+status = "supporting-source"
+license = "Apache-2.0 upstream root; file-level notices apply"

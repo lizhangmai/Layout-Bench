@@ -3,7 +3,7 @@ schema_version = 1
 [backends.extraction]
 type = "magic-capacitance-docker"
 [backends.extraction.settings]
-image = "layout-bench-extractor:local"
+image = "layout-bench-tools:local"
 support = "build/support/sg13g2-magic"
 technology = "magic/ihp-sg13g2.tech"
 tech_name = "ihp-sg13g2"
@@ -14,7 +14,7 @@ timeout_seconds = 60
 [backends.spice]
 type = "ngspice-docker"
 [backends.spice.settings]
-image = "layout-bench-simulator:local"
+image = "layout-bench-tools:local"
 support = "build/support/sg13g2-mos-models"
 timeout_seconds = 30
 
@@ -27,19 +27,19 @@ timeout_seconds = 30
 [backends.artifact]
 type = "klayout-docker"
 [backends.artifact.settings]
-image = "layout-bench-evaluator:local"
+image = "layout-bench-tools:local"
 check = "artifact"
 [backends.drc]
 type = "klayout-docker"
 [backends.drc.settings]
-image = "layout-bench-evaluator:local"
+image = "layout-bench-tools:local"
 check = "drc"
 support = "build/support/sg13g2-klayout"
 profile = "drc.json"
 [backends.lvs]
 type = "klayout-docker"
 [backends.lvs.settings]
-image = "layout-bench-evaluator:local"
+image = "layout-bench-tools:local"
 check = "lvs"
 support = "build/support/sg13g2-klayout"
 profile = "lvs.json"

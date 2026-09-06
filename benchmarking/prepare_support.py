@@ -11,7 +11,7 @@ from .files import Asset, keys, read_file, relative
 
 
 def prepare_support(source: Path, profile: Path, destination: Path, *,
-                    compiler_image: str = "layout-bench-model-compiler:local") -> str:
+                    compiler_image: str = "layout-bench-tools:local") -> str:
     source, profile = source.absolute(), profile.absolute()
     if destination.exists() or destination.is_symlink():
         raise FileExistsError(f"Support destination exists: {destination}")
@@ -79,6 +79,6 @@ if __name__ == "__main__":
     parser.add_argument("source", type=Path)
     parser.add_argument("profile", type=Path)
     parser.add_argument("destination", type=Path)
-    parser.add_argument("--compiler-image", default="layout-bench-model-compiler:local")
+    parser.add_argument("--compiler-image", default="layout-bench-tools:local")
     args = parser.parse_args()
     print(prepare_support(args.source, args.profile, args.destination, compiler_image=args.compiler_image))

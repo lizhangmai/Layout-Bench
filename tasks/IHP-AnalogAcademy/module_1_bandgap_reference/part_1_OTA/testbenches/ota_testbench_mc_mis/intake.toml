@@ -1,0 +1,12 @@
+schema_version = 1
+id = "module_1_bandgap_reference.part_1_OTA.testbenches.ota_testbench_mc_mis"
+title = "IHP AnalogAcademy: ota_testbench_mc_mis"
+source_checkout = "third_party/IHP-AnalogAcademy"
+source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+source_path = "modules/module_1_bandgap_reference/part_1_OTA/testbenches/ota_testbench_mc_mis.sch"
+source_sha256 = "605f2d3cec5122d9d6f5245f1ded959f6d83d5d19d3c6fbc116351390ffe1c03"
+source_bytes = 2342
+source_format = "xschem"
+role = "testbench"
+status = "supporting-source"
+license = "Apache-2.0 upstream root; file-level notices apply"

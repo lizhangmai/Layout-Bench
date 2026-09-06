@@ -1,0 +1,12 @@
+schema_version = 1
+id = "module_1_bandgap_reference.part_1_OTA.gmid_example.testbenches.ota_testbench"
+title = "IHP AnalogAcademy: ota_testbench"
+source_checkout = "third_party/IHP-AnalogAcademy"
+source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+source_path = "modules/module_1_bandgap_reference/part_1_OTA/gmid_example/testbenches/ota_testbench.sch"
+source_sha256 = "81577b238bdd926731d3ef54ba29e35e7f94c51aea91b0e8dd6dfbd8c4fc60c6"
+source_bytes = 2738
+source_format = "xschem"
+role = "testbench"
+status = "supporting-source"
+license = "Apache-2.0 upstream root; file-level notices apply"

@@ -3,7 +3,7 @@ schema_version = 1
 [backends.spice]
 type = "ngspice-docker"
 [backends.spice.settings]
-image = "layout-bench-simulator:local"
+image = "layout-bench-tools:local"
 timeout_seconds = 30
 
 [bindings]

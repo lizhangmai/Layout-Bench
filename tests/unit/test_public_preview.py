@@ -52,8 +52,7 @@ def test_one_resolved_image_for_compilation_judge_and_agents(preview, tmp_path, 
         if path := backend["settings"].get("support"):
             assert Path(path).is_dir() and Path(path).parent == destination
     probe = load_run_config(destination / "protocol-probe.toml")
-    codex = load_run_config(destination / "codex-sg13g2.toml")
-    assert probe.image == codex.image == identity
+    assert probe.image == identity
     assert probe.files["protocol_probe.py"].content == (ROOT / "examples/agents/protocol_probe.py").read_bytes()
     assert (destination / "agent-resources").is_dir()
 

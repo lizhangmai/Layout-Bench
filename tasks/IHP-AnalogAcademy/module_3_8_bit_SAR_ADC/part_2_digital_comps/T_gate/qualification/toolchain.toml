@@ -1,0 +1,51 @@
+schema_version = 1
+
+[backends.extraction]
+type = "magic-capacitance-docker"
+[backends.extraction.settings]
+image = "layout-bench-tools:local"
+support = "build/support/sg13g2-magic"
+technology = "magic/ihp-sg13g2.tech"
+tech_name = "ihp-sg13g2"
+style = "ngspice()"
+capacitance_threshold_ff = 0.0
+timeout_seconds = 60
+
+[backends.spice]
+type = "ngspice-docker"
+[backends.spice.settings]
+image = "layout-bench-tools:local"
+support = "build/support/sg13g2-mos-models"
+timeout_seconds = 30
+
+[bindings]
+"layout.constraints" = "geometry"
+"layout.artifact" = "artifact"
+"layout.drc" = "drc"
+"layout.lvs" = "lvs"
+"layout.extract_capacitance" = "extraction"
+"circuit.simulate" = "spice"
+[backends.artifact]
+type = "klayout-docker"
+[backends.artifact.settings]
+image = "layout-bench-tools:local"
+check = "artifact"
+[backends.drc]
+type = "klayout-docker"
+[backends.drc.settings]
+image = "layout-bench-tools:local"
+check = "drc"
+support = "build/support/sg13g2-klayout-ports"
+profile = "drc.json"
+[backends.lvs]
+type = "klayout-docker"
+[backends.lvs.settings]
+image = "layout-bench-tools:local"
+check = "lvs"
+support = "build/support/sg13g2-klayout-ports"
+profile = "lvs.json"
+
+[backends.geometry]
+type = "klayout-geometry-docker"
+[backends.geometry.settings]
+image = "layout-bench-tools:local"

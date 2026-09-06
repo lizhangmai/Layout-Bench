@@ -1,0 +1,12 @@
+schema_version = 1
+id = "module_1_bandgap_reference.part_1_OTA.schematic.two_stage_OTA"
+title = "IHP AnalogAcademy: two_stage_OTA"
+source_checkout = "third_party/IHP-AnalogAcademy"
+source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+source_path = "modules/module_1_bandgap_reference/part_1_OTA/schematic/two_stage_OTA.sch"
+source_sha256 = "4385e81ad81c229b81095fe2060153b2817376cfcfbb6d9adfc908d58d7e34a7"
+source_bytes = 2954
+source_format = "xschem"
+role = "design"
+status = "candidate"
+license = "Apache-2.0 upstream root; file-level notices apply"

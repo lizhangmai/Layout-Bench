@@ -1,0 +1,12 @@
+schema_version = 1
+id = "module_2_50GHz_MPA.part_4_layout_EMsims.lumped_modelling.em_models_subcircuits.T_conn_subcircuit.T_connection"
+title = "IHP AnalogAcademy: T_connection"
+source_checkout = "third_party/IHP-AnalogAcademy"
+source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+source_path = "modules/module_2_50GHz_MPA/part_4_layout_EMsims/lumped_modelling/em_models_subcircuits/T_conn_subcircuit/T_connection.sch"
+source_sha256 = "58ff08e557059c651fe472da7b25762d7cd6e3dfa0223913a27b0b4e44cb6ca6"
+source_bytes = 1474
+source_format = "qucs"
+role = "design"
+status = "source-only"
+license = "Apache-2.0 upstream root; file-level notices apply"

@@ -1,0 +1,12 @@
+schema_version = 1
+id = "module_2_50GHz_MPA.part_4_layout_EMsims.lumped_modelling.em_models_subcircuits.core_subcircuit.BJT_core"
+title = "IHP AnalogAcademy: BJT_core"
+source_checkout = "third_party/IHP-AnalogAcademy"
+source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+source_path = "modules/module_2_50GHz_MPA/part_4_layout_EMsims/lumped_modelling/em_models_subcircuits/core_subcircuit/BJT_core.sch"
+source_sha256 = "2bb93851751181225b889c8f21be430741b39ac3d07a202178c118116d4b3f68"
+source_bytes = 1979
+source_format = "qucs"
+role = "design"
+status = "source-only"
+license = "Apache-2.0 upstream root; file-level notices apply"

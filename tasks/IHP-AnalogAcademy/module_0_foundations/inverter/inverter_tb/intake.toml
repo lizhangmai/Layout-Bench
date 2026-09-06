@@ -1,0 +1,12 @@
+schema_version = 1
+id = "module_0_foundations.inverter.inverter_tb"
+title = "IHP AnalogAcademy: inverter_tb"
+source_checkout = "third_party/IHP-AnalogAcademy"
+source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+source_path = "modules/module_0_foundations/inverter/inverter_tb.sch"
+source_sha256 = "521464a42c5352cad371a8b091d71d9a083686749ef49c69b3f07ec838a3cb82"
+source_bytes = 1606
+source_format = "xschem"
+role = "testbench"
+status = "supporting-source"
+license = "Apache-2.0 upstream root; file-level notices apply"

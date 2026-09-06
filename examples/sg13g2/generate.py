@@ -17,7 +17,7 @@ def generate_fixtures(view: Path, destination: Path, *, suite: str = "extraction
     view_digest = verify_pdk(view)
     if destination.exists() or destination.is_symlink():
         raise FileExistsError(destination)
-    tool = DockerTool("layout-bench-extractor:local", ["magic", "--version"], 60)
+    tool = DockerTool("layout-bench-tools:local", ["magic", "--version"], 60)
     primitive_files = {"pdk/" + p.relative_to(view).as_posix(): Asset(p.read_bytes(), "binary")
                        for p in view.rglob("*") if p.is_file()}
     environment = {"KLAYOUT": "1", "PYTHONDONTWRITEBYTECODE": "1",

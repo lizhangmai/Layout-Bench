@@ -47,7 +47,7 @@ def test_run_config_freezes_declared_code_and_rejects_changes(tmp_path):
     config = tmp_path / "agent.toml"
     config.write_text(f'''schema_version = 1
 id = "offline-test"
-image = "layout-bench-evaluator:local"
+image = "layout-bench-tools:local"
 command = ["python", "/agent/cli.py"]
 wall_seconds = 10
 memory_mb = 128

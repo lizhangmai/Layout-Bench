@@ -6,7 +6,7 @@ repo_root="$(cd "${script_dir}/../.." && pwd)"
 test_tmp="$(mktemp -d "${TMPDIR:-/tmp}/layout-bench-context.XXXXXX")"
 trap 'rm -rf "${test_tmp}"' EXIT
 context="${test_tmp}/context"
-mkdir -p "${context}/.cache" "${context}/.codex" \
+mkdir -p "${context}/.cache" \
     "${context}/tasks" "${context}/results" "${context}/benchmarking" \
     "${context}/third_party/example"
 cp "${repo_root}/.dockerignore" "${context}/.dockerignore"
@@ -17,8 +17,6 @@ allowed=(
     uv.lock
 )
 blocked=(
-    .codex/auth.json
-    .codex/config.toml
     .cache/private.bin
     tasks/private.json
     results/final.gds
