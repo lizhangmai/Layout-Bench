@@ -1,0 +1,135 @@
+schema_version = 2
+kind = "layout_case"
+id = "TO_Apr2025.97_GHZ_LINEAR_TIA"
+title = "TO_Apr2025 97 GHz low-noise linear TIA"
+role = "design"
+status = "candidate"
+
+[origin]
+checkout = "third_party/TO_Apr2025"
+commit = "63e203a0eccfb6028a1a0a8364553e4e979b55b3"
+license = "Apache-2.0 upstream root; file-level notices, PDK, models, and tool licenses apply"
+
+[[sources]]
+id = "TO_Apr2025.97_GHZ_LINEAR_TIA.schematic"
+path = "97_GHZ_LINEAR_TIA/design_data/qucs-s/97_GHZ_LINEAR_TIA.sch"
+role = "design"
+format = "qucs"
+sha256 = "888bf18885d41187f15c08e11e3a560593e40b12f8e9f6c4132cf7954fa2a1b3"
+bytes = 22409
+
+[[upstream_assets]]
+id = "TO_Apr2025.97_GHZ_LINEAR_TIA.reference_gds"
+path = "97_GHZ_LINEAR_TIA/design_data/gds/FMD_QNC_01_97_GHZ_LINEAR_TIA.gds"
+role = "reference"
+format = "gds"
+sha256 = "4412a8cb23f44989b4c626e6095ef10a1b2b407b72128e607fae50a2c103e211"
+bytes = 10315366
+
+[[upstream_assets]]
+id = "TO_Apr2025.97_GHZ_LINEAR_TIA.lvs_netlist"
+path = "97_GHZ_LINEAR_TIA/design_data/klayout/lvs/97_GHZ_LINEAR_TIA.cdl"
+role = "lvs-netlist"
+format = "cdl"
+sha256 = "544a8502228d40e1cd48610d40fd925bd69ad2bc8c6fbadfbcd51acb2ed824b6"
+bytes = 2358
+
+[[upstream_assets]]
+id = "TO_Apr2025.97_GHZ_LINEAR_TIA.extracted_netlist"
+path = "97_GHZ_LINEAR_TIA/design_data/klayout/FMD_QNC_01_LIN_TIA_extracted.cir"
+role = "extracted-netlist"
+format = "spice"
+sha256 = "3b6bb7be8cc8d247a3ff113006e07dbbff80219062dc40bd64f419e59915568c"
+bytes = 2704
+
+[[upstream_assets]]
+id = "TO_Apr2025.97_GHZ_LINEAR_TIA.drc_minimal"
+path = "97_GHZ_LINEAR_TIA/design_data/klayout/drc/97_GHZ_LINEAR_TIA_minimal.lyrdb"
+role = "drc-evidence"
+format = "lyrdb"
+sha256 = "8092d21cd61aa77a1c4f20fbf4a6f96bed462d0aa52789a6c104862ba612d3e1"
+bytes = 15243
+
+[[upstream_assets]]
+id = "TO_Apr2025.97_GHZ_LINEAR_TIA.drc_maximal"
+path = "97_GHZ_LINEAR_TIA/design_data/klayout/drc/97_GHZ_LINEAR_TIA_maximal.lyrdb"
+role = "drc-evidence"
+format = "lyrdb"
+sha256 = "09250425353fe8c7850d532b44ee427290a19de2a099ce7875d470bfeb517c86"
+bytes = 73317
+
+[[upstream_assets]]
+id = "TO_Apr2025.97_GHZ_LINEAR_TIA.lvs_report"
+path = "97_GHZ_LINEAR_TIA/design_data/klayout/lvs/97_GHZ_LINEAR_TIA_lvs.lvsdb"
+role = "lvs-evidence"
+format = "lvsdb"
+sha256 = "988f900ee9adcbf28bb410f9b95abe58ae7ee91dd6f10e0c2c20f8951b3439d8"
+bytes = 9044129
+
+[[upstream_assets]]
+id = "TO_Apr2025.97_GHZ_LINEAR_TIA.choke_1_s2p"
+path = "97_GHZ_LINEAR_TIA/design_data/openEMS/choke_1_em_data/choke_1_em.s2p"
+role = "rf-evidence"
+format = "s2p"
+sha256 = "e1ec15b48495044e2cfc193b2c9b3b558ea6f79a0fbce0df2d6a8e12b58290a1"
+bytes = 120595
+
+[[upstream_assets]]
+id = "TO_Apr2025.97_GHZ_LINEAR_TIA.choke_2_s2p"
+path = "97_GHZ_LINEAR_TIA/design_data/openEMS/choke_2_em_data/choke_2_em.s2p"
+role = "rf-evidence"
+format = "s2p"
+sha256 = "7ca263ff6ff1b4a34e7e85df8e60dfc38f18c6754314c7bcf40815b1f6f56e5c"
+bytes = 120146
+
+[[upstream_assets]]
+id = "TO_Apr2025.97_GHZ_LINEAR_TIA.choke_3_s2p"
+path = "97_GHZ_LINEAR_TIA/design_data/openEMS/choke_3_em_data/choke_3_em.s2p"
+role = "rf-evidence"
+format = "s2p"
+sha256 = "79d6b12d45e42ffce73a7d5a3e21b39feb970cca259ded414d6721befcfd9c1b"
+bytes = 120146
+
+[[upstream_assets]]
+id = "TO_Apr2025.97_GHZ_LINEAR_TIA.choke_4_s2p"
+path = "97_GHZ_LINEAR_TIA/design_data/openEMS/choke_4_em_data/choke_4_em.s2p"
+role = "rf-evidence"
+format = "s2p"
+sha256 = "812c349aab8b38a2faa69c63639fb463d802273815935fe3a8c1cbe766d0a78f"
+bytes = 122906
+
+[[upstream_assets]]
+id = "TO_Apr2025.97_GHZ_LINEAR_TIA.deg_1_s2p"
+path = "97_GHZ_LINEAR_TIA/design_data/openEMS/deg_1_em_data/deg_1_em.s2p"
+role = "rf-evidence"
+format = "s2p"
+sha256 = "0cf172233045b91e145311915769b1afe4571a00d429c2dfb9d03fd883fd4705"
+bytes = 122111
+
+[[upstream_assets]]
+id = "TO_Apr2025.97_GHZ_LINEAR_TIA.deg_4_s2p"
+path = "97_GHZ_LINEAR_TIA/design_data/openEMS/deg_4_em_data/deg_4_em.s2p"
+role = "rf-evidence"
+format = "s2p"
+sha256 = "ad39a2615c5b48b83eac7f7b1c245dae05fef015348fe81dc5bb5475a7036a70"
+bytes = 544815
+
+[[upstream_assets]]
+id = "TO_Apr2025.97_GHZ_LINEAR_TIA.input_s2p"
+path = "97_GHZ_LINEAR_TIA/design_data/openEMS/input_em_data/input_em.s2p"
+role = "rf-evidence"
+format = "s2p"
+sha256 = "28a4dd1e07b9463f59f0687ee5522215381ab24266b0acbb504f237731833153"
+bytes = 123684
+
+[[upstream_assets]]
+id = "TO_Apr2025.97_GHZ_LINEAR_TIA.output_s2p"
+path = "97_GHZ_LINEAR_TIA/design_data/openEMS/output_em_data/output_em.s2p"
+role = "rf-evidence"
+format = "s2p"
+sha256 = "5d80418943c303511c6689949b3b96a97748c855befebc8f626a9ddb2c9daad9"
+bytes = 123682
+
+[screening]
+decision = "include"
+reason = "The pinned upstream design includes the documented Qucs schematic, GDS, LVS netlist/report, extracted netlist, minimal/maximal DRC reports, and eight OpenEMS S2P files for the 97 GHz linear TIA implementation."

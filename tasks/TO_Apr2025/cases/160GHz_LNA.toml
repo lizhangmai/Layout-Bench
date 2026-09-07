@@ -1,0 +1,127 @@
+schema_version = 2
+kind = "layout_case"
+id = "TO_Apr2025.160GHz_LNA"
+title = "TO_Apr2025 160 GHz low-noise amplifier"
+role = "design"
+status = "candidate"
+
+[origin]
+checkout = "third_party/TO_Apr2025"
+commit = "63e203a0eccfb6028a1a0a8364553e4e979b55b3"
+license = "Apache-2.0 upstream root; file-level notices, PDK, models, and tool licenses apply"
+
+[[sources]]
+id = "TO_Apr2025.160GHz_LNA.schematic"
+path = "160GHz_LNA/design_data/qucs-s/160GHz_LNA(MAIN).sch"
+role = "design"
+format = "qucs"
+sha256 = "5c638aa82acaca9630878ce72074ebe5a0713880a3566e3d851449fcc8a230c6"
+bytes = 15254
+
+[[upstream_assets]]
+id = "TO_Apr2025.160GHz_LNA.reference_gds"
+path = "160GHz_LNA/design_data/gds/FMD_QNC_04_160GHz_LNA.gds"
+role = "reference"
+format = "gds"
+sha256 = "9362ccf2dce10e94a5dd736ac06217076763bcc002c18fc04e5fb341c3438bff"
+bytes = 6917230
+
+[[upstream_assets]]
+id = "TO_Apr2025.160GHz_LNA.lvs_netlist"
+path = "160GHz_LNA/design_data/klayout/lvs/160GHz_LNA.cdl"
+role = "lvs-netlist"
+format = "cdl"
+sha256 = "b46ce5ad9f6a5fe4772bf81a1d84a42319aaf1f46df558ec8f6d3cd98d116c57"
+bytes = 977
+
+[[upstream_assets]]
+id = "TO_Apr2025.160GHz_LNA.extracted_netlist"
+path = "160GHz_LNA/design_data/klayout/TOP_extracted.cir"
+role = "extracted-netlist"
+format = "spice"
+sha256 = "37ef1585b702d4ffce3b103722b6da711c4c4ea25c1ef7b0cb304ee1726ac4c2"
+bytes = 1120
+
+[[upstream_assets]]
+id = "TO_Apr2025.160GHz_LNA.drc_minimal"
+path = "160GHz_LNA/design_data/klayout/drc/160GHz_LNA_minimal.lyrdb"
+role = "drc-evidence"
+format = "lyrdb"
+sha256 = "301e7232c3f98f065055a682e79bca0c5851fadec3d3cc44ac5d679587427cef"
+bytes = 15190
+
+[[upstream_assets]]
+id = "TO_Apr2025.160GHz_LNA.drc_maximal"
+path = "160GHz_LNA/design_data/klayout/drc/160GHz_LNA_maximal.lyrdb"
+role = "drc-evidence"
+format = "lyrdb"
+sha256 = "0a0cfa451a00e43e6b08076704b49ddfa4dfaf529f0389b38a304bf846f570e0"
+bytes = 73264
+
+[[upstream_assets]]
+id = "TO_Apr2025.160GHz_LNA.lvs_report"
+path = "160GHz_LNA/design_data/klayout/lvs/160GHz_LNA.lvsdb"
+role = "lvs-evidence"
+format = "lvsdb"
+sha256 = "0edc7684a76907b2a6ee47457d33e06554c69e658f35e12237baf0562ca33006"
+bytes = 6864870
+
+[[upstream_assets]]
+id = "TO_Apr2025.160GHz_LNA.first_tl_s2p"
+path = "160GHz_LNA/design_data/openems/1st_TL.s2p"
+role = "rf-evidence"
+format = "s2p"
+sha256 = "2d60d7d8f21a1b90b7761fe52f816b625a18d1466fba6c7b9a3b98331bfb5582"
+bytes = 359718
+
+[[upstream_assets]]
+id = "TO_Apr2025.160GHz_LNA.second_tl_s2p"
+path = "160GHz_LNA/design_data/openems/2nd_TL.s2p"
+role = "rf-evidence"
+format = "s2p"
+sha256 = "aff785cab537caa681966ade882b78bf06e66b77882831d939c05ad09c6b94af"
+bytes = 361255
+
+[[upstream_assets]]
+id = "TO_Apr2025.160GHz_LNA.third_tl_s2p"
+path = "160GHz_LNA/design_data/openems/3rd_TL.s2p"
+role = "rf-evidence"
+format = "s2p"
+sha256 = "aff785cab537caa681966ade882b78bf06e66b77882831d939c05ad09c6b94af"
+bytes = 361255
+
+[[upstream_assets]]
+id = "TO_Apr2025.160GHz_LNA.fourth_tl_s2p"
+path = "160GHz_LNA/design_data/openems/4th_TL.s2p"
+role = "rf-evidence"
+format = "s2p"
+sha256 = "70311bdea806fbf33e060fa076dd901ec590abc715b2221fabb3b35f9e48fe5a"
+bytes = 358430
+
+[[upstream_assets]]
+id = "TO_Apr2025.160GHz_LNA.choke_s2p"
+path = "160GHz_LNA/design_data/openems/Choke.s2p"
+role = "rf-evidence"
+format = "s2p"
+sha256 = "3e37b5018beb7c2a012d544bd2fa8415a4dcccb3585fe250cede51879e1c7e9d"
+bytes = 543028
+
+[[upstream_assets]]
+id = "TO_Apr2025.160GHz_LNA.dgen_s2p"
+path = "160GHz_LNA/design_data/openems/Dgen.s2p"
+role = "rf-evidence"
+format = "s2p"
+sha256 = "869efd58e4dba33f51c7122f28781639f5b34862cd394a1458b1216065de9839"
+bytes = 540606
+
+[[upstream_assets]]
+id = "TO_Apr2025.160GHz_LNA.dgen_final_stage_s2p"
+path = "160GHz_LNA/design_data/openems/Dgen_final_stage.s2p"
+role = "rf-evidence"
+format = "s2p"
+sha256 = "c38c38071e27297ad15a67cf2c682ecc8775e5e62050167f0a03bad5bbb46694"
+bytes = 541744
+
+[screening]
+decision = "include"
+reason = "The pinned upstream design includes the documented Qucs schematic, GDS, LVS netlist/report, extracted netlist, minimal/maximal DRC reports, and seven OpenEMS S2P files for the 160 GHz LNA implementation."

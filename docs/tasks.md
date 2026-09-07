@@ -1,6 +1,6 @@
 # Adding Tasks and Validating the Judge
 
-See the framework fixture in [`examples/sg13g2/checked-switch`](../examples/sg13g2/checked-switch/task.toml) for the task schema. The selected public IHP cases are listed in [`tasks/IHP-AnalogAcademy/catalog.toml`](../tasks/IHP-AnalogAcademy/catalog.toml); a case may be promoted only when the pinned upstream checkout already contains the reusable layout and corresponding physical evidence. Source review then freezes inputs, constraints, evaluation, tool bindings, and independent qualification. Models, budgets, repetitions, and access policy belong to the outer [run plan](running.md).
+See the framework fixture in [`examples/sg13g2/checked-switch`](../examples/sg13g2/checked-switch/task.toml) for the task schema. The selected public IHP and TO_Apr2025 cases are listed in [`tasks/IHP-AnalogAcademy/catalog.toml`](../tasks/IHP-AnalogAcademy/catalog.toml) and [`tasks/TO_Apr2025/catalog.toml`](../tasks/TO_Apr2025/catalog.toml); a case may be promoted only when the pinned upstream checkout already contains the reusable layout and corresponding physical evidence. Source review then freezes inputs, constraints, evaluation, tool bindings, and independent qualification. Models, budgets, repetitions, and access policy belong to the outer [run plan](running.md).
 
 The catalog is an inventory index, not a shortcut around task qualification. A
 `candidate` record becomes a benchmark task only after its authoritative
@@ -142,7 +142,7 @@ These tests validate the judge implementation and task measurability; they do no
 
 When a public task is fully entered, provide its reference GDS, generator script, reproduction steps, check configuration, expected results, and counterexamples for key rejection paths. Archive pre-layout/post-layout calibration under the same conditions and record the actual tool identity. Pre-layout simulation cannot replace candidate post-layout simulation, and a witness is not an optimum-quality baseline. Fix families and measurement conditions before comparison; size variants of one template do not constitute independent circuit knowledge.
 
-Qualification applies only to the fixed case, tools, rules, and declared conditions; requalify the affected scope after an environment change. An IHP case without upstream layout evidence must remain excluded rather than receiving a generated replacement reference.
+Qualification applies only to the fixed case, tools, rules, and declared conditions; requalify the affected scope after an environment change. An IHP or TO_Apr2025 case without upstream layout evidence must remain excluded rather than receiving a generated replacement reference.
 
 <a id="input-isolation"></a>
 

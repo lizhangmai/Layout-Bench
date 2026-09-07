@@ -23,7 +23,7 @@ Measure whether an agent can turn a circuit netlist, physical constraints, and p
 
 Layout-Bench runs an Agent in an isolated container, records an explicit GDS submission, and evaluates the frozen candidate with independent EDA tools. DRC/LVS establish physical validity; a complete task also checks the declared geometry and post-layout performance limits.
 
-> **Public preview.** The repository ships a framework integration fixture (`examples/sg13g2/checked-switch`) for local smoke checks. The IHP AnalogAcademy catalog is [`tasks/IHP-AnalogAcademy/catalog.toml`](tasks/IHP-AnalogAcademy/catalog.toml) and currently contains only four selected cases whose pinned upstream checkout already provides a reusable layout together with the corresponding netlist and physical evidence. Schematic-only circuits are intentionally not included.
+> **Public preview.** The repository ships a framework integration fixture (`examples/sg13g2/checked-switch`) for local smoke checks. The selected public circuit catalogs are [`tasks/IHP-AnalogAcademy/catalog.toml`](tasks/IHP-AnalogAcademy/catalog.toml) and [`tasks/TO_Apr2025/catalog.toml`](tasks/TO_Apr2025/catalog.toml); each currently contains only four cases whose pinned upstream checkout already provides a reusable layout together with the corresponding netlist and physical evidence. Schematic-only circuits are intentionally not included.
 
 ## Why Layout-Bench?
 
@@ -83,7 +83,7 @@ uv run --locked python scripts/public_preview.py qualify \
   --output build/runs/preview-qualification
 ```
 
-IHP reference and qualification assets are published only for cases that pass the upstream-complete screening gate. Standard Agent runs receive only the declared task inputs and never a reference solution.
+IHP and TO_Apr2025 reference and qualification assets are published only for cases that pass the upstream-complete screening gate. Standard Agent runs receive only the declared task inputs and never a reference solution.
 
 <a id="run-your-agent"></a>
 
@@ -91,7 +91,7 @@ IHP reference and qualification assets are published only for cases that pass th
 
 The workflow is simple:
 
-1. **Choose a task** — start with the checked-switch integration fixture or an IHP case that has passed the upstream-complete screening gate.
+1. **Choose a task** — start with the checked-switch integration fixture or an IHP/TO_Apr2025 case that has passed the upstream-complete screening gate.
 2. **Configure a harness** — provide any executable command, reviewed files, resources, and budgets; an optional harness profile records its protocol and execution semantics.
 3. **Submit a candidate** — work in `/workspace`, then run `python -I /protocol/submit.py` to submit the configured GDS explicitly.
 4. **Evaluate and compare** — use the independent evaluator for one candidate, or a frozen batch plan for task × configuration × repetition measurements.
@@ -193,7 +193,7 @@ It is a deterministic SG13G2 checked-switch integration fixture. It exercises th
 
 This package includes the common executable-harness session protocol, a provider-neutral canonical harness example, a host-owned model gateway, configurable EDA backends, a deterministic integration fixture, and local batch statistics. It does not include hosted evaluation, identity authentication, or an official leaderboard.
 
-The framework is licensed under [MIT](LICENSE). IHP AnalogAcademy source records retain the upstream license and per-file notices; any later derived task assets must retain the corresponding upstream notices. Submodules, tools, and dependencies retain their own licenses and notices; source and resource preparation are described in the [tool guide](docs/tools.md#external-sources).
+The framework is licensed under [MIT](LICENSE). IHP AnalogAcademy and TO_Apr2025 source records retain their upstream licenses and per-file notices; any later derived task assets must retain the corresponding upstream notices. Submodules, tools, and dependencies retain their own licenses and notices; source and resource preparation are described in the [tool guide](docs/tools.md#external-sources).
 
 <p align="center">
 <a href="README_CN.md">阅读中文文档 →</a>

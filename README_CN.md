@@ -24,7 +24,7 @@
 
 Layout-Bench 在隔离容器中运行 Agent，记录明确提交的 GDS，并使用独立的 EDA 工具评估冻结后的候选版图。DRC/LVS 用于建立物理有效性；完整任务还会检查声明的几何约束和后仿性能限值。
 
-> **公开预览版。** 当前仓库用 `examples/sg13g2/checked-switch` 作为框架集成 smoke fixture。[`tasks/IHP-AnalogAcademy/catalog.toml`](tasks/IHP-AnalogAcademy/catalog.toml) 目前只包含 4 个已筛选电路；它们的 pinned upstream 均已提供可公开复用版图、对应网表和物理证据。只有原理图的电路不会纳入公开 Bench。
+> **公开预览版。** 当前仓库用 `examples/sg13g2/checked-switch` 作为框架集成 smoke fixture。当前公开电路目录为 [`tasks/IHP-AnalogAcademy/catalog.toml`](tasks/IHP-AnalogAcademy/catalog.toml) 和 [`tasks/TO_Apr2025/catalog.toml`](tasks/TO_Apr2025/catalog.toml)；两者目前都只包含 4 个已筛选电路，且 pinned upstream 均已提供可公开复用版图、对应网表和物理证据。只有原理图的电路不会纳入公开 Bench。
 
 ## 为什么选择 Layout-Bench？
 
@@ -84,13 +84,13 @@ uv run --locked python scripts/public_preview.py qualify \
   --output build/runs/preview-qualification
 ```
 
-IHP 的参考解和 qualification 资产只会随通过“上游已有完整实现”门槛的电路公开。标准 Agent 运行只接收 case TOML 的 `[task]` 段声明的输入，永远不会挂载参考解。
+IHP 和 TO_Apr2025 的参考解和 qualification 资产只会随通过“上游已有完整实现”门槛的电路公开。标准 Agent 运行只接收 case TOML 的 `[task]` 段声明的输入，永远不会挂载参考解。
 
 ## 如何使用
 
 工作流程如下：
 
-1. **选择任务**：从 checked-switch 集成 fixture 或已经通过“上游有完整实现”筛选的 IHP case 开始。
+1. **选择任务**：从 checked-switch 集成 fixture 或已经通过“上游有完整实现”筛选的 IHP/TO_Apr2025 case 开始。
 2. **配置 harness**：提供任意可执行命令、经过审查的文件、资料和预算；可选 harness profile 只记录协议和执行语义。
 3. **提交候选版图**：在 `/workspace` 中工作，然后运行 `python -I /protocol/submit.py`，明确提交配置的 GDS。
 4. **评估和比较**：单个候选使用独立评估器；批量测量使用冻结的“任务 × 配置 × 重复次数”计划。
@@ -192,7 +192,7 @@ DRC/LVS 是物理有效性门槛。任务成功还要求所有硬约束、必需
 
 本公开包包含通用可执行 harness 会话协议、不绑定厂商的 canonical harness 示例、由主机持有的模型 gateway、可配置 EDA 后端、确定性集成 fixture 和本地批量统计。不包含托管评测、身份认证或官方排行榜。
 
-框架采用 [MIT](LICENSE) 许可。IHP AnalogAcademy 录入清单保留上游许可和逐文件声明；后续派生任务资产也必须保留对应上游声明。Submodule、工具和依赖保留各自的许可与声明；来源和资料准备见[工具指南](docs/tools.md#external-sources)。
+框架采用 [MIT](LICENSE) 许可。IHP AnalogAcademy 和 TO_Apr2025 录入清单保留上游许可和逐文件声明；后续派生任务资产也必须保留对应上游声明。Submodule、工具和依赖保留各自的许可与声明；来源和资料准备见[工具指南](docs/tools.md#external-sources)。
 
 <p align="center">
 <a href="README.md">阅读英文文档 →</a>
