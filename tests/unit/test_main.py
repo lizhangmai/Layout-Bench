@@ -31,7 +31,7 @@ def test_run_summary_surfaces_failed_gates_and_inference_count(tmp_path):
         },
     }))
     summary = _run_summary({
-        "termination": "completed", "outcome": "failed", "task_success": False,
+        "termination": "completed", "reason": "", "outcome": "failed", "task_success": False,
         "candidate": {"sha256": "abc"},
         "inference": {"requests": [{"sequence": 1}, {"sequence": 2}]},
     }, output)
@@ -44,12 +44,12 @@ def test_run_summary_surfaces_failed_gates_and_inference_count(tmp_path):
 
 def test_run_summary_does_not_hide_missing_evaluation(tmp_path):
     summary = _run_summary({
-        "termination": "completed", "outcome": "no_submission", "task_success": False,
+        "termination": "completed", "reason": "", "outcome": "no_submission", "task_success": False,
         "candidate": None,
     }, tmp_path / "run")
     assert summary == {
         "report": str(tmp_path / "run/run.json"),
-        "termination": "completed", "outcome": "no_submission",
+        "termination": "completed", "reason": "", "outcome": "no_submission",
         "task_success": False, "candidate": None,
     }
 

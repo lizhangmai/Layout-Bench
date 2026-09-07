@@ -34,7 +34,7 @@ def _run_summary(report, output):
     """
     summary = {"report": str(output / "run.json"),
                **{key: report[key] for key in
-                  ("termination", "outcome", "task_success", "candidate")}}
+                  ("termination", "reason", "outcome", "task_success", "candidate")}}
     if report.get("inference") is not None:
         summary["inference_requests"] = len(report["inference"].get("requests", []))
     evaluation_path = output / "evaluation/report.json"
