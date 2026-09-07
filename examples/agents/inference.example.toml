@@ -1,9 +1,8 @@
 schema_version = 1
-# The gateway currently implements the provider-neutral Responses wire family.
-# A harness may use it through its own bridge; the session runner does not
-# assume which harness owns the conversation.
+# The gateway currently implements a Responses-shaped wire family.  This is a
+# protocol label, not a provider selection; use any compatible endpoint.
 wire_api = "responses"
-base_url = "https://api.openai.com/v1"
+base_url = "https://inference.example.invalid/v1"
 model = "REPLACE_WITH_YOUR_MODEL"
 api_key_env = "LAYOUT_BENCH_API_KEY"
 max_requests = 100

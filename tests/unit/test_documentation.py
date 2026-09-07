@@ -54,3 +54,9 @@ def test_document_symlink_does_not_read_outside_checkout(tmp_path):
     assert len(errors) == 1
     assert 'regular file' in errors[0]
     assert 'sensitive-path' not in errors[0]
+
+
+def test_inference_example_does_not_select_a_model_provider():
+    example = (ROOT / 'examples/agents/inference.example.toml').read_text()
+    assert 'api.openai.com' not in example
+    assert 'inference.example.invalid' in example
