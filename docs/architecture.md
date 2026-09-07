@@ -1,6 +1,6 @@
 # Architecture and Extension Interfaces
 
-Layout-Bench measures an Agent's ability to turn authoritative netlists, constraints, and process resources into GDS. The system under test includes the harness, model, prompt, context strategy, and tools; each measurement covers one task, one configuration, and one independent repetition. The benchmark owns a small session protocol and treats harness internals as opaque unless a run explicitly declares a managed or native runtime semantic. See the root [README](../README.md) for the current scope and next steps.
+Layout-Bench measures an Agent's ability to turn authoritative netlists, constraints, and process resources into GDS. The system under test includes the harness, model, prompt, context strategy, and tools; each measurement covers one task, one configuration, and one independent repetition. The benchmark owns a small session protocol and treats harness internals as opaque unless a run explicitly declares a managed or native runtime semantic. See the root [README](../README.md) for the current public scope.
 
 <a id="repositories"></a>
 
