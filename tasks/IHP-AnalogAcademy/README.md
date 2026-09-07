@@ -50,8 +50,5 @@ source file and the upstream [license](../../third_party/IHP-AnalogAcademy/LICEN
 before redistributing a derived asset.
 
 The optional `[screening]` table records the source-review decision (`include`,
-`defer`, or `exclude`) and its short reason. The complete evidence and the
-one-by-one decision record are maintained in
-[`docs/ihp-analog-academy-case-screening.md`](../../docs/ihp-analog-academy-case-screening.md);
-`include` is a preparation decision, not a claim that the case is already a
-qualified runnable task.
+`defer`, or `exclude`) and its short reason. `include` is a preparation
+decision, not a claim that the case is already a qualified runnable task.
