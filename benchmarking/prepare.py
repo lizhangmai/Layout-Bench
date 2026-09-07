@@ -21,6 +21,14 @@ def export_xschem(manifest: Path, checkouts: dict[str, Path], output: Path,
                   image: str = "layout-bench-tools:local") -> None:
     manifest_bytes = manifest.read_bytes()
     spec = tomllib.loads(manifest_bytes.decode("utf-8"))
+    source_manifest_sha256 = hashlib.sha256(manifest_bytes).hexdigest()
+    if spec.get("kind") == "layout_case":
+        if not isinstance(spec.get("source_export"), dict):
+            raise ValueError("Circuit case does not declare source_export")
+        spec = spec["source_export"]
+        source_manifest_sha256 = hashlib.sha256(
+            json.dumps(spec, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
     _keys(spec, {"tool", "schematic", "netlist", "files"}, set(), "source")
     if spec["tool"] != "xschem-lvs":
         raise ValueError("Only the xschem-lvs exporter is implemented")
@@ -106,7 +114,7 @@ def export_xschem(manifest: Path, checkouts: dict[str, Path], output: Path,
             )
             provenance = {
                 "exporter": "xschem-lvs", "image_id": image_id, "version": version,
-                "source_manifest_sha256": hashlib.sha256(manifest_bytes).hexdigest(),
+                "source_manifest_sha256": source_manifest_sha256,
                 "files": records, "command": command,
                 "netlist": netlist, "netlist_sha256": hashlib.sha256(content).hexdigest(),
                 "postprocessing": "none",

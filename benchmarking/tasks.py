@@ -97,13 +97,63 @@ class Task:
             stage.rename(destination)
 
 
-def load_task(config: Path) -> Task:
-    """Read task.toml, reject unsupported fields and verify each declared input."""
+def _validate_case(data: dict) -> None:
+    """Validate the inventory half of a unified circuit case."""
+    _keys(data, {"schema_version", "kind", "id", "title", "status", "origin", "sources"},
+          {"role", "task", "source_export", "assets", "qualification"}, "case")
+    if type(data["schema_version"]) is not int or data["schema_version"] != 2:
+        raise ValueError("Unsupported case schema_version")
+    if data["kind"] != "layout_case":
+        raise ValueError("Only layout_case cases are supported")
+    for field in ("id", "title", "status"):
+        _text(data[field], f"case.{field}")
+    if data["status"] not in {"candidate", "qualified", "source-only", "supporting-source"}:
+        raise ValueError("Case status is not recognized")
+    origin = data["origin"]
+    _keys(origin, {"checkout", "commit", "license"}, set(), "case.origin")
+    for field in ("checkout", "commit", "license"):
+        _text(origin[field], f"case.origin.{field}")
+    sources = data["sources"]
+    if not isinstance(sources, list) or not sources:
+        raise ValueError("Case needs at least one source")
+    seen = set()
+    for source in sources:
+        _keys(source, {"id", "path", "role", "format", "sha256", "bytes"}, set(), "case.sources")
+        source_id = _text(source["id"], "case.sources.id")
+        if source_id in seen:
+            raise ValueError(f"Duplicate case source: {source_id}")
+        seen.add(source_id)
+        _relative(source["path"], "case.sources.path")
+        _text(source["role"], "case.sources.role")
+        _text(source["format"], "case.sources.format")
+        if not isinstance(source["sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", source["sha256"]):
+            raise ValueError("case.sources.sha256 must be a lowercase SHA-256")
+        if type(source["bytes"]) is not int or source["bytes"] <= 0:
+            raise ValueError("case.sources.bytes must be a positive integer")
+    assets = data.get("assets", [])
+    if not isinstance(assets, list):
+        raise TypeError("case.assets must be an array")
+    for asset in assets:
+        _keys(asset, {"path", "role", "visibility", "format", "sha256", "bytes"}, set(), "case.assets")
+        _relative(asset["path"], "case.assets.path")
+        _text(asset["role"], "case.assets.role")
+        if asset["visibility"] not in {"agent", "evaluator", "maintainer"}:
+            raise ValueError("case.assets.visibility is not recognized")
+        _text(asset["format"], "case.assets.format")
+        if not isinstance(asset["sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", asset["sha256"]):
+            raise ValueError("case.assets.sha256 must be a lowercase SHA-256")
+        if type(asset["bytes"]) is not int or asset["bytes"] <= 0:
+            raise ValueError("case.assets.bytes must be a positive integer")
+    qualification = data.get("qualification")
+    if qualification is not None:
+        _keys(qualification, {"evidence", "reference"}, set(), "case.qualification")
+        _relative(qualification["evidence"], "case.qualification.evidence")
+        _relative(qualification["reference"], "case.qualification.reference")
+
+
+def _load_task_data(data: dict, config: Path, raw: bytes, *, label: str) -> Task:
+    """Load the executable task section from either schema."""
     config = config.absolute()
-    if config.resolve(strict=True) != config or not config.is_file():
-        raise ValueError("Task configuration must be a regular, non-symlink file")
-    raw = config.read_bytes()
-    data = tomllib.loads(raw.decode("utf-8"))
     _keys(data, {"schema_version", "id", "title", "kind", "family", "status",
                  "environment", "inputs", "output"}, {"provenance"}, "task")
     if type(data["schema_version"]) is not int or data["schema_version"] != 1:
@@ -122,8 +172,9 @@ def load_task(config: Path) -> Task:
     for role, entry in data["inputs"].items():
         identifier(role)
         required = {"path", "sha256", "subcircuit"} if role == "netlist" else {"path", "sha256"}
-        _keys(entry, required, {"format"}, f"inputs.{role}")
+        _keys(entry, required, {"format", "source"}, f"inputs.{role}")
         relative = _relative(entry["path"], f"inputs.{role}.path")
+        source_relative = _relative(entry.get("source", relative), f"inputs.{role}.source")
         if any(relative == p or relative.startswith(p + "/") or p.startswith(relative + "/")
                for p in seen_paths):
             raise ValueError(f"Overlapping task input paths: {relative}")
@@ -131,7 +182,7 @@ def load_task(config: Path) -> Task:
         digest = entry["sha256"]
         if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
             raise ValueError(f"inputs.{role}.sha256 must be a lowercase SHA-256")
-        content = _read_file(config.parent, relative)
+        content = _read_file(config.parent, source_relative)
         if hashlib.sha256(content).hexdigest() != digest:
             raise ValueError(f"Task input checksum mismatch: {relative}")
         inputs.append(InputFile(role, relative, digest, content,
@@ -152,14 +203,36 @@ def load_task(config: Path) -> Task:
         raise ValueError("output.max_bytes must be a positive integer")
     if "provenance" in data:
         origin = data["provenance"]
-        _keys(origin, {"path", "sha256"}, set(), "provenance")
+        _keys(origin, {"path", "sha256"}, {"source"}, "provenance")
         path = _relative(origin["path"], "provenance.path")
         if path in seen_paths:
             raise ValueError("Preparation provenance must not be an Agent input")
-        if hashlib.sha256(_read_file(config.parent, path)).hexdigest() != origin["sha256"]:
+        source = _relative(origin.get("source", path), "provenance.source")
+        if hashlib.sha256(_read_file(config.parent, source)).hexdigest() != origin["sha256"]:
             raise ValueError("Preparation provenance checksum mismatch")
     return Task(
         data["id"], data["title"], data["family"], data["status"], data["environment"], subcircuit,
         tuple(inputs), LayoutOutput(output_path, top_cell, output["max_bytes"]),
         hashlib.sha256(raw).hexdigest(), evaluation,
     )
+
+
+def load_task(config: Path) -> Task:
+    """Read a standalone task or the executable section of a circuit case."""
+    config = config.absolute()
+    if config.resolve(strict=True) != config or not config.is_file():
+        raise ValueError("Task configuration must be a regular, non-symlink file")
+    raw = config.read_bytes()
+    data = tomllib.loads(raw.decode("utf-8"))
+    if data.get("kind") != "layout_case":
+        return _load_task_data(data, config, raw, label="task")
+    _validate_case(data)
+    task_data = data.get("task")
+    if task_data is None:
+        raise ValueError(f"Case {data['id']} does not declare an executable task")
+    if not isinstance(task_data, dict):
+        raise TypeError("case.task must be a table")
+    task_data = dict(task_data)
+    task_data.update({"schema_version": 1, "id": data["id"], "title": data["title"],
+                      "status": data["status"]})
+    return _load_task_data(task_data, config, raw, label="case.task")

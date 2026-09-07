@@ -7,7 +7,7 @@
 [protocol-probe.toml](protocol-probe.toml) 展示一个 opaque harness 的 `command`、限额和带摘要的 `files`。程序只画矩形并显式提交，不实现题目电路；运行预期退出 1，`run.json` 应显示正常终止但任务评估失败：
 
 ```bash
-uv run --locked python main.py run tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/task.toml \
+uv run --locked python main.py run tasks/IHP-AnalogAcademy/cases/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.toml \
   --agent build/runs/preview/prepared/protocol-probe.toml \
   --toolchain build/runs/preview/prepared/toolchain.toml --output build/runs/protocol-probe
 ```

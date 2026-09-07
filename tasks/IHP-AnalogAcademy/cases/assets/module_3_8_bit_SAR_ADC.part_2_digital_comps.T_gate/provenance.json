@@ -1,0 +1,56 @@
+{
+  "exporter": "xschem-lvs",
+  "image_id": "sha256:1e3105010e990494ced1662d473c914293834cc4add3551fcb90a0fbf56eaaf1",
+  "version": "Created /home/ubuntu/.xschem dir with template xschemrc\nXSCHEM V3.4.4\nCopyright (C) 1998-2023 Stefan Schippers\n\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+  "source_manifest_sha256": "71ebaaa95466be722a8f6fb6ec17cc6bf07ae27d0f3336a6144679bd344578e0",
+  "files": [
+    {
+      "checkout": "academy",
+      "path": "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/schematic/T_gate.sch",
+      "target": "T_gate.sch",
+      "sha256": "c3dc8407942cc88e9cd0ed0fae6549c090a3d753fa95fdf1e97582e5e4a873fd",
+      "commit": "133ecf657572e021b5921b5a1b7693abfb209623"
+    },
+    {
+      "checkout": "academy",
+      "path": "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/schematic/T_gate.sym",
+      "target": "T_gate.sym",
+      "sha256": "3ec46e80cbe10fd135e3274e76ea32c93e65015fac7c4b5cc8cf90a59e1b53d1",
+      "commit": "133ecf657572e021b5921b5a1b7693abfb209623"
+    },
+    {
+      "checkout": "pdk",
+      "path": "ihp-sg13g2/libs.tech/xschem/sg13g2_pr/sg13_lv_nmos.sym",
+      "target": "sg13g2_pr/sg13_lv_nmos.sym",
+      "sha256": "4c65869259c7aea7ff30d8612c5017419423d55e27dbb0aea28323e7da49ba7d",
+      "commit": "5e6d592e4002946a4616f798c357f0f3c06cf3b6"
+    },
+    {
+      "checkout": "pdk",
+      "path": "ihp-sg13g2/libs.tech/xschem/sg13g2_pr/sg13_lv_pmos.sym",
+      "target": "sg13g2_pr/sg13_lv_pmos.sym",
+      "sha256": "bc03331b71de250641ba1eb34c3b13bd3bb21a53ed7c329ecf6b0b1a7c53a6c1",
+      "commit": "5e6d592e4002946a4616f798c357f0f3c06cf3b6"
+    }
+  ],
+  "command": [
+    "xschem",
+    "-i",
+    "-x",
+    "-q",
+    "-r",
+    "-s",
+    "--tcl",
+    "file mkdir /workspace/export; set XSCHEM_LIBRARY_PATH /source:$XSCHEM_SHAREDIR/xschem_library/devices; set top_is_subckt 1; set lvs_netlist 1; set spiceprefix 1",
+    "--command",
+    "xschem set format lvs_format; xschem netlist",
+    "-o",
+    "/workspace/export",
+    "-N",
+    "T_gate.spice",
+    "/source/T_gate.sch"
+  ],
+  "netlist": "T_gate.spice",
+  "netlist_sha256": "173d8ad93008a527e08da56956183aa802abfd7c3bfa14b4ce3f534fe5d342d9",
+  "postprocessing": "none"
+}

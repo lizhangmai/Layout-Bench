@@ -26,7 +26,7 @@ IMAGE = os.environ.get("LAYOUT_BENCH_TEST_IMAGE", "layout-bench-tools:local")
 
 pytestmark = pytest.mark.integration
 ROOT = Path(__file__).resolve().parents[2]
-TASK = ROOT / "tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/task.toml"
+TASK = ROOT / "tasks/IHP-AnalogAcademy/cases/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.toml"
 PREAMBLE = '''import json, os, subprocess, time
 from pathlib import Path
 task = json.loads(Path('/protocol/task.json').read_text())

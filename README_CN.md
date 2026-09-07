@@ -24,7 +24,7 @@
 
 Layout-Bench 在隔离容器中运行 Agent，记录明确提交的 GDS，并使用独立的 EDA 工具评估冻结后的候选版图。DRC/LVS 用于建立物理有效性；完整任务还会检查声明的几何约束和后仿性能限值。
 
-> **公开预览版。** 当前仓库包含一个已资格验证的公开任务 `academy-tgate`、对应参考解和 14 个资格验证场景；IHP AnalogAcademy 的全部电路来源已按模块录入 [`tasks/IHP-AnalogAcademy/`](tasks/IHP-AnalogAcademy/README.md)，没有专属网表、约束、评估和资格材料的电路仍是目录记录，不是可运行任务。本公开包用于本地、可复现的评测。
+> **公开预览版。** 当前仓库包含一个已资格验证的公开任务 `module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate`、对应参考解和 14 个资格验证场景；IHP AnalogAcademy 的全部电路来源已按统一 case 配置录入 [`tasks/IHP-AnalogAcademy/`](tasks/IHP-AnalogAcademy/README.md)，没有专属网表、约束、评估和资格材料的电路仍是 case 记录，不是可运行任务。本公开包用于本地、可复现的评测。
 
 ## 为什么选择 Layout-Bench？
 
@@ -84,13 +84,13 @@ uv run --locked python scripts/public_preview.py qualify \
   --output build/runs/preview-qualification
 ```
 
-[参考解](tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/reference/README.md)和[资格证据](tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/qualification/README.md)公开用于调试。标准 Agent 运行只接收声明的任务输入，永远不会挂载参考解。
+[参考解](tasks/IHP-AnalogAcademy/cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/reference/README.md)和[资格证据](tasks/IHP-AnalogAcademy/cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/qualification/README.md)公开用于调试。标准 Agent 运行只接收 case TOML 的 `[task]` 段声明的输入，永远不会挂载参考解。
 
 ## 如何使用
 
 工作流程如下：
 
-1. **选择任务**：从公开的 `academy-tgate` 任务及其声明输入开始。
+1. **选择任务**：从公开的传输门 case 及其声明输入开始。
 2. **配置 harness**：提供任意可执行命令、经过审查的文件、资料和预算；可选 harness profile 只记录协议和执行语义。
 3. **提交候选版图**：在 `/workspace` 中工作，然后运行 `python -I /protocol/submit.py`，明确提交配置的 GDS。
 4. **评估和比较**：单个候选使用独立评估器；批量测量使用冻结的“任务 × 配置 × 重复次数”计划。
@@ -100,7 +100,7 @@ uv run --locked python scripts/public_preview.py qualify \
 通过主机持有的 gateway 连接模型时，先参考[不绑定厂商的 canonical harness 与适配器契约](examples/agents/README.md#provider-neutral-canonical-harness)，再复制 [inference.example.toml](examples/agents/inference.example.toml)，填写端点、模型和主机密钥变量名，再运行自己的 harness 配置：
 
 ```bash
-uv run --locked python main.py run tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/task.toml \
+uv run --locked python main.py run tasks/IHP-AnalogAcademy/cases/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.toml \
   --agent path/to/agent.toml \
   --resources build/runs/preview/prepared/agent-resources \
   --toolchain build/runs/preview/prepared/toolchain.toml \
@@ -120,7 +120,7 @@ uv run --locked python main.py inference-check build/runs/inference.toml --agent
 
 Layout-Bench 运行一个四阶段循环：
 
-1. **定义**：`task.toml` 固定任务输入、输出契约、约束和可选评估计划。
+1. **定义**：统一 case TOML 固定电路来源、任务输入、输出契约、约束和可选评估计划。
 2. **运行**：Runner 固定 Agent 配置、资料、预算、工具链和执行身份，然后启动隔离会话。
 3. **裁判**：明确提交后，评估器使用声明的 artifact、DRC、LVS、几何、提取和性能 job 检查冻结的 GDS。
 4. **报告**：持久事件和工件支持独立重新评估、批量统计和可复现性检查。
@@ -170,7 +170,7 @@ DRC/LVS 是物理有效性门槛。任务成功还要求所有硬约束、必需
 <details>
 <summary><strong>标准 Agent 会收到参考解吗？</strong></summary>
 
-不会。参考 GDS 和资格证据公开用于调试，但标准运行只会物化 `task.toml` 声明的任务输入。
+不会。参考 GDS 和资格证据公开用于调试，但标准运行只会物化 case TOML 的 `[task]` 段声明的任务输入。
 
 </details>
 
@@ -192,7 +192,7 @@ DRC/LVS 是物理有效性门槛。任务成功还要求所有硬约束、必需
 
 本公开包包含公开任务及资格材料、通用可执行 harness 会话协议、不绑定厂商的 canonical harness 示例、由主机持有的模型 gateway、可配置 EDA 后端和本地批量统计。不包含托管评测、身份认证或官方排行榜。
 
-框架采用 [MIT](LICENSE) 许可。公开的 `academy-tgate` 任务保留其 [Apache-2.0 许可](tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/LICENSE)。IHP AnalogAcademy 录入清单保留上游许可和逐文件声明；Submodule、工具和依赖保留各自的许可与声明；来源和资料准备见[工具指南](docs/tools.md#external-sources)。
+框架采用 [MIT](LICENSE) 许可。公开的传输门 case 保留其 [Apache-2.0 许可](tasks/IHP-AnalogAcademy/cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/LICENSE)。IHP AnalogAcademy 录入清单保留上游许可和逐文件声明；Submodule、工具和依赖保留各自的许可与声明；来源和资料准备见[工具指南](docs/tools.md#external-sources)。
 
 <p align="center">
 <a href="README.md">阅读英文文档 →</a>

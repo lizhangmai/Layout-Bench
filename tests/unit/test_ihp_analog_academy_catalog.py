@@ -19,38 +19,52 @@ ARTIFACT_EXTENSIONS = {
 }
 
 
-def test_catalog_is_complete_and_points_to_named_circuit_configs():
+def _configs(catalog):
+    return {
+        item["id"]: tomllib.loads((CATALOG.parent / item["config_path"]).read_text())
+        for item in catalog["cases"]
+    }
+
+
+def test_catalog_has_one_unified_config_per_case():
     catalog = tomllib.loads(CATALOG.read_text())
-    circuits = catalog["circuits"]
-    assert catalog["schema_version"] == 2
-    assert catalog["circuit_source_count"] == len(circuits) == 50
+    assert catalog["schema_version"] == 3
+    assert catalog["source_count"] == 50
+    assert catalog["case_count"] == len(catalog["cases"]) == 30
     assert catalog["artifact_count"] == len(catalog["artifacts"])
     excluded = {item["path"] for item in catalog["excluded"]}
     assert excluded == {EXCLUDED.rstrip("/"), "utils/PEX_Demo"}
     assert all(not any(item["path"].startswith(path + "/") for path in excluded)
                for item in catalog["artifacts"])
 
-    config_paths = {item["config_path"] for item in circuits}
-    assert len(config_paths) == len(circuits)
-    assert all(Path(path).name != "intake.toml" for path in config_paths)
-    configs = {path: tomllib.loads((CATALOG.parent / path).read_text()) for path in config_paths}
-    assert all((CATALOG.parent / path).is_file() for path in config_paths)
-    assert all(Path(path).stem == Path(data["source_path"]).stem
-               for path, data in configs.items())
+    config_paths = [item["config_path"] for item in catalog["cases"]]
+    assert len(config_paths) == len(set(config_paths))
+    assert all(Path(path).parent == Path("cases") for path in config_paths)
+    assert all(Path(path).stem == item["id"] for path, item in
+               zip(config_paths, catalog["cases"], strict=True))
+    configs = _configs(catalog)
+    assert set(configs) == {item["id"] for item in catalog["cases"]}
+    assert all(data["kind"] == "layout_case" and data["schema_version"] == 2
+               for data in configs.values())
+    assert all(not Path(path).name in {"intake.toml", "task.toml", "source.toml"}
+               for path in config_paths)
+
+    sources = [source for data in configs.values() for source in data["sources"]]
+    assert len(sources) == catalog["source_count"]
+    assert len({source["id"] for source in sources}) == len(sources)
+    assert len({source["path"] for source in sources}) == len(sources)
+    assert all(source["path"].endswith(".sch") for source in sources)
 
     qualified = [data for data in configs.values() if data["status"] == "qualified"]
     assert [data["id"] for data in qualified] == [
-        "module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.schematic.T_gate"
+        "module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate"
     ]
-    assert qualified[0]["task_path"].endswith("/T_gate/task.toml")
-
-    source_configs = {
-        path.relative_to(CATALOG.parent).as_posix()
-        for path in CATALOG.parent.rglob("*.toml")
-        if "source_path" in tomllib.loads(path.read_text())
-    }
-    assert source_configs == config_paths
-    assert not list(CATALOG.parent.rglob("intake.toml"))
+    assert "task" in qualified[0]
+    assert "source_export" in qualified[0]
+    assert not list(CATALOG.parent.glob("**/intake.toml"))
+    assert not list(CATALOG.parent.glob("**/task.toml"))
+    assert not list(CATALOG.parent.glob("**/source.toml"))
+    assert not (CATALOG.parent / "qualified").exists()
 
 
 def test_catalog_digests_match_the_pinned_submodule():
@@ -69,19 +83,21 @@ def test_catalog_digests_match_the_pinned_submodule():
         if path.startswith(ALLOWED_PREFIXES)
         and not any(path.startswith(prefix) for prefix in EXCLUDED_PREFIXES)
     }
-    expected_circuits = {path for path in source_paths if path.endswith(".sch")}
+    expected_sources = {path for path in source_paths if path.endswith(".sch")}
     expected_artifacts = {
         path for path in source_paths if Path(path).suffix.lower() in ARTIFACT_EXTENSIONS
     }
-    config_data = [tomllib.loads((CATALOG.parent / item["config_path"]).read_text())
-                   for item in catalog["circuits"]]
-    assert {data["source_path"] for data in config_data} == expected_circuits
+    configs = _configs(catalog)
+    sources = [source for data in configs.values() for source in data["sources"]]
+    assert {source["path"] for source in sources} == expected_sources
     assert {item["path"] for item in catalog["artifacts"]} == expected_artifacts
-    for data in config_data:
-        path = academy / data["source_path"]
-        assert path.is_file(), data["source_path"]
-        assert not any(data["source_path"].startswith(prefix + "/") for prefix in excluded)
-        assert hashlib.sha256(path.read_bytes()).hexdigest() == data["source_sha256"]
+    for source in sources:
+        path = academy / source["path"]
+        assert path.is_file(), source["path"]
+        assert not any(source["path"].startswith(prefix.rstrip("/") + "/") for prefix in excluded)
+        content = path.read_bytes()
+        assert hashlib.sha256(content).hexdigest() == source["sha256"]
+        assert len(content) == source["bytes"]
     for item in catalog["artifacts"]:
         path = academy / item["path"]
         assert path.is_file(), item["path"]

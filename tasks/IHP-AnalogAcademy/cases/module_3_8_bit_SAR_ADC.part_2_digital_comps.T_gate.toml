@@ -1,0 +1,218 @@
+schema_version = 2
+kind = "layout_case"
+id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate"
+title = "IHP AnalogAcademy transmission gate"
+role = "design"
+status = "qualified"
+
+[origin]
+checkout = "third_party/IHP-AnalogAcademy"
+commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+license = "Apache-2.0 upstream root; file-level notices apply"
+
+[[sources]]
+id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.schematic.T_gate"
+path = "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/schematic/T_gate.sch"
+role = "design"
+format = "xschem"
+sha256 = "c3dc8407942cc88e9cd0ed0fae6549c090a3d753fa95fdf1e97582e5e4a873fd"
+bytes = 988
+
+[[sources]]
+id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.testbench.T_gate_switch_tb"
+path = "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/testbench/T_gate_switch_tb.sch"
+role = "testbench"
+format = "xschem"
+sha256 = "c2af0e445836e43c7c64a19f15082b71edeca7ab5959a4860816165bb3cb740a"
+bytes = 3337
+
+[source_export]
+tool = "xschem-lvs"
+schematic = "T_gate.sch"
+netlist = "T_gate.spice"
+
+[[source_export.files]]
+checkout = "academy"
+path = "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/schematic/T_gate.sch"
+target = "T_gate.sch"
+sha256 = "c3dc8407942cc88e9cd0ed0fae6549c090a3d753fa95fdf1e97582e5e4a873fd"
+
+[[source_export.files]]
+checkout = "academy"
+path = "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/schematic/T_gate.sym"
+target = "T_gate.sym"
+sha256 = "3ec46e80cbe10fd135e3274e76ea32c93e65015fac7c4b5cc8cf90a59e1b53d1"
+
+[[source_export.files]]
+checkout = "pdk"
+path = "ihp-sg13g2/libs.tech/xschem/sg13g2_pr/sg13_lv_nmos.sym"
+target = "sg13g2_pr/sg13_lv_nmos.sym"
+sha256 = "4c65869259c7aea7ff30d8612c5017419423d55e27dbb0aea28323e7da49ba7d"
+
+[[source_export.files]]
+checkout = "pdk"
+path = "ihp-sg13g2/libs.tech/xschem/sg13g2_pr/sg13_lv_pmos.sym"
+target = "sg13g2_pr/sg13_lv_pmos.sym"
+sha256 = "bc03331b71de250641ba1eb34c3b13bd3bb21a53ed7c329ecf6b0b1a7c53a6c1"
+
+[task]
+kind = "netlist_to_gds"
+family = "transmission_gate"
+environment = "sg13g2-klayout-main-magic-c-v1"
+
+[task.inputs.netlist]
+path = "inputs/circuit.spice"
+source = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/inputs/circuit.spice"
+sha256 = "173d8ad93008a527e08da56956183aa802abfd7c3bfa14b4ce3f534fe5d342d9"
+subcircuit = "T_gate"
+
+[task.inputs.constraints]
+path = "inputs/constraints.json"
+source = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/inputs/constraints.json"
+sha256 = "5338c1db5867ea8c121008d07db15513f4f41320843764c5494ecc1cc1fc5c39"
+format = "json"
+
+[task.inputs.description]
+path = "inputs/description.md"
+source = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/inputs/description.md"
+sha256 = "9c1b44ac41ad6962b60485245d3ca03c5f56ecd5b72ce005b821fab34cfd8d6f"
+
+[task.inputs.license]
+path = "LICENSE"
+source = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/LICENSE"
+sha256 = "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+
+[task.inputs.evaluation]
+path = "inputs/evaluation.toml"
+source = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/inputs/evaluation.toml"
+sha256 = "209534505f7cda29f70ede955167309f293170b98bf309cc8a9a6d590ca0aecb"
+format = "toml"
+
+[task.inputs.on]
+path = "inputs/on.spice"
+source = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/inputs/on.spice"
+sha256 = "17d83bbe071e3ed59ea385bbcce8d038ba08093e69d934e90512d4826e5f2ff6"
+format = "spice"
+
+[task.inputs.off]
+path = "inputs/off.spice"
+source = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/inputs/off.spice"
+sha256 = "0fb37558df2fe4ba7c84493b58e6a396f6ff9597280c0451deff14e0a39bacf8"
+format = "spice"
+
+[task.inputs.transient]
+path = "inputs/transient.spice"
+source = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/inputs/transient.spice"
+sha256 = "70cfe8a1bb35e9ceb6e019685a41d48397fda71e01dfd4391cad7ad1c831a18e"
+format = "spice"
+
+[task.output]
+path = "output/final.gds"
+format = "gds"
+top_cell = "T_gate"
+max_bytes = 10485760
+
+[task.provenance]
+path = "provenance.json"
+source = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/provenance.json"
+sha256 = "537cb2fdd48f81dfeb1ad1f2e8b38c26905efdd4b7159087fcf2817531cfed82"
+
+[[assets]]
+path = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/qualification/README.md"
+role = "qualification"
+visibility = "evaluator"
+format = "markdown"
+sha256 = "0f1f201bfa8127949cc4e440695da830d5ac61530c6d4b4a71c32215b3755503"
+bytes = 5905
+
+[[assets]]
+path = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/qualification/calibrate.py"
+role = "qualification"
+visibility = "evaluator"
+format = "python"
+sha256 = "4c1f0ac69beac1f96bffe4c54683b80d7748ca9d89692bf1799c9d9c5bcb0a6b"
+bytes = 2982
+
+[[assets]]
+path = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/qualification/run.py"
+role = "qualification"
+visibility = "evaluator"
+format = "python"
+sha256 = "ae0024121e1c83aee36e65e41c3b76604abaf97742c26b7c2e578ea46a70b935"
+bytes = 4317
+
+[[assets]]
+path = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/qualification/schematic.rb"
+role = "qualification"
+visibility = "evaluator"
+format = "ruby"
+sha256 = "abbfa61bd90d5d3bae6c9754eeb23639abba18edbc2c67c1a4fd0831fb4153db"
+bytes = 1060
+
+[[assets]]
+path = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/qualification/toolchain.toml"
+role = "qualification"
+visibility = "evaluator"
+format = "toml"
+sha256 = "2ddff53890bf0c4f74706dffd34572c5d7795eab25d12eb9d8bcc9ce09549aca"
+bytes = 1280
+
+[[assets]]
+path = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/qualification/variants.py"
+role = "qualification"
+visibility = "evaluator"
+format = "python"
+sha256 = "822c861f0a3c391ee1f15a3b38546000fdc30c889cd3a62fa837f90f6c796eb8"
+bytes = 2457
+
+[[assets]]
+path = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/reference/README.md"
+role = "reference"
+visibility = "evaluator"
+format = "markdown"
+sha256 = "9771b17c77800303450a0a2e5f35568c5ef0ec3e28b7581b3ae0d96cb16eb7b8"
+bytes = 1910
+
+[[assets]]
+path = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/reference/generate.py"
+role = "reference"
+visibility = "evaluator"
+format = "python"
+sha256 = "5c5e65c545f999b6df08edc6ae5a7a27a658d5956378c283618c98fb8dcfbf7f"
+bytes = 2094
+
+[[assets]]
+path = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/reference/generation.json"
+role = "reference"
+visibility = "evaluator"
+format = "json"
+sha256 = "0da9d082763cdfb65415f1c68dc390d942808cd0b1e2aa85c1d231ca58a3b544"
+bytes = 690
+
+[[assets]]
+path = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/reference/generation.log"
+role = "reference"
+visibility = "evaluator"
+format = "text"
+sha256 = "c7469e16114e0d3f15c269a576336a3e99d7233f1c1bffa6d1dac88233357c58"
+bytes = 108
+
+[[assets]]
+path = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/reference/layout.py"
+role = "reference"
+visibility = "evaluator"
+format = "python"
+sha256 = "1a3750c2b28caf0df6a2a932a079325d562d512b474b22b08d43812d3cfa8c90"
+bytes = 2388
+
+[[assets]]
+path = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/reference/reference.gds"
+role = "reference"
+visibility = "evaluator"
+format = "gds"
+sha256 = "7faa7b83f307fbc38a6e168c967b1da10e3982ff48c21b55088bb7a35d2e3ee0"
+bytes = 9084
+
+[qualification]
+evidence = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/qualification/qualification.json"
+reference = "assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/reference/reference.gds"

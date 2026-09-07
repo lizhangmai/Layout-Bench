@@ -6,12 +6,12 @@ cd "${repo_root}"
 test_tmp="$(mktemp -d "${TMPDIR:-/tmp}/layout-bench-task.XXXXXX")"
 trap 'rm -rf "${test_tmp}"' EXIT
 
-uv run --locked python -m benchmarking.prepare tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/source.toml \
+uv run --locked python -m benchmarking.prepare tasks/IHP-AnalogAcademy/cases/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.toml \
     "${test_tmp}/export" \
     --checkout academy=third_party/IHP-AnalogAcademy \
     --checkout pdk=third_party/IHP-Open-PDK
-cmp "${test_tmp}/export/T_gate.spice" tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/inputs/circuit.spice
-uv run --locked python main.py task tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/task.toml \
+cmp "${test_tmp}/export/T_gate.spice" tasks/IHP-AnalogAcademy/cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/inputs/circuit.spice
+uv run --locked python main.py task tasks/IHP-AnalogAcademy/cases/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.toml \
     --materialize "${test_tmp}/inputs" > "${test_tmp}/task.json"
 uv run --locked python -m benchmarking.environment \
     third_party/IHP-Open-PDK "${test_tmp}/pdk" > /dev/null

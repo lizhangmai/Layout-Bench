@@ -38,7 +38,7 @@ These modules live under `benchmarking/` and are assembled by the root `main.py`
 
 ## Where to Change When Extending
 
-- **New task**: add inputs, constraints, and an evaluation plan, then complete [qualification](tasks.md#qualification). Models, budgets, and repetitions belong to the [run configuration](running.md), not to `task.toml`.
+- **New task**: add one unified circuit case with sources, inputs, constraints, and an evaluation plan, then complete [qualification](tasks.md#qualification). Models, budgets, and repetitions belong to the [run configuration](running.md), not to the case TOML.
 - **New harness**: use `command` plus reviewed `files` and implement the `layout-session.v1` protocol. Add a profile under the harness seam only when launch preparation or a trusted capability declaration is reusable; the session runner must not learn the framework's internal conversation.
 - **New model wire family**: register one adapter implementing `validate_request`, `prepare_request`, and `response_semantics`, then select it with the required `wire_api` field. The adapter owns HTTP method/auth/header conventions, terminal-state parsing, and mapping to the common nullable usage fields. Do not add one benchmark branch per model or per harness.
 - **New EDA backend**: implement `identity` and `run(job, inputs) -> JobResult`, returning measured values with units, declared artifacts, and diagnostic evidence. The backend owns execution isolation and format interpretation and may use a container, a native library, or a controlled remote tool.

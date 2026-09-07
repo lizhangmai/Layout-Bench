@@ -23,7 +23,7 @@ Measure whether an agent can turn a circuit netlist, physical constraints, and p
 
 Layout-Bench runs an Agent in an isolated container, records an explicit GDS submission, and evaluates the frozen candidate with independent EDA tools. DRC/LVS establish physical validity; a complete task also checks the declared geometry and post-layout performance limits.
 
-> **Public preview.** The repository ships one qualified public task, `academy-tgate`, its reference solution, and 14 qualification scenarios. The complete IHP AnalogAcademy source catalog is [under `tasks/IHP-AnalogAcademy/`](tasks/IHP-AnalogAcademy/README.md); circuits without task-specific netlists, constraints, evaluation, and qualification remain catalog records rather than runnable tasks. This package is intended for local, reproducible evaluation.
+> **Public preview.** The repository ships one qualified public task, `module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate`, its reference solution, and 14 qualification scenarios. The complete IHP AnalogAcademy source catalog is [under `tasks/IHP-AnalogAcademy/`](tasks/IHP-AnalogAcademy/README.md); circuits without task-specific netlists, constraints, evaluation, and qualification remain case records rather than runnable tasks. This package is intended for local, reproducible evaluation.
 
 ## Why Layout-Bench?
 
@@ -83,7 +83,7 @@ uv run --locked python scripts/public_preview.py qualify \
   --output build/runs/preview-qualification
 ```
 
-The [reference solution](tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/reference/README.md) and [qualification evidence](tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/qualification/README.md) are public for debugging. Standard Agent runs receive only the declared task inputs and never the reference solution.
+The [reference solution](tasks/IHP-AnalogAcademy/cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/reference/README.md) and [qualification evidence](tasks/IHP-AnalogAcademy/cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/qualification/README.md) are public for debugging. Standard Agent runs receive only the declared task inputs and never the reference solution.
 
 <a id="run-your-agent"></a>
 
@@ -91,7 +91,7 @@ The [reference solution](tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_d
 
 The workflow is simple:
 
-1. **Choose a task** — start with the public `academy-tgate` task and its declared inputs.
+1. **Choose a task** — start with the public transmission-gate case and its declared inputs.
 2. **Configure a harness** — provide any executable command, reviewed files, resources, and budgets; an optional harness profile records its protocol and execution semantics.
 3. **Submit a candidate** — work in `/workspace`, then run `python -I /protocol/submit.py` to submit the configured GDS explicitly.
 4. **Evaluate and compare** — use the independent evaluator for one candidate, or a frozen batch plan for task × configuration × repetition measurements.
@@ -101,7 +101,7 @@ The configured harness receives `/protocol/prompt.txt`, `/protocol/task.json`, `
 To connect a model through the host-owned gateway, start from the provider-neutral [canonical harness and adapter contract](examples/agents/README.md#provider-neutral-canonical-harness), then copy [inference.example.toml](examples/agents/inference.example.toml), fill in your endpoint, model, and host key-variable name, and run your harness configuration:
 
 ```bash
-uv run --locked python main.py run tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/task.toml \
+uv run --locked python main.py run tasks/IHP-AnalogAcademy/cases/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.toml \
   --agent path/to/agent.toml \
   --resources build/runs/preview/prepared/agent-resources \
   --toolchain build/runs/preview/prepared/toolchain.toml \
@@ -121,7 +121,7 @@ Once the harness forwards a request, this command calls your configured model; q
 
 Layout-Bench runs a four-phase loop:
 
-1. **Define** — `task.toml` freezes the task inputs, output contract, constraints, and optional evaluation plan.
+1. **Define** — a case TOML freezes the circuit sources, task inputs, output contract, constraints, and optional evaluation plan in one file.
 2. **Run** — the Runner freezes the Agent configuration, resources, budgets, toolchain, and execution identity, then starts an isolated session.
 3. **Judge** — after an explicit submission, the evaluator checks the frozen GDS with the declared artifact, DRC, LVS, geometry, extraction, and performance jobs.
 4. **Report** — durable events and artifacts support independent re-evaluation, batch statistics, and reproducibility checks.
@@ -171,7 +171,7 @@ Yes. Any executable that follows the session protocol can be configured with its
 <details>
 <summary><strong>Does a standard Agent receive the reference solution?</strong></summary>
 
-No. The reference GDS and qualification evidence are public for debugging, but standard runs materialize only the task inputs declared by `task.toml`.
+No. The reference GDS and qualification evidence are public for debugging, but standard runs materialize only the task inputs declared by the case TOML's `[task]` section.
 
 </details>
 
@@ -193,7 +193,7 @@ They exercise the judge's positive, negative, geometry, extraction, performance,
 
 This package includes the public task and its qualification materials, the common executable-harness session protocol, a provider-neutral canonical harness example, a host-owned model gateway, configurable EDA backends, and local batch statistics. It does not include hosted evaluation, identity authentication, or an official leaderboard.
 
-The framework is licensed under [MIT](LICENSE). The public `academy-tgate` task retains its [Apache-2.0 license](tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/LICENSE). The IHP AnalogAcademy source records retain the upstream license and per-file notices; submodules, tools, and dependencies retain their own licenses and notices; source and resource preparation are described in the [tool guide](docs/tools.md#external-sources).
+The framework is licensed under [MIT](LICENSE). The public transmission-gate case retains its [Apache-2.0 license](tasks/IHP-AnalogAcademy/cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/LICENSE). The IHP AnalogAcademy source records retain the upstream license and per-file notices; submodules, tools, and dependencies retain their own licenses and notices; source and resource preparation are described in the [tool guide](docs/tools.md#external-sources).
 
 <p align="center">
 <a href="README_CN.md">阅读中文文档 →</a>

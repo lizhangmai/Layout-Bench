@@ -1,8 +1,9 @@
-schema_version = 2
+schema_version = 3
 source_checkout = "third_party/IHP-AnalogAcademy"
 source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
 source_license = "Apache-2.0 upstream root; file-level notices apply"
-circuit_source_count = 50
+source_count = 50
+case_count = 30
 artifact_count = 81
 
 [[excluded]]
@@ -13,155 +14,125 @@ reason = "Historical PEX fixture excluded by docs/tasks.md#input-isolation"
 path = "utils/PEX_Demo"
 reason = "Historical PEX fixture excluded by docs/tasks.md#input-isolation"
 
-[[circuits]]
-config_path = "module_0_foundations/inverter/inverter.toml"
+[[cases]]
+id = "module_0_foundations.inverter"
+config_path = "cases/module_0_foundations.inverter.toml"
 
-[[circuits]]
-config_path = "module_0_foundations/inverter/inverter_tb.toml"
+[[cases]]
+id = "module_0_foundations.lvs_tester"
+config_path = "cases/module_0_foundations.lvs_tester.toml"
 
-[[circuits]]
-config_path = "module_0_foundations/lvs_tester/schematic/lvs_tester.toml"
+[[cases]]
+id = "module_1_bandgap_reference.part_1_OTA.gmid_example"
+config_path = "cases/module_1_bandgap_reference.part_1_OTA.gmid_example.toml"
 
-[[circuits]]
-config_path = "module_1_bandgap_reference/part_1_OTA/gmid_example/schematic/two_stage_OTA.toml"
+[[cases]]
+id = "module_1_bandgap_reference.part_1_OTA"
+config_path = "cases/module_1_bandgap_reference.part_1_OTA.toml"
 
-[[circuits]]
-config_path = "module_1_bandgap_reference/part_1_OTA/gmid_example/testbenches/ota_testbench.toml"
+[[cases]]
+id = "module_1_bandgap_reference.part_2_full_bgr"
+config_path = "cases/module_1_bandgap_reference.part_2_full_bgr.toml"
 
-[[circuits]]
-config_path = "module_1_bandgap_reference/part_1_OTA/gmid_example/testbenches/ota_testbench_mc_mis.toml"
+[[cases]]
+id = "module_1_bandgap_reference.part_3_layout.BGR_layout.final_bandgapreference"
+config_path = "cases/module_1_bandgap_reference.part_3_layout.BGR_layout.final_bandgapreference.toml"
 
-[[circuits]]
-config_path = "module_1_bandgap_reference/part_1_OTA/schematic/two_stage_OTA.toml"
+[[cases]]
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA"
+config_path = "cases/module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA.toml"
 
-[[circuits]]
-config_path = "module_1_bandgap_reference/part_1_OTA/testbenches/ota_testbench.toml"
+[[cases]]
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.input_pair"
+config_path = "cases/module_1_bandgap_reference.part_3_layout.OTA_layout.input_pair.toml"
 
-[[circuits]]
-config_path = "module_1_bandgap_reference/part_1_OTA/testbenches/ota_testbench_mc_mis.toml"
+[[cases]]
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.input_stage"
+config_path = "cases/module_1_bandgap_reference.part_3_layout.OTA_layout.input_stage.toml"
 
-[[circuits]]
-config_path = "module_1_bandgap_reference/part_2_full_bgr/schematic/bandgap_MC.toml"
+[[cases]]
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.output_stage"
+config_path = "cases/module_1_bandgap_reference.part_3_layout.OTA_layout.output_stage.toml"
 
-[[circuits]]
-config_path = "module_1_bandgap_reference/part_2_full_bgr/schematic/bandgap_reference.toml"
+[[cases]]
+id = "module_1_bandgap_reference.part_3_layout.startup_circuit"
+config_path = "cases/module_1_bandgap_reference.part_3_layout.startup_circuit.toml"
 
-[[circuits]]
-config_path = "module_1_bandgap_reference/part_2_full_bgr/schematic/bandgap_reference_temp.toml"
+[[cases]]
+id = "module_2_50GHz_MPA.part_1_biasing.bias_1_fingers"
+config_path = "cases/module_2_50GHz_MPA.part_1_biasing.bias_1_fingers.toml"
 
-[[circuits]]
-config_path = "module_1_bandgap_reference/part_2_full_bgr/schematic/verilog/veriloga_tbs/tb_diff_amp.toml"
+[[cases]]
+id = "module_2_50GHz_MPA.part_1_biasing.bias_2_stability"
+config_path = "cases/module_2_50GHz_MPA.part_1_biasing.bias_2_stability.toml"
 
-[[circuits]]
-config_path = "module_1_bandgap_reference/part_3_layout/BGR_layout/final_bandgapreference/schematic_mod/full_bandgap.toml"
+[[cases]]
+id = "module_2_50GHz_MPA.part_2_matching_ideal.input_matching"
+config_path = "cases/module_2_50GHz_MPA.part_2_matching_ideal.input_matching.toml"
 
-[[circuits]]
-config_path = "module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/schematic_mod/two_stage_OTA_layout.toml"
+[[cases]]
+id = "module_2_50GHz_MPA.part_3_nonlinear_analysis.harmonic_balance"
+config_path = "cases/module_2_50GHz_MPA.part_3_nonlinear_analysis.harmonic_balance.toml"
 
-[[circuits]]
-config_path = "module_1_bandgap_reference/part_3_layout/OTA_layout/input_pair/schematic_mod/input_common_centroid.toml"
+[[cases]]
+id = "module_2_50GHz_MPA.part_3_nonlinear_analysis.load_pull_final"
+config_path = "cases/module_2_50GHz_MPA.part_3_nonlinear_analysis.load_pull_final.toml"
 
-[[circuits]]
-config_path = "module_1_bandgap_reference/part_3_layout/OTA_layout/input_stage/schematic_mod/input_stage.toml"
+[[cases]]
+id = "module_2_50GHz_MPA.part_4_layout_EMsims.T_connection_post_layout"
+config_path = "cases/module_2_50GHz_MPA.part_4_layout_EMsims.T_connection_post_layout.toml"
 
-[[circuits]]
-config_path = "module_1_bandgap_reference/part_3_layout/OTA_layout/output_stage/schematic_mod/output_stage.toml"
+[[cases]]
+id = "module_2_50GHz_MPA.part_4_layout_EMsims.core_post_layout"
+config_path = "cases/module_2_50GHz_MPA.part_4_layout_EMsims.core_post_layout.toml"
 
-[[circuits]]
-config_path = "module_1_bandgap_reference/part_3_layout/startup_circuit/schematic_mod/startup_circuit.toml"
+[[cases]]
+id = "module_2_50GHz_MPA.part_4_layout_EMsims.T_connection_subcircuit"
+config_path = "cases/module_2_50GHz_MPA.part_4_layout_EMsims.T_connection_subcircuit.toml"
 
-[[circuits]]
-config_path = "module_2_50GHz_MPA/part_1_biasing/schematic/bias_1_fingers/bias_1_fingers.toml"
+[[cases]]
+id = "module_2_50GHz_MPA.part_4_layout_EMsims.BJT_core"
+config_path = "cases/module_2_50GHz_MPA.part_4_layout_EMsims.BJT_core.toml"
 
-[[circuits]]
-config_path = "module_2_50GHz_MPA/part_1_biasing/schematic/bias_2_stability/bias_2_stability.toml"
+[[cases]]
+id = "module_3_8_bit_SAR_ADC.part_1_comparator"
+config_path = "cases/module_3_8_bit_SAR_ADC.part_1_comparator.toml"
 
-[[circuits]]
-config_path = "module_2_50GHz_MPA/part_2_matching_ideal/schematic/input_matching.toml"
+[[cases]]
+id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate"
+config_path = "cases/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.toml"
 
-[[circuits]]
-config_path = "module_2_50GHz_MPA/part_3_nonlinear_analysis/schematic/compression_1/harmonic_balance.toml"
+[[cases]]
+id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.algorithm.sar_logic"
+config_path = "cases/module_3_8_bit_SAR_ADC.part_2_digital_comps.algorithm.sar_logic.toml"
 
-[[circuits]]
-config_path = "module_2_50GHz_MPA/part_3_nonlinear_analysis/schematic/load_pull_2/load_pull_final.toml"
+[[cases]]
+id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.bootstrap_switch"
+config_path = "cases/module_3_8_bit_SAR_ADC.part_2_digital_comps.bootstrap_switch.toml"
 
-[[circuits]]
-config_path = "module_2_50GHz_MPA/part_4_layout_EMsims/em_components/T_connection_2/post_layout_sim/schematic/Tcon_post_sim.toml"
+[[cases]]
+id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.nand_gate"
+config_path = "cases/module_3_8_bit_SAR_ADC.part_2_digital_comps.nand_gate.toml"
 
-[[circuits]]
-config_path = "module_2_50GHz_MPA/part_4_layout_EMsims/em_components/core_1/post_layout_sim/schematic/core_pl_sim.toml"
+[[cases]]
+id = "module_3_8_bit_SAR_ADC.part_3_array_components.C-DAC"
+config_path = "cases/module_3_8_bit_SAR_ADC.part_3_array_components.C-DAC.toml"
 
-[[circuits]]
-config_path = "module_2_50GHz_MPA/part_4_layout_EMsims/lumped_modelling/em_models_subcircuits/T_conn_subcircuit/T_connection.toml"
+[[cases]]
+id = "module_3_8_bit_SAR_ADC.part_3_array_components.switch_array"
+config_path = "cases/module_3_8_bit_SAR_ADC.part_3_array_components.switch_array.toml"
 
-[[circuits]]
-config_path = "module_2_50GHz_MPA/part_4_layout_EMsims/lumped_modelling/em_models_subcircuits/core_subcircuit/BJT_core.toml"
+[[cases]]
+id = "module_3_8_bit_SAR_ADC.part_4_SAR_ADC"
+config_path = "cases/module_3_8_bit_SAR_ADC.part_4_SAR_ADC.toml"
 
-[[circuits]]
-config_path = "module_3_8_bit_SAR_ADC/part_1_comparator/schematic/dynamic_comparator.toml"
+[[cases]]
+id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator"
+config_path = "cases/module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.toml"
 
-[[circuits]]
-config_path = "module_3_8_bit_SAR_ADC/part_1_comparator/testbench/comparator_tb.toml"
-
-[[circuits]]
-config_path = "module_3_8_bit_SAR_ADC/part_1_comparator/testbench/offset_MC_analysis.toml"
-
-[[circuits]]
-config_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/T_gate.toml"
-
-[[circuits]]
-config_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/testbench/T_gate_switch_tb.toml"
-
-[[circuits]]
-config_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/xschem/sar_logic_tb.toml"
-
-[[circuits]]
-config_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/bootstrap_switch/schematic/bootstrap_switch.toml"
-
-[[circuits]]
-config_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/bootstrap_switch/schematic/inverter.toml"
-
-[[circuits]]
-config_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/bootstrap_switch/testbench/bootstrap_switch_tbs.toml"
-
-[[circuits]]
-config_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/nand_gate/schematic/nand_gate.toml"
-
-[[circuits]]
-config_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/nand_gate/testbench/nand_tb.toml"
-
-[[circuits]]
-config_path = "module_3_8_bit_SAR_ADC/part_3_array_components/C-DAC/C-DAC.toml"
-
-[[circuits]]
-config_path = "module_3_8_bit_SAR_ADC/part_3_array_components/switch_array/switch_array.toml"
-
-[[circuits]]
-config_path = "module_3_8_bit_SAR_ADC/part_4_SAR_ADC/SAR_ADC_tb.toml"
-
-[[circuits]]
-config_path = "module_3_8_bit_SAR_ADC/part_4_SAR_ADC/sar_adc_tutorial.toml"
-
-[[circuits]]
-config_path = "module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/misc/input_pair/schematic_mod/input_pair_cm.toml"
-
-[[circuits]]
-config_path = "module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/misc/load/schematic_mod/load.toml"
-
-[[circuits]]
-config_path = "module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/schematic/DIFF_COMPARATOR.toml"
-
-[[circuits]]
-config_path = "module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/xschem_post_layout/testbench/comparator_tb.toml"
-
-[[circuits]]
-config_path = "module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/xschem_post_layout/testbench/offset_MC_analysis.toml"
-
-[[circuits]]
-config_path = "utils/gmid_demonstration/testbench/ota_testbench.toml"
-
-[[circuits]]
-config_path = "utils/gmid_demonstration/testbench/schematic.toml"
+[[cases]]
+id = "utils.gmid_demonstration"
+config_path = "cases/utils.gmid_demonstration.toml"
 
 [[artifacts]]
 path = "modules/module_0_foundations/inverter/inverter.sym"

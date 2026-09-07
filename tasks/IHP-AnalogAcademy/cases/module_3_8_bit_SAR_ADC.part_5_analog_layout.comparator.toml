@@ -1,0 +1,51 @@
+schema_version = 2
+kind = "layout_case"
+id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator"
+title = "IHP AnalogAcademy comparator"
+role = "design"
+status = "candidate"
+
+[origin]
+checkout = "third_party/IHP-AnalogAcademy"
+commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+license = "Apache-2.0 upstream root; file-level notices apply"
+
+[[sources]]
+id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.layout.misc.input_pair.schematic_mod.input_pair_cm"
+path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/misc/input_pair/schematic_mod/input_pair_cm.sch"
+role = "design"
+format = "xschem"
+sha256 = "d1d7332f1f09f1a02705176c47c1a155a1542aed517d523f89bcf4a0fa2b1598"
+bytes = 1062
+
+[[sources]]
+id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.layout.misc.load.schematic_mod.load"
+path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/misc/load/schematic_mod/load.sch"
+role = "design"
+format = "xschem"
+sha256 = "9410cb220454c0b0556eeea7e66499b729b860b6d2c53932f137039f30170640"
+bytes = 2477
+
+[[sources]]
+id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.layout.schematic.DIFF_COMPARATOR"
+path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/schematic/DIFF_COMPARATOR.sch"
+role = "design"
+format = "xschem"
+sha256 = "ba403c374a2c4f017c6044083d096abb89f71ffe34c2abaa0f90c351648f213a"
+bytes = 5737
+
+[[sources]]
+id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.xschem_post_layout.testbench.comparator_tb"
+path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/xschem_post_layout/testbench/comparator_tb.sch"
+role = "testbench"
+format = "xschem"
+sha256 = "b67a4ebc34e15e5853b3d58b07793c0dec18d27d74ec866db8a45b2ede174237"
+bytes = 33365
+
+[[sources]]
+id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.xschem_post_layout.testbench.offset_MC_analysis"
+path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/xschem_post_layout/testbench/offset_MC_analysis.sch"
+role = "testbench"
+format = "xschem"
+sha256 = "0b39ecd3eda4fe38a942281a2b3937b7c1aec253a23ea8a26c1e3ec9d1876d02"
+bytes = 3564

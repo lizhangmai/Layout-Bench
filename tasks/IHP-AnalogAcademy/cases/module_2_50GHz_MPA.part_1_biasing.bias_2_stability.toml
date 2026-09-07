@@ -1,0 +1,19 @@
+schema_version = 2
+kind = "layout_case"
+id = "module_2_50GHz_MPA.part_1_biasing.bias_2_stability"
+title = "IHP AnalogAcademy bias_2_stability"
+role = "design"
+status = "source-only"
+
+[origin]
+checkout = "third_party/IHP-AnalogAcademy"
+commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+license = "Apache-2.0 upstream root; file-level notices apply"
+
+[[sources]]
+id = "module_2_50GHz_MPA.part_1_biasing.schematic.bias_2_stability.bias_2_stability"
+path = "modules/module_2_50GHz_MPA/part_1_biasing/schematic/bias_2_stability/bias_2_stability.sch"
+role = "design"
+format = "qucs"
+sha256 = "75172c34ac577dd0d46c15ba2379288f355b729c361529132a60cef036a893f5"
+bytes = 3005

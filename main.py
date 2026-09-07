@@ -76,7 +76,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     subcommands = parser.add_subparsers(dest="command", required=True)
     task_parser = subcommands.add_parser("task", help="Validate a task and show its I/O")
-    task_parser.add_argument("config", type=Path, help="Path to task.toml")
+    task_parser.add_argument("config", type=Path, help="Path to a task or unified case TOML")
     task_parser.add_argument("--materialize", type=Path, help="New directory for verified inputs")
     evaluate_parser = subcommands.add_parser("evaluate", help="Evaluate a GDS with a task's declared plan")
     evaluate_parser.add_argument("config", type=Path)

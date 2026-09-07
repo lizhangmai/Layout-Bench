@@ -1,0 +1,19 @@
+schema_version = 2
+kind = "layout_case"
+id = "module_1_bandgap_reference.part_3_layout.startup_circuit"
+title = "IHP AnalogAcademy startup_circuit"
+role = "design"
+status = "candidate"
+
+[origin]
+checkout = "third_party/IHP-AnalogAcademy"
+commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+license = "Apache-2.0 upstream root; file-level notices apply"
+
+[[sources]]
+id = "module_1_bandgap_reference.part_3_layout.startup_circuit.schematic_mod.startup_circuit"
+path = "modules/module_1_bandgap_reference/part_3_layout/startup_circuit/schematic_mod/startup_circuit.sch"
+role = "design"
+format = "xschem"
+sha256 = "82b9a7e45468a401691ca806f7a9a8e228e23d556cfb86a327c5b174ffd05d95"
+bytes = 2825

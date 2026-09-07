@@ -1,0 +1,35 @@
+schema_version = 2
+kind = "layout_case"
+id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.bootstrap_switch"
+title = "IHP AnalogAcademy bootstrap_switch"
+role = "design"
+status = "candidate"
+
+[origin]
+checkout = "third_party/IHP-AnalogAcademy"
+commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+license = "Apache-2.0 upstream root; file-level notices apply"
+
+[[sources]]
+id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.bootstrap_switch.schematic.bootstrap_switch"
+path = "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/bootstrap_switch/schematic/bootstrap_switch.sch"
+role = "design"
+format = "xschem"
+sha256 = "92a2156b0ea00df85a60dd11600db7f8208a3cd3aae57a12f5c1bac2ab286263"
+bytes = 6400
+
+[[sources]]
+id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.bootstrap_switch.schematic.inverter"
+path = "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/bootstrap_switch/schematic/inverter.sch"
+role = "design"
+format = "xschem"
+sha256 = "c6dea75629e5f536948d095a53ad57cd1d5f8062405fca765b98a0d8c45661ba"
+bytes = 948
+
+[[sources]]
+id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.bootstrap_switch.testbench.bootstrap_switch_tbs"
+path = "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/bootstrap_switch/testbench/bootstrap_switch_tbs.sch"
+role = "testbench"
+format = "xschem"
+sha256 = "3d99cb4540489390017efcd357c4cb15793c78aa039f6709ff2f6281ca500d26"
+bytes = 2402

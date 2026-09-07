@@ -71,7 +71,7 @@ Keep originals byte-for-byte as supplied upstream and register framework-generat
 
 ### Prepare a Netlist from a Schematic
 
-`benchmarking.prepare` gives a network-isolated preparation container only the files explicitly listed by `source.toml`, invokes Xschem to export the raw LVS netlist, and saves source digests and diagnostic logs. Arguments include the manifest, output directory, and `--checkout NAME=PATH` for each source. Use the unified image with `--image layout-bench-tools:local`. See the [qualification materials](../tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/qualification/README.md#source-reproduction) for the exact re-export command for the public task. See the [task guide](tasks.md) for source and input-semantics checks.
+`benchmarking.prepare` gives a network-isolated preparation container only the files explicitly listed by a case TOML's `[source_export]` section, invokes Xschem to export the raw LVS netlist, and saves source digests and diagnostic logs. Arguments include the case configuration, output directory, and `--checkout NAME=PATH` for each source. Use the unified image with `--image layout-bench-tools:local`. See the [qualification materials](../tasks/IHP-AnalogAcademy/cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/qualification/README.md#source-reproduction) for the exact re-export command for the public task. See the [task guide](tasks.md) for source and input-semantics checks.
 
 ## EDA Backend Contract
 
@@ -81,7 +81,7 @@ The backend extension interface is described in [architecture](architecture.md#e
 
 ngspice writes an input role as `<role>.spice` and uses `deck.spice` as its entry point. The testbench declares analyses and measurements; `parameters.values` generates `parameters.spice`, `parameters.measurements` specifies names and units, and `parameters.exports` names declared artifacts. Exit 0 still requires a complete set of finite measurements. See the [RC](../examples/characterization/rc.toml), [divider](../examples/characterization/divider.toml), and [MOS post-layout](../examples/sg13g2/switch.toml) plan examples.
 
-Magic's `layout.extract_capacitance` takes the top cell and ordered `ports` from trusted configuration; check the port list against the authoritative netlist. Later jobs must reference the extracted netlist exported as-is rather than replacing it with string substitutions or a hand-written netlist. The current flow extracts devices and parasitic capacitance only and records `wire_resistance=false`; it cannot claim complete RC extraction. See the [task qualification materials](../tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/qualification/README.md) for the exact conditions and calibration scope.
+Magic's `layout.extract_capacitance` takes the top cell and ordered `ports` from trusted configuration; check the port list against the authoritative netlist. Later jobs must reference the extracted netlist exported as-is rather than replacing it with string substitutions or a hand-written netlist. The current flow extracts devices and parasitic capacitance only and records `wire_resistance=false`; it cannot claim complete RC extraction. See the [task qualification materials](../tasks/IHP-AnalogAcademy/cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/qualification/README.md) for the exact conditions and calibration scope.
 
 ### KLayout Physical Checks
 

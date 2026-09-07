@@ -7,8 +7,8 @@ seed = 0
 max_infrastructure_retries = 0
 
 [[tasks]]
-config = "../../tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/task.toml"
-toolchain = "../../tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/qualification/toolchain.toml"
+config = "../../tasks/IHP-AnalogAcademy/cases/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.toml"
+toolchain = "../../tasks/IHP-AnalogAcademy/cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/qualification/toolchain.toml"
 
 [[agents]]
 id = "offline-probe"

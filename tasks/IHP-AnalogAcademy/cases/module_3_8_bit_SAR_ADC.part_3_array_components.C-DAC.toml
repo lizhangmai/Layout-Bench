@@ -1,0 +1,19 @@
+schema_version = 2
+kind = "layout_case"
+id = "module_3_8_bit_SAR_ADC.part_3_array_components.C-DAC"
+title = "IHP AnalogAcademy C-DAC"
+role = "design"
+status = "candidate"
+
+[origin]
+checkout = "third_party/IHP-AnalogAcademy"
+commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+license = "Apache-2.0 upstream root; file-level notices apply"
+
+[[sources]]
+id = "module_3_8_bit_SAR_ADC.part_3_array_components.C-DAC.C-DAC"
+path = "modules/module_3_8_bit_SAR_ADC/part_3_array_components/C-DAC/C-DAC.sch"
+role = "design"
+format = "xschem"
+sha256 = "3d90b8ca6bb186ce02e1ffe59ef1794ce0a8d35f39f83de9289f55491abb200e"
+bytes = 2220

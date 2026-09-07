@@ -1,0 +1,35 @@
+schema_version = 2
+kind = "layout_case"
+id = "module_1_bandgap_reference.part_1_OTA.gmid_example"
+title = "IHP AnalogAcademy gmid_example"
+role = "design"
+status = "candidate"
+
+[origin]
+checkout = "third_party/IHP-AnalogAcademy"
+commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+license = "Apache-2.0 upstream root; file-level notices apply"
+
+[[sources]]
+id = "module_1_bandgap_reference.part_1_OTA.gmid_example.schematic.two_stage_OTA"
+path = "modules/module_1_bandgap_reference/part_1_OTA/gmid_example/schematic/two_stage_OTA.sch"
+role = "design"
+format = "xschem"
+sha256 = "2bfae18e0f02cbf7a2919bd8d219ea2d1edbb32457830365ae4d4965f6a2e232"
+bytes = 2175
+
+[[sources]]
+id = "module_1_bandgap_reference.part_1_OTA.gmid_example.testbenches.ota_testbench"
+path = "modules/module_1_bandgap_reference/part_1_OTA/gmid_example/testbenches/ota_testbench.sch"
+role = "testbench"
+format = "xschem"
+sha256 = "81577b238bdd926731d3ef54ba29e35e7f94c51aea91b0e8dd6dfbd8c4fc60c6"
+bytes = 2738
+
+[[sources]]
+id = "module_1_bandgap_reference.part_1_OTA.gmid_example.testbenches.ota_testbench_mc_mis"
+path = "modules/module_1_bandgap_reference/part_1_OTA/gmid_example/testbenches/ota_testbench_mc_mis.sch"
+role = "testbench"
+format = "xschem"
+sha256 = "61dbf163affdaabfe1417c48ce28d06e65015c3b682495b2cdf024937736b348"
+bytes = 2310

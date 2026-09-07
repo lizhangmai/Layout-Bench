@@ -1,4 +1,4 @@
-"""Build and reproduce the public academy-tgate preview without a model account."""
+"""Build and reproduce the public transmission-gate preview without a model account."""
 
 import argparse
 import hashlib
@@ -14,7 +14,9 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
-TASK = ROOT / "tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate"
+CASE_ID = "module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate"
+TASK = ROOT / f"tasks/IHP-AnalogAcademy/cases/assets/{CASE_ID}"
+CONFIG = ROOT / f"tasks/IHP-AnalogAcademy/cases/{CASE_ID}.toml"
 IMAGE = "layout-bench-tools:local"
 RUNS = "build/runs"
 SUPPORT = "build/support"
@@ -178,7 +180,7 @@ def prepare(destination, image=IMAGE):
         print(f"Preparing {name} from the reviewed PDK files", flush=True)
         prepare_support(pdk, ROOT / f"technology/sg13g2/{name}.json", destination / name, compiler_image=image_id)
     # This example composes this public task's existing configuration; the framework
-    # still accepts arbitrary task/toolchain files and has no academy-tgate branches.
+    # still accepts arbitrary task/toolchain files and has no task-specific branches.
     config = (TASK / "qualification/toolchain.toml").read_text()
     for old, name in (("magic", "magic"), ("mos-models", "mos-models"), ("klayout-ports", "klayout")):
         # Accept the historical .cache paths while new task templates use the
@@ -231,16 +233,16 @@ def run(prepared, output, qualification):
         calibration_summary(output, summary)
         print(f"PASS: {len(summary['cases'])} qualification scenarios and schematic calibration. No model was called.")
         return
-    python(ROOT / "main.py", "evaluate", TASK / "task.toml", TASK / "reference/reference.gds",
+    python(ROOT / "main.py", "evaluate", CONFIG, TASK / "reference/reference.gds",
            "--toolchain", toolchain, "--output", output / "reference", log=output / "reference.log")
     agent = prepared.absolute() / "protocol-probe.toml"
-    python(ROOT / "main.py", "run", TASK / "task.toml", "--agent", agent,
+    python(ROOT / "main.py", "run", CONFIG, "--agent", agent,
            "--toolchain", toolchain, "--output", output / "probe", expected=1, log=output / "probe.log")
     probe = json.loads((output / "probe/run.json").read_text())
     if probe["termination"] != "completed" or probe["outcome"] != "failed" or not probe["candidate"]:
         raise ValueError("Expected a completed protocol probe with a rejected rectangular layout.")
     canonical_agent = prepared.absolute() / "canonical-probe.toml"
-    python(ROOT / "main.py", "run", TASK / "task.toml", "--agent", canonical_agent,
+    python(ROOT / "main.py", "run", CONFIG, "--agent", canonical_agent,
            "--toolchain", toolchain, "--output", output / "canonical-probe", expected=1,
            log=output / "canonical-probe.log")
     canonical = json.loads((output / "canonical-probe/run.json").read_text())
@@ -248,8 +250,8 @@ def run(prepared, output, qualification):
             or not canonical["candidate"]):
         raise ValueError("Expected a completed canonical probe with a rejected rectangular layout.")
     plan = (ROOT / "examples/plans/protocol-probe.toml").read_text()
-    for old, path in (("../../tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/task.toml", TASK / "task.toml"),
-                      ("../../tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/qualification/toolchain.toml", toolchain),
+    for old, path in (("../../tasks/IHP-AnalogAcademy/cases/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.toml", CONFIG),
+                      ("../../tasks/IHP-AnalogAcademy/cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/qualification/toolchain.toml", toolchain),
                       ("../agents/protocol-probe.toml", agent)):
         plan = plan.replace(json.dumps(old), json.dumps(str(path)))
     (output / "plan.toml").write_text(plan)
@@ -258,7 +260,7 @@ def run(prepared, output, qualification):
     batch = json.loads((output / "batch/batch.json").read_text())
     if not batch["summary"]["complete"] or any(g["success_rate"] != 0 for g in batch["summary"]["groups"]):
         raise ValueError("Expected complete batch coverage and zero protocol-probe task successes.")
-    summary = {"run_kind": "public_preview_smoke", "task": "academy-tgate", "reference": "passed",
+    summary = {"run_kind": "public_preview_smoke", "task": CASE_ID, "reference": "passed",
                "protocol_probe": "expected_failure", "canonical_probe": "expected_failure",
                "batch": "complete", "model_called": False}
     (output / "preview.json").write_text(json.dumps(summary, indent=2) + "\n")

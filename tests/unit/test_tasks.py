@@ -7,6 +7,7 @@ import pytest
 from benchmarking.tasks import load_task
 
 pytestmark = pytest.mark.unit
+ROOT = Path(__file__).resolve().parents[2]
 
 
 @pytest.fixture
@@ -81,6 +82,18 @@ def test_materialization_uses_validated_snapshot_and_configured_io(package, tmp_
     assert description["netlist_subcircuit"] == "SYNTHETIC"
     assert "maintainer only" not in json.dumps(description)
     assert (destination / "input/spec.spice").stat().st_mode & 0o222 == 0
+
+
+def test_unified_circuit_case_loads_nested_task_and_keeps_reference_assets_private(tmp_path):
+    config = ROOT / "tasks/IHP-AnalogAcademy/cases/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.toml"
+    task = load_task(config)
+    assert task.id == "module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate"
+    assert task.status == "qualified"
+    destination = tmp_path / "case-inputs"
+    task.materialize(destination)
+    assert (destination / "inputs/circuit.spice").is_file()
+    assert not (destination / "reference").exists()
+    assert not (destination / "qualification").exists()
 
 
 def test_changed_input_is_rejected(package, tmp_path):

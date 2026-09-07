@@ -14,7 +14,9 @@ from benchmarking.toolchains import load_toolchain
 
 pytestmark = [pytest.mark.integration, pytest.mark.acceptance, pytest.mark.acceptance_eda]
 ROOT = Path(__file__).resolve().parents[2]
-TASK = ROOT / 'tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate'
+CASE_ID = 'module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate'
+TASK = ROOT / f'tasks/IHP-AnalogAcademy/cases/assets/{CASE_ID}'
+CONFIG = ROOT / f'tasks/IHP-AnalogAcademy/cases/{CASE_ID}.toml'
 
 
 def test_public_task_reference_invalid_cases_and_pre_post_measurements(tmp_path):
@@ -49,7 +51,7 @@ def test_public_task_reference_invalid_cases_and_pre_post_measurements(tmp_path)
     assert interface['ports'][2] == aliases['aliases']['!CONTROL'].upper()
     assert interface['ports'][3] == 'CONTROL'
     # Binding errors cannot turn a previous LVS report into evidence for a new GDS.
-    task = load_task(TASK / 'task.toml')
+    task = load_task(CONFIG)
     outputs = ref['jobs']['lvs']['outputs']
     inputs = {'layout': Asset((tmp_path/'qualification/wrong_size/reference.gds').read_bytes(), 'gds'),
               'task': task.evaluation_inputs()['task'], 'constraints': task.evaluation_inputs()['input:constraints'],

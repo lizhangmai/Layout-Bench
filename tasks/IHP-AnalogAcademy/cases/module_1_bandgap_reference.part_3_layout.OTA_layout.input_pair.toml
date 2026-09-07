@@ -1,0 +1,19 @@
+schema_version = 2
+kind = "layout_case"
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.input_pair"
+title = "IHP AnalogAcademy input_pair"
+role = "design"
+status = "candidate"
+
+[origin]
+checkout = "third_party/IHP-AnalogAcademy"
+commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+license = "Apache-2.0 upstream root; file-level notices apply"
+
+[[sources]]
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.input_pair.schematic_mod.input_common_centroid"
+path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/input_pair/schematic_mod/input_common_centroid.sch"
+role = "design"
+format = "xschem"
+sha256 = "a378667699cf81eff1a49baa7a075836d5641b95836a4063810d06f11a303aef"
+bytes = 2981

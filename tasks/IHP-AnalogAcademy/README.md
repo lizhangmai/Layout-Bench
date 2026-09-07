@@ -1,52 +1,54 @@
-# IHP AnalogAcademy circuit catalog
+# IHP AnalogAcademy circuit cases
 
-This directory is the public circuit catalog for the pinned
-`IHP-AnalogAcademy` submodule. It mirrors the upstream module and part names so
-each source record has one stable, named configuration file:
+This directory catalogs the pinned `IHP-AnalogAcademy` submodule. Every
+logical circuit case has exactly one configuration file under `cases/`:
 
 ```text
-tasks/IHP-AnalogAcademy/<module>/<part>/<circuit>.toml
+tasks/IHP-AnalogAcademy/cases/<case-id>.toml
 ```
 
-`catalog.toml` is the complete inventory for submodule commit
-`133ecf657572e021b5921b5a1b7693abfb209623`. It records every non-excluded
-upstream `*.sch` source (50 records, including testbenches and the utility
-gmid demonstration) and points to the corresponding named configuration file,
-such as `module_0_foundations/inverter/inverter_tb.toml`. The named file is the
-canonical maintainer record for that circuit; it is not mounted as an Agent
-input.
+The case ID is the file stem. A case configuration contains the circuit
+identity, upstream source records, status, and—when the circuit is runnable—
+the complete `[task]` declaration. Testbenches, Monte Carlo variants, and
+supporting schematics are `[[sources]]` entries in their owning case; they do
+not create separate configuration files.
 
-The qualified transmission-gate directory also contains `source.toml` and
-`task.toml`. Those are separate executable interfaces for source preparation
-and benchmark execution, respectively; they do not split the circuit record.
+`catalog.toml` is only the dataset index. The pinned catalog contains 50
+upstream schematic sources grouped into 30 logical cases. Source paths and
+digests remain bound to the recorded submodule commit. The historical
+`module_0_foundations/PEX_Demo` and `utils/PEX_Demo` fixtures remain excluded
+by the [input-isolation checklist](../../docs/tasks.md#input-isolation).
 
-The catalog's artifact section is limited to circuit-bearing netlists, symbols,
-models, RF decks, extraction records, and layouts associated with those source
-records; unrelated utility chip/gallery layouts are not task inputs.
+Non-configuration material uses one separate namespace:
 
-The statuses deliberately distinguish source review from benchmark
-qualification:
+```text
+tasks/IHP-AnalogAcademy/cases/assets/<case-id>/
+```
+
+The qualified transmission-gate case is the current runnable example:
+
+```text
+cases/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.toml
+cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/
+```
+
+Its single case TOML contains the source records, `[source_export]`, the
+complete `[task]`, reference/qualification asset declarations, and
+`status = "qualified"`. The assets directory contains payload files only; it
+does not contain another `task.toml`, `source.toml`, or circuit configuration.
+Reference and qualification assets are evaluator/debugging materials and are
+not materialized by a standard Agent run.
+
+Statuses distinguish source review from readiness:
 
 | Status | Meaning |
-|---|---|
-| `qualified` | A complete `netlist_to_gds` task with frozen inputs, an evaluation plan, a reference, and qualification evidence. Currently only the transmission gate has this status. |
-| `candidate` | A circuit source that is eligible for a future layout task, but still needs an authoritative exported netlist, constraints, evaluation, and qualification. |
-| `source-only` | A course source that is not currently a `netlist_to_gds` input (for example, a Qucs RF analysis schematic). |
-| `supporting-source` | A testbench or integration schematic; it is tracked for provenance but is not a standalone layout task. |
+| --- | --- |
+| `qualified` | A complete runnable case with frozen inputs, evaluation, reference, and qualification evidence. |
+| `candidate` | A reviewed circuit that still needs a runnable task and qualification. |
+| `source-only` | A source such as a Qucs/RF analysis that is not currently a layout task. |
+| `supporting-source` | A standalone supporting/testbench group retained for provenance. |
 
-The qualified transmission-gate task lives at
-`module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/`. Its task ID remains
-`academy-tgate` for run-record compatibility; the filesystem namespace is now
-the source hierarchy rather than a flat task name.
-
-The catalog does not copy a complete upstream checkout into Agent-visible
-inputs. Source paths and SHA-256 digests are resolved against the pinned
-submodule, while generated/layout artifacts are inventory records only. The
-historical `module_0_foundations/PEX_Demo` and `utils/PEX_Demo` fixtures and
-their derivatives remain excluded by the input-isolation checklist in [the
-task guide](../../docs/tasks.md#input-isolation).
-
-The upstream root is Apache-2.0, but individual upstream files may carry
-their own notices (including GPL-licensed tool components). Review the
-corresponding source file and the upstream [license](../../third_party/IHP-AnalogAcademy/LICENSE)
+The upstream root is Apache-2.0, but individual files may carry their own
+notices (including GPL-licensed tool components). Review the corresponding
+source file and the upstream [license](../../third_party/IHP-AnalogAcademy/LICENSE)
 before redistributing a derived asset.

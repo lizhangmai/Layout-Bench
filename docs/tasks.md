@@ -1,6 +1,6 @@
 # Adding Tasks and Validating the Judge
 
-See the complete example in [the IHP AnalogAcademy transmission-gate task](../tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/task.toml). The complete upstream circuit inventory is [catalogued under `tasks/IHP-AnalogAcademy/`](../tasks/IHP-AnalogAcademy/README.md); source review proceeds by checking sources, freezing inputs, defining constraints and an evaluation plan, preparing tool bindings, and then validating with a reference solution and counterexamples. Models, budgets, repetitions, and access policy belong to the outer [run plan](running.md).
+See the complete example in [the IHP AnalogAcademy transmission-gate case](../tasks/IHP-AnalogAcademy/cases/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.toml). The complete upstream circuit inventory is [catalogued under `tasks/IHP-AnalogAcademy/`](../tasks/IHP-AnalogAcademy/README.md); source review proceeds by checking sources, freezing inputs, defining constraints and an evaluation plan, preparing tool bindings, and then validating with a reference solution and counterexamples. Models, budgets, repetitions, and access policy belong to the outer [run plan](running.md).
 
 The catalog is an inventory index, not a shortcut around task qualification. A
 `candidate` record becomes a benchmark task only after its authoritative
@@ -16,7 +16,7 @@ and source digest, so updating the submodule requires a new source review.
 
 Public tasks use public designs and open PDKs/EDAs approved for distribution, and publish their inputs, reference solution, and qualification materials. A reference solution is for debugging and demonstrating feasibility; it is neither the only answer nor an optimum or scoring denominator. A standard solve receives only declared inputs; debugging with reference materials must be distinguished from solving in an empty workspace.
 
-An existing authoritative netlist can be frozen directly. When entering a task from a schematic, invoke the original tools on the files listed by `source.toml` and retain the untouched netlist, source-file digests, Git commit, actual image, and command. The current Xschem entry point is in the [tools guide](tools.md#source-preparation). Use a fixed PDK reader to cross-check the target circuit, device parameters, nets, and ports; a hand-copied CDL that matches a self-built layout does not establish fidelity to the source circuit.
+An existing authoritative netlist can be frozen directly. When entering a case from a schematic, invoke the original tools on the files listed by the case TOML's `[source_export]` section and retain the untouched netlist, source-file digests, Git commit, actual image, and command. The current Xschem entry point is in the [tools guide](tools.md#source-preparation). Use a fixed PDK reader to cross-check the target circuit, device parameters, nets, and ports; a hand-copied CDL that matches a self-built layout does not establish fidelity to the source circuit.
 
 <a id="asset-rights"></a>
 
@@ -26,7 +26,7 @@ Record the source, license, and permitted use and distribution scope separately 
 
 | Material | Storage and runtime visibility |
 |---|---|
-| Netlist, constraints, evaluation requirements, required testbench/model/description | Inputs declared by `task.toml`; readable by a standard Agent |
+| Netlist, constraints, evaluation requirements, required testbench/model/description | Inputs declared by the case TOML's `[task]` section; readable by a standard Agent |
 | Reference GDS, generators, qualification matrix, calibration, and counterexamples | Put public tasks in `reference/` and `qualification/`; downloadable for debugging but excluded from standard solve inputs |
 | Preparation source records | May be referenced by `provenance`; not materialized for the Agent automatically |
 | Process and tool materials | Separately reviewed resource bundles; do not mount a complete upstream checkout or repository |
@@ -35,9 +35,9 @@ Hidden tasks use only independently authored or authorized unpublished designs. 
 
 <a id="task-configuration"></a>
 
-## 2. Declare `task.toml` and Freeze Inputs
+## 2. Declare the case `[task]` section and Freeze Inputs
 
-`benchmarking/tasks.py` loads schema 1:
+`benchmarking/tasks.py` loads the nested executable task using the existing schema-1 fields. For a public circuit case, those fields live under `[task]` in a schema-2 `kind = "layout_case"` file; standalone framework fixtures may still use the legacy schema-1 task file.
 
 | Field | Meaning |
 |---|---|
@@ -113,7 +113,7 @@ Reports store `physical_valid`, `specs_pass`, and `task_success` separately; unk
 Independent re-evaluation does not run the Agent. Run it from the repository root with a new output directory:
 
 ```text
-uv run --locked python main.py evaluate <task.toml> <candidate.gds> --toolchain <toolchain.toml> --output <new-output-directory>
+uv run --locked python main.py evaluate <case.toml> <candidate.gds> --toolchain <toolchain.toml> --output <new-output-directory>
 ```
 
 <a id="qualification"></a>
@@ -134,7 +134,7 @@ These tests validate the judge implementation and task measurability; they do no
 
 When a public task is fully entered, provide its reference GDS, generator script, reproduction steps, check configuration, expected results, and counterexamples for key rejection paths. Archive pre-layout/post-layout calibration under the same conditions and record the actual tool identity. Pre-layout simulation cannot replace candidate post-layout simulation, and a witness is not an optimum-quality baseline. Fix families and measurement conditions before comparison; size variants of one template do not constitute independent circuit knowledge.
 
-See the [academy-tgate qualification materials](../tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/qualification/README.md) for the example's scope, calibration, and requalification commands. Qualification applies only to the fixed task, tools, rules, and declared conditions; requalify the affected scope after an environment change.
+See the [transmission-gate qualification materials](../tasks/IHP-AnalogAcademy/cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/qualification/README.md) for the example's scope, calibration, and requalification commands. Qualification applies only to the fixed case, tools, rules, and declared conditions; requalify the affected scope after an environment change.
 
 <a id="input-isolation"></a>
 

@@ -1,0 +1,43 @@
+schema_version = 2
+kind = "layout_case"
+id = "module_1_bandgap_reference.part_2_full_bgr"
+title = "IHP AnalogAcademy part_2_full_bgr"
+role = "design"
+status = "candidate"
+
+[origin]
+checkout = "third_party/IHP-AnalogAcademy"
+commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+license = "Apache-2.0 upstream root; file-level notices apply"
+
+[[sources]]
+id = "module_1_bandgap_reference.part_2_full_bgr.schematic.bandgap_MC"
+path = "modules/module_1_bandgap_reference/part_2_full_bgr/schematic/bandgap_MC.sch"
+role = "design"
+format = "xschem"
+sha256 = "a32bb973bb5a507403c636cc54ca201239ad31df2a46281f37c5a2023c013612"
+bytes = 6533
+
+[[sources]]
+id = "module_1_bandgap_reference.part_2_full_bgr.schematic.bandgap_reference"
+path = "modules/module_1_bandgap_reference/part_2_full_bgr/schematic/bandgap_reference.sch"
+role = "design"
+format = "xschem"
+sha256 = "b7d5bcf322b7bfb14d21f8f76b74a22fb97d9f1d40466c1821d8913d0e844058"
+bytes = 6713
+
+[[sources]]
+id = "module_1_bandgap_reference.part_2_full_bgr.schematic.bandgap_reference_temp"
+path = "modules/module_1_bandgap_reference/part_2_full_bgr/schematic/bandgap_reference_temp.sch"
+role = "design"
+format = "xschem"
+sha256 = "df2a7d3f1927f6ff574fafad3e761d7f7615cd78296b619597d0eda0e3ce7088"
+bytes = 6153
+
+[[sources]]
+id = "module_1_bandgap_reference.part_2_full_bgr.schematic.verilog.veriloga_tbs.tb_diff_amp"
+path = "modules/module_1_bandgap_reference/part_2_full_bgr/schematic/verilog/veriloga_tbs/tb_diff_amp.sch"
+role = "testbench"
+format = "xschem"
+sha256 = "b34fc859718f1e831a0710ea587c949b8be04c88e26f79699c0e2a46472bc19f"
+bytes = 2288
