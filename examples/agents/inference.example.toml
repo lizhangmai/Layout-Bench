@@ -7,3 +7,8 @@ model = "REPLACE_WITH_YOUR_MODEL"
 api_key_env = "LAYOUT_BENCH_API_KEY"
 max_requests = 100
 request_timeout_seconds = 60
+# Optional aggregate budgets over observable gateway usage. Token fields are
+# provider-reported counters, not a cross-provider compute-equivalence claim.
+# max_input_tokens = 200000
+# max_output_tokens = 50000
+# max_wall_seconds = 1800

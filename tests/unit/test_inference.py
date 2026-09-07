@@ -91,6 +91,53 @@ def test_request_bound_usage_and_no_error_body_exposure():
     assert gateway.summary()["usage"]["input_tokens"] is None
 
 
+def test_summary_separates_forwarded_denied_failed_and_truncated_requests():
+    config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 3, 10,
+                             Asset(b"profile", "text"), "responses")
+    responses = iter([
+        b'{"status":"completed","usage":{"input_tokens":2,"output_tokens":1}}',
+        b'{"status":"failed","error":{"code":"upstream"}}',
+        (b'{"status":"incomplete","incomplete_details":{"reason":"max_output_tokens"},'
+         b'"usage":{"input_tokens":3,"output_tokens":4}}'),
+    ])
+    gateway = InferenceGateway(config, transport=lambda *args: (200, "application/json", next(responses)))
+    gateway.deadline = time.monotonic() + 10
+    for _ in range(3):
+        assert gateway.request("/responses", b'{"model":"test-model"}')[0] == 200
+    assert gateway.request("/responses", b'{"model":"test-model"}')[0] == 429
+    summary = gateway.summary()
+    assert summary["request_counts"] == {
+        "forwarded": 3, "denied": 1, "failed": 1, "truncated": 1,
+        "content_filtered": 0, "cancelled": 0,
+    }
+    assert summary["denied_reasons"] == {"request_budget_exhausted": 1}
+    assert summary["usage"]["input_tokens"] is None
+    assert summary["usage_observed"]["input_tokens"] == {"known": 2, "missing": 1}
+    assert summary["wall_seconds"] >= 0
+    assert all(event["elapsed_seconds"] >= 0 for event in summary["requests"])
+
+
+def test_declared_observable_token_and_gateway_time_budgets_are_provider_neutral():
+    config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 5, 10,
+                             Asset(b"profile", "text"), "responses",
+                             max_input_tokens=2, max_output_tokens=3, max_wall_seconds=30)
+    gateway = InferenceGateway(
+        config,
+        transport=lambda *args: (200, "application/json",
+                                 b'{"status":"completed","usage":{"input_tokens":2,"output_tokens":1}}'),
+    )
+    gateway.deadline = time.monotonic() + 10
+    assert gateway.request("/responses", b'{"model":"test-model"}')[0] == 200
+    assert gateway.request("/responses", b'{"model":"test-model"}')[0] == 429
+    summary = gateway.summary()
+    assert summary["budget"] == {
+        "max_requests": 5, "max_input_tokens": 2,
+        "max_output_tokens": 3, "max_wall_seconds": 30,
+    }
+    assert summary["denied_reasons"] == {"input_token_budget_exhausted": 1}
+    assert summary["limit_reached"] is True
+
+
 def test_no_forwarded_requests_are_not_classified_as_model_usage():
     config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 1, 10,
                              Asset(b"profile", "text"), "responses")
@@ -114,12 +161,18 @@ model = "test-model"
 api_key_env = "LAYOUT_BENCH_TEST_KEY"
 max_requests = 2
 request_timeout_seconds = 5
+max_input_tokens = 100
+max_output_tokens = 50
+max_wall_seconds = 120
 ''')
     config = load_inference_config(source)
     monkeypatch.setenv(config.api_key_env, "unique-secret-value")
     gateway = ResponsesGateway(config)
     assert "unique-secret-value" not in json.dumps(gateway.public)
     assert gateway.public["socket"] == "/protocol/inference.sock"
+    assert gateway.public["max_input_tokens"] == 100
+    assert gateway.public["max_output_tokens"] == 50
+    assert gateway.public["max_wall_seconds"] == 120
     source.write_text(source.read_text().replace("https://", "http://"))
     with pytest.raises(ValueError, match="HTTPS"):
         load_inference_config(source)

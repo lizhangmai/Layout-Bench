@@ -7,7 +7,7 @@ from pathlib import Path
 from .evaluate import run_evaluation
 from .files import Asset
 from .harnesses import PROCESS_FEEDBACK_CAPABILITY
-from .inference import validate_harness_wire
+from .inference import USAGE_FIELDS, validate_harness_wire
 from .recorder import RecordingError, RunRecorder
 from .session import DockerSession, task_message
 
@@ -40,7 +40,7 @@ def run_agent(task, config, resources, backends, destination: Path, *, inference
               "implementation": {name: archive(Asset(Path(__file__).with_name(name).read_bytes(), "python"))
                                  for name in ("agent.py", "session.py", "snapshot.py", "submit.py", "process_check.py",
                                               "model_config.py", "harnesses.py", "recorder.py", "recording.py")},
-              "usage": {"input_tokens": None, "output_tokens": None, "cost": None},
+              "usage": {field: None for field in USAGE_FIELDS},
               "phase": "running", "outcome": None, "task_success": None, "evaluation": None}
     def save():
         recorder.save(report)

@@ -53,6 +53,33 @@ def _resources(reports):
     return result
 
 
+def _inference_resources(reports):
+    """Summarize gateway resource evidence without treating tokens as compute."""
+    failed = {"service_error", "http_error", "protocol_or_transport_error",
+              "incomplete_error", "cancelled"}
+    gateways = [r.get("inference") for r in reports
+                if isinstance(r, dict) and isinstance(r.get("inference"), dict)]
+    requests = [event for gateway in gateways for event in gateway.get("requests", [])]
+    outcomes = [event.get("outcome") for event in requests]
+    usage = {}
+    for field in ("input_tokens", "output_tokens", "cached_input_tokens",
+                  "reasoning_output_tokens", "cost"):
+        values = [(event.get("usage") or {}).get(field) for event in requests]
+        known = sum(value is not None for value in values)
+        usage[field] = {"known": known, "missing": len(values) - known,
+                        "total": sum(values) if values and known == len(values) else None}
+    return {
+        "forwarded": len(requests),
+        "denied": sum((gateway.get("denied_requests") or 0) for gateway in gateways),
+        "failed": sum(outcome in failed for outcome in outcomes),
+        "truncated": sum(outcome == "budget_truncated" for outcome in outcomes),
+        "content_filtered": sum(outcome == "content_filtered" for outcome in outcomes),
+        "cancelled": sum(outcome == "cancelled" for outcome in outcomes),
+        "wall_seconds": _distribution([gateway.get("wall_seconds") for gateway in gateways]),
+        "usage": usage,
+    }
+
+
 def _read_archived_asset(root, reference, label):
     """Read and verify an archive reference from a trusted run directory."""
     if not isinstance(reference, dict) or set(reference) != {"sha256", "format", "bytes", "path"}:
@@ -437,8 +464,9 @@ def summarize_batch(destination, *, allow_in_progress=False):
             actual_run_kinds = Counter(r.get("run_kind") for r in reported if r.get("run_kind"))
             actual_run_kind = (next(iter(actual_run_kinds)) if len(actual_run_kinds) == 1
                                else "mixed" if actual_run_kinds else agent["run_kind"])
-            inference_requests = sum(len((r.get("inference") or {}).get("requests", [])) for r in reported)
-            inference_denied = sum((r.get("inference") or {}).get("denied_requests", 0) for r in reported)
+            inference_resources = _inference_resources(reported)
+            inference_requests = inference_resources["forwarded"]
+            inference_denied = inference_resources["denied"]
             inference_unused = sum(1 for r in reported
                                    if r.get("inference") is not None
                                    and not (r.get("inference") or {}).get("requests"))
@@ -457,6 +485,13 @@ def summarize_batch(destination, *, allow_in_progress=False):
                 "failure_modes": dict(group_failure_modes),
                 "inference_requests": inference_requests,
                 "inference_denied_requests": inference_denied,
+                "inference_forwarded_requests": inference_resources["forwarded"],
+                "inference_failed_requests": inference_resources["failed"],
+                "inference_truncated_requests": inference_resources["truncated"],
+                "inference_content_filtered_requests": inference_resources["content_filtered"],
+                "inference_cancelled_requests": inference_resources["cancelled"],
+                "inference_wall_seconds": inference_resources["wall_seconds"],
+                "inference_usage": inference_resources["usage"],
                 "inference_unused_runs": inference_unused,
                 "infrastructure_error_rate": sum(e["state"] == "infrastructure_error" for e, _, _ in all_attempts)/finished_attempts if finished_attempts else None,
                 "termination_counts": dict(Counter(r["termination"] for r, _ in measured)),

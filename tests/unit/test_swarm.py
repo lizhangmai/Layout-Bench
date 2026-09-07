@@ -438,6 +438,11 @@ request_timeout_seconds = 5
     group = batch["summary"]["groups"][0]
     assert group["run_kind"] == "model_protocol_test"
     assert group["resources"]["all_attempts"]["input_tokens"]["sum"] == 14
+    assert group["inference_forwarded_requests"] == 2
+    assert group["inference_denied_requests"] == 0
+    assert group["inference_failed_requests"] == 0
+    assert group["inference_truncated_requests"] == 0
+    assert group["inference_usage"]["input_tokens"] == {"known": 2, "missing": 0, "total": 14}
 
 
 def test_corrupted_candidate_blocks_statistics_even_when_reports_are_intact(tmp_path):

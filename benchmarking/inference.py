@@ -32,6 +32,8 @@ GENERIC_HTTP_ERROR = b'{"error":"Inference upstream rejected request"}'
 GENERIC_RESPONSE_ERROR = b'{"error":"Inference response failed validation"}'
 USAGE_FIELDS = ("input_tokens", "output_tokens", "cached_input_tokens",
                 "reasoning_output_tokens", "cost")
+FAILED_OUTCOMES = frozenset({"service_error", "http_error", "protocol_or_transport_error",
+                             "incomplete_error", "cancelled"})
 
 
 @dataclass(frozen=True)
@@ -43,6 +45,9 @@ class InferenceConfig:
     request_timeout_seconds: int
     source: Asset
     wire_api: str
+    max_input_tokens: int | None = None
+    max_output_tokens: int | None = None
+    max_wall_seconds: int | None = None
 
 
 @dataclass(frozen=True)
@@ -112,7 +117,8 @@ def load_inference_config(path):
     source = Asset(read_file(path.parent, path.name), "toml")
     data = tomllib.loads(source.content.decode())
     keys(data, {"schema_version", "base_url", "model", "api_key_env", "max_requests",
-                "request_timeout_seconds", "wire_api"}, set(), "inference profile")
+                "request_timeout_seconds", "wire_api"},
+         {"max_input_tokens", "max_output_tokens", "max_wall_seconds"}, "inference profile")
     if type(data["schema_version"]) is not int or data["schema_version"] != 1:
         raise ValueError("Unsupported inference profile")
     url = urlsplit(text(data["base_url"], "inference endpoint"))
@@ -125,10 +131,15 @@ def load_inference_config(path):
     for name in ("max_requests", "request_timeout_seconds"):
         if type(data[name]) is not int or data[name] <= 0:
             raise ValueError(f"{name} must be a positive integer")
+    for name in ("max_input_tokens", "max_output_tokens", "max_wall_seconds"):
+        if name in data and (type(data[name]) is not int or data[name] <= 0):
+            raise ValueError(f"{name} must be a positive integer")
     wire_api = text(data["wire_api"], "inference wire_api")
     _wire_adapter(wire_api)
     return InferenceConfig(*(data[k] for k in ("base_url", "model", "api_key_env", "max_requests",
-                                             "request_timeout_seconds")), source, wire_api)
+                                             "request_timeout_seconds")), source, wire_api,
+                           *(data.get(k) for k in ("max_input_tokens", "max_output_tokens",
+                                                   "max_wall_seconds")))
 
 
 def _validate_responses_request(path, body, model):
@@ -356,8 +367,11 @@ class InferenceGateway:
         self._socket = None
         self.events = []
         self.denied = 0
+        self.denied_events = []
         self.limit_reached = False
         self.deadline = 0
+        self._started_monotonic = None
+        self._stopped_monotonic = None
         self.server = None
         self.recorder = None
         self.shutdown_incomplete = False
@@ -370,6 +384,9 @@ class InferenceGateway:
                 "socket": INFERENCE_SOCKET,
                 "max_requests": self.config.max_requests,
                 "request_timeout_seconds": self.config.request_timeout_seconds,
+                "max_input_tokens": self.config.max_input_tokens,
+                "max_output_tokens": self.config.max_output_tokens,
+                "max_wall_seconds": self.config.max_wall_seconds,
                 "transport": "test" if self.is_test else "https",
                 "source_sha256": Asset(Path(__file__).read_bytes(), "python").sha256}
 
@@ -428,28 +445,59 @@ class InferenceGateway:
         if self.recorder:
             self.recorder.event(kind, **data)
 
+    def _deny(self, reason):
+        self.denied += 1
+        event = {"reason": reason, "sequence": len(self.denied_events) + 1}
+        self.denied_events.append(event)
+        self._record("inference.denied", **event)
+
+    def _token_budget_reason(self):
+        totals = {}
+        for field, limit in (("input_tokens", self.config.max_input_tokens),
+                             ("output_tokens", self.config.max_output_tokens)):
+            if limit is None:
+                continue
+            values = [event["usage"].get(field) if isinstance(event.get("usage"), dict) else None
+                      for event in self.events]
+            if values and all(type(value) is int and value >= 0 for value in values):
+                totals[field] = sum(values)
+                if totals[field] >= limit:
+                    return f"{field[:-7]}_token_budget_exhausted"
+        return None
+
     def request(self, path, body):
         if self._stopped:
+            self._deny("session_stopped")
             return 429, "application/json", b'{"error":"Inference session stopped"}'
         if not self._lock.acquire(blocking=False):
-            self._record("inference.denied", reason="concurrent_request")
+            self._deny("concurrent_request")
             return 429, "application/json", b'{"error":"Concurrent inference is disabled"}'
         try:
             if self._stopped:
+                self._deny("session_stopped")
                 return 429, "application/json", b'{"error":"Inference session stopped"}'
             if len(body) > MAX_BODY:
-                self._record("inference.denied", reason="request_too_large")
+                self._deny("request_too_large")
                 return 413, "application/json", b'{"error":"Request too large"}'
-            if time.monotonic() >= self.deadline or len(self.events) >= self.config.max_requests:
+            if time.monotonic() >= self.deadline:
                 self.limit_reached = True
-                self._record("inference.denied", reason="budget_exhausted")
+                self._deny("wall_time_budget_exhausted")
+                return 429, "application/json", b'{"error":"Inference budget exhausted"}'
+            if len(self.events) >= self.config.max_requests:
+                self.limit_reached = True
+                self._deny("request_budget_exhausted")
+                return 429, "application/json", b'{"error":"Inference budget exhausted"}'
+            token_reason = self._token_budget_reason()
+            if token_reason:
+                self.limit_reached = True
+                self._deny(token_reason)
                 return 429, "application/json", b'{"error":"Inference budget exhausted"}'
             try:
                 payload = self.wire_adapter.validate_request(path, body, self.config.model)
             except (ValueError, TypeError, RecursionError):
-                self.denied += 1
-                self._record("inference.denied", reason="invalid_request")
+                self._deny("invalid_request")
                 return 400, "application/json", b'{"error":"Request violates inference profile"}'
+            request_started = time.monotonic()
             event = {"path": path, "request_sha256": hashlib.sha256(payload).hexdigest(),
                      "request_bytes": len(payload), "status": None, "usage": None,
                      "sequence": len(self.events) + 1, "outcome": "pending", "started_at": time.time()}
@@ -485,6 +533,10 @@ class InferenceGateway:
                 event["status"] = 499 if event["cancelled"] else 502
                 event["outcome"] = "cancelled" if event["cancelled"] else "protocol_or_transport_error"
                 result = 502, "application/json", b'{"error":"Inference transport failed"}'
+            event["elapsed_seconds"] = max(0.0, time.monotonic() - request_started)
+            if self._token_budget_reason():
+                event["budget_exceeded"] = True
+                self.limit_reached = True
             event["finished_at"] = time.time()
             self._record("inference.result", **event)
             return result
@@ -492,7 +544,11 @@ class InferenceGateway:
             self._lock.release()
 
     def start(self, path, deadline, *, uid=None):
+        self._started_monotonic = time.monotonic()
+        self._stopped_monotonic = None
         self.deadline = deadline
+        if self.config.max_wall_seconds is not None:
+            self.deadline = min(self.deadline, self._started_monotonic + self.config.max_wall_seconds)
         gateway = self
 
         class Handler(socketserver.StreamRequestHandler):
@@ -537,6 +593,7 @@ class InferenceGateway:
 
     def stop(self):
         self._stopped = True
+        self._stopped_monotonic = time.monotonic()
         self.deadline = 0
         if self._socket:
             try:
@@ -554,9 +611,11 @@ class InferenceGateway:
             self.shutdown_incomplete = True
 
     def summary(self):
-        usage = {}
+        usage, usage_observed = {}, {}
         for field in USAGE_FIELDS:
             values = [e["usage"].get(field) if isinstance(e["usage"], dict) else None for e in self.events]
+            known = sum(value is not None for value in values)
+            usage_observed[field] = {"known": known, "missing": len(values) - known}
             if not values or any(value is None for value in values):
                 usage[field] = None
             elif field == "cost":
@@ -569,8 +628,29 @@ class InferenceGateway:
         # enough to classify a run as a model/protocol run.
         run_kind = ("offline_cli_development" if not self.events else
                     "model_protocol_test" if self.is_test else "model_cli_development")
+        wall_seconds = ((self._stopped_monotonic - self._started_monotonic)
+                        if self._started_monotonic is not None and self._stopped_monotonic is not None
+                        else sum(event.get("elapsed_seconds", 0.0) for event in self.events))
+        outcomes = [event.get("outcome") for event in self.events]
+        counts = {
+            "forwarded": len(self.events), "denied": self.denied,
+            "failed": sum(outcome in FAILED_OUTCOMES for outcome in outcomes),
+            "truncated": sum(outcome == "budget_truncated" for outcome in outcomes),
+            "content_filtered": sum(outcome == "content_filtered" for outcome in outcomes),
+            "cancelled": sum(outcome == "cancelled" for outcome in outcomes),
+        }
+        denied_reasons = {}
+        for event in self.denied_events:
+            denied_reasons[event["reason"]] = denied_reasons.get(event["reason"], 0) + 1
         return {**self.public, "run_kind": run_kind, "requests": copy.deepcopy(self.events), "usage": usage,
-                "denied_requests": self.denied, "limit_reached": self.limit_reached,
+                "usage_observed": usage_observed, "wall_seconds": wall_seconds,
+                "request_counts": counts, "denied_requests": self.denied,
+                "denied_reasons": denied_reasons, "denied": copy.deepcopy(self.denied_events),
+                "budget": {"max_requests": self.config.max_requests,
+                           "max_input_tokens": self.config.max_input_tokens,
+                           "max_output_tokens": self.config.max_output_tokens,
+                           "max_wall_seconds": self.config.max_wall_seconds},
+                "limit_reached": self.limit_reached,
                 "shutdown_incomplete": self.shutdown_incomplete,
                 "infrastructure_error": self.shutdown_incomplete or any(e["outcome"] not in {"completed", "budget_truncated",
                                                                   "content_filtered", "cancelled"}
