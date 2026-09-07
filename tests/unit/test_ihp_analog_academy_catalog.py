@@ -46,7 +46,7 @@ def test_catalog_is_complete_and_keeps_intake_separate_from_tasks():
 
 def test_catalog_digests_match_the_pinned_submodule():
     academy = ROOT / "third_party/IHP-AnalogAcademy"
-    if not academy.is_dir():
+    if not (academy / ".git").exists():
         pytest.skip("IHP AnalogAcademy submodule is not initialized")
     catalog = tomllib.loads(CATALOG.read_text())
     excluded = {item["path"] for item in catalog["excluded"]}
