@@ -121,6 +121,8 @@ actually exercised the model rather than only running the harness protocol.
 | API service, image startup, or storage failure | Record an infrastructure error; batch runs use the predeclared retry allowance and retain the original attempt |
 | Evaluator crash, timeout, or missing measurement | Keep the candidate for re-evaluation; do not count it as a model failure or start a replacement Agent |
 
+The run report uses `reason = "Wall-clock limit reached"` for a session deadline and a generic `Agent exited with code N` reason for a non-zero harness exit; detailed diagnostics remain in the console artifacts.
+
 Classify an evaluation anomaly as an artifact failure only after confirming a violation of a published candidate limit. Leave unresolved slots as `missing` and show incomplete coverage in summaries. Distinguish response budget truncation from service failure as above; HTTP 200 alone does not prove inference succeeded.
 
 <a id="local-run-plans"></a>

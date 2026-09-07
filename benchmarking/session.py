@@ -243,6 +243,7 @@ class DockerSession:
                     remaining = deadline - time.monotonic()
                     if remaining <= 0:
                         termination = "budget_exhausted"
+                        reason = "Wall-clock limit reached"
                         break
                     try:
                         connection, _ = server.accept()
@@ -297,7 +298,8 @@ class DockerSession:
                         reason = state.get("Error") or "Docker attach failed"
                     else:
                         termination = "completed" if code == 0 else "agent_error"
-                        reason = "OOM killed" if state.get("OOMKilled") else ""
+                        reason = ("OOM killed" if state.get("OOMKilled") else
+                                  f"Agent exited with code {code}" if code else "")
             except (OSError, ValueError, subprocess.SubprocessError) as error:
                 termination, reason = "infrastructure_error", str(error)
             finally:

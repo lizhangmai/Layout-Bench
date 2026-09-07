@@ -92,6 +92,12 @@ output.write_bytes(b'not submitted')
 def test_stop_and_submission_are_independent(code, termination, content):
     result = execute(code, seconds=3)
     assert result.termination == termination, result.console.content
+    expected_reason = {
+        "budget_exhausted": "Wall-clock limit reached",
+        "agent_error": "Agent exited with code 1",
+        "completed": "",
+    }[termination]
+    assert result.reason == expected_reason, result.console.content
     assert (result.candidate.content if result.candidate is not None else None) == content
     assert result.elapsed_seconds < 6
 
