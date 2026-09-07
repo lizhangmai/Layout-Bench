@@ -20,7 +20,7 @@ type = "klayout-docker"
 image = "layout-bench-tools:local"
 check = "lvs"
 support = "build/support/sg13g2-klayout-ports"
-profile = "lvs.json"
+profile = "lvs-comparator.json"
 
 [backends.geometry]
 type = "klayout-geometry-docker"

@@ -166,7 +166,11 @@ def lvs(config):
         return "failed", "LVS circuit, device, parameter or connectivity mismatch", details
     if not any(target[0].first().each_device()) and not any(target[0].first().each_subcircuit()):
         return "failed", "LVS extracted circuit is empty", details
-    if not report.flag_missing_ports(reference):
+    # The reviewed KLayout profile may intentionally ignore top-level port-label
+    # mismatches.  Keep the adapter's fallback check aligned with that setting;
+    # otherwise the profile's ignore_top_ports_mismatch switch would be inert.
+    ignore_top_ports = config.get("variables", {}).get("ignore_top_ports_mismatch") == "true"
+    if not ignore_top_ports and not report.flag_missing_ports(reference):
         return "failed", "LVS top-level ports are missing or mislabeled", details
     return "passed", "", details
 

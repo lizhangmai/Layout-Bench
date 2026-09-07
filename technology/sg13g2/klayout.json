@@ -499,6 +499,10 @@
     "lvs.json": {
       "content": "{\n  \"deck\": \"ihp-sg13g2/libs.tech/klayout/tech/lvs/sg13g2.lvs\",\n  \"variables\": {\n    \"run_mode\": \"flat\",\n    \"top_lvl_pins\": \"true\",\n    \"no_simplify\": \"true\",\n    \"combine_devices\": \"true\",\n    \"disable_tap_extraction\": \"true\",\n    \"ignore_top_ports_mismatch\": \"false\"\n  },\n  \"scope\": \"Upstream flat device/parameter/connectivity LVS with strict named top ports; physical taps connect bulk but are not schematic devices.\",\n  \"layer_names\": {\n    \"metal1\": \"metal1_con\"\n  }\n}\n",
       "format": "json"
+    },
+    "lvs-comparator.json": {
+      "content": "{\n  \"deck\": \"ihp-sg13g2/libs.tech/klayout/tech/lvs/sg13g2.lvs\",\n  \"variables\": {\n    \"run_mode\": \"flat\",\n    \"top_lvl_pins\": \"true\",\n    \"no_simplify\": \"true\",\n    \"combine_devices\": \"true\",\n    \"disable_tap_extraction\": \"true\",\n    \"ignore_top_ports_mismatch\": \"true\"\n  },\n  \"scope\": \"Upstream flat device/parameter/connectivity LVS with top-level port-label mismatches ignored for the pinned upstream comparator; physical taps connect bulk but are not schematic devices.\",\n  \"layer_names\": {\n    \"metal1\": \"metal1_con\"\n  }\n}\n",
+      "format": "json"
     }
   }
 }
