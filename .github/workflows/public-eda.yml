@@ -1,12 +1,19 @@
 name: Public EDA preview
 on:
+  schedule:
+    - cron: '17 2 * * *'
   workflow_dispatch:
+
+concurrency:
+  group: public-eda-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 jobs:
   public-preview:
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v6
         with:
@@ -15,7 +22,10 @@ jobs:
         with:
           version: '0.11.2'
           python-version: '3.12'
-      - run: uv run --locked python scripts/public_preview.py quickstart --output build/runs/preview
+      - run: uv sync --locked
+      - run: uv run --locked python scripts/public_preview.py quickstart --network host --output build/runs/preview
+      - name: Run repeatable EDA acceptance suite
+        run: uv run --locked python scripts/acceptance.py eda --image layout-bench-tools:local
       - run: bash tests/integration/test_toolchain.sh tools
       - run: bash tests/integration/test_build_context.sh
       - run: uv run --locked python scripts/public_preview.py qualify --prepared build/runs/preview/prepared --output build/runs/preview-qualification
