@@ -48,7 +48,7 @@ def verify_framework(snapshot, root=ROOT):
         raise ValueError("Framework source changed after execution conditions were frozen")
 
 
-def host_identity():
+def host_identity(*, concurrency=1):
     return {"system": platform.system(), "release": platform.release(), "machine": platform.machine(),
             "python": sys.version, "cpu_count": os.cpu_count(), "uid": os.getuid(), "gid": os.getgid(),
-            "concurrency": 1, "working_directory": str(Path.cwd())}
+            "concurrency": concurrency, "working_directory": str(Path.cwd())}

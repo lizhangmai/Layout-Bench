@@ -53,6 +53,29 @@ class RunRecorder:
         self.error = None
         self._closed = False
 
+    @classmethod
+    def resume(cls, destination):
+        """Reopen an unfinished evidence directory without replacing its journal."""
+        self = cls.__new__(cls)
+        self.root = Path(destination).absolute()
+        if not self.root.is_dir() or not (self.root / "artifacts").is_dir():
+            raise FileNotFoundError(self.root)
+        self._lock = threading.RLock()
+        self._sequence = 0
+        with (self.root / "events.jsonl").open("rb") as stream:
+            for line in stream:
+                if not line.endswith(b"\n"):
+                    raise ValueError("Cannot resume an event journal with an incomplete tail")
+                event = json.loads(line)
+                self._sequence += 1
+                if (event.get("schema_version") != 1
+                        or event.get("sequence") != self._sequence):
+                    raise ValueError("Cannot resume an invalid event journal")
+        self._started = time.monotonic()
+        self.error = None
+        self._closed = False
+        return self
+
     def _write(self, operation):
         if self._closed:
             raise RecordingError("Run recorder is closed")

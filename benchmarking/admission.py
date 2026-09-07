@@ -27,7 +27,7 @@ def conditions(manifest):
     """Stable review subject, excluding archive location and Git working-tree prose."""
     return {**{key: manifest[key] for key in (
         "schema_version", "run_kind", "id", "scope", "plan", "host", "repetitions",
-        "order", "seed", "max_infrastructure_retries", "statistics", "tasks", "agents", "schedule")},
+        "order", "seed", "max_infrastructure_retries", "concurrency", "statistics", "tasks", "agents", "schedule")},
         "framework_sha256": manifest["framework"]["sha256"]}
 
 

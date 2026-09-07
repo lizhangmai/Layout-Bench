@@ -446,9 +446,11 @@ def summarize_batch(destination, *, allow_in_progress=False):
                                 observed_metrics[name].append(value)
                                 if report["task_success"]:
                                     successful_metrics[name].append(value)
+                replacements = max(0, len(task_attempts) - len(selected))
                 per_task[task_id] = {
                     "family": manifest["tasks"][task_id]["family"], "scheduled": len(selected),
-                    "measured": len(observed), "missing": missing, "successes": successes,
+                    "measured": len(observed), "missing": missing, "replacements": replacements,
+                    "successes": successes,
                     "physical_valid": physical,
                     "success_rate": successes/len(selected) if not missing else None,
                     "observed_success_rate": successes/len(observed) if observed else None,
@@ -480,6 +482,7 @@ def summarize_batch(destination, *, allow_in_progress=False):
                 "task_equal_success_rate": sum(t["success_rate"] for t in per_task.values())/len(per_task) if complete else None,
                 "physical_valid_rate": sum(t["weight"]*t["physical_valid"]/t["scheduled"] for t in per_task.values()) if complete else None,
                 "attempts": len(all_attempts), "attempts_finished": finished_attempts,
+                "replacements": sum(task["replacements"] for task in per_task.values()),
                 "infrastructure_errors": sum(e["state"] == "infrastructure_error" for e, _, _ in all_attempts),
                 "evaluation_errors": sum(e["state"] == "evaluation_error" for e, _, _ in all_attempts),
                 "failure_modes": dict(group_failure_modes),

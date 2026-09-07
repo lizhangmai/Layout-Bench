@@ -16,7 +16,7 @@ from benchmarking.provenance import (
 from benchmarking.recorder import RunRecorder
 from benchmarking.recording import SessionResult
 from benchmarking.report import summarize_batch, wilson
-from benchmarking.swarm import execute_plan, load_plan
+from benchmarking.swarm import execute_plan, load_plan, resume_plan
 
 pytestmark = [pytest.mark.unit, pytest.mark.acceptance, pytest.mark.acceptance_fast]
 
@@ -121,6 +121,33 @@ def test_cross_product_family_weights_and_recomputed_evidence(tmp_path):
         execute(path, tmp_path / "run")
 
 
+def test_concurrent_slots_use_fresh_sessions_and_keep_frozen_schedule(tmp_path):
+    import threading
+    import time
+
+    path = make_plan(tmp_path / "input", repetitions=2, tasks=2, agents=1)
+    sessions, lock = [], threading.Lock()
+
+    class ConcurrentSession(FakeSession):
+        def __init__(self, image):
+            super().__init__(image)
+            with lock:
+                sessions.append(self)
+
+        def run(self, *args, **kwargs):
+            time.sleep(.02)
+            return super().run(*args, **kwargs)
+
+    batch = execute_plan(load_plan(path), tmp_path / "run", session_factory=ConcurrentSession,
+                         toolchain_loader=backends, concurrency=2)
+    assert batch["outcome"] == "complete"
+    manifest = json.loads((tmp_path / "run" / "execution.json").read_text())
+    assert manifest["concurrency"] == 2 and manifest["host"]["concurrency"] == 2
+    assert len(sessions) == 1 + len(batch["attempts"])
+    run_sessions = sessions[1:]
+    assert len({id(session) for session in run_sessions}) == len(run_sessions)
+
+
 def test_summary_retains_numeric_metrics_for_failed_candidates(tmp_path):
     path = make_plan(tmp_path / "input", tasks=1, agents=1)
 
@@ -150,6 +177,28 @@ def test_scheduling_is_frozen_and_failures_are_not_extra_samples(tmp_path):
     assert group["resources"]["all_attempts"]["wall_seconds"]["sum"] is None
     assert all('secret' not in p.read_text() for p in (tmp_path/"run").glob("*.json"))
     assert [c["attempt"] for c in calls] == [1, 2, 1, 2]
+
+
+def test_resume_marks_interrupted_attempt_and_schedules_a_replacement(tmp_path):
+    path = make_plan(tmp_path / "input", repetitions=1, tasks=1, agents=1, retries=1)
+    calls = 0
+
+    def interrupted(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise KeyboardInterrupt
+        return run_agent(*args, **kwargs)
+
+    with pytest.raises(KeyboardInterrupt):
+        execute(path, tmp_path / "run", runner=interrupted)
+    resumed = resume_plan(load_plan(path), tmp_path / "run", session_factory=FakeSession,
+                          toolchain_loader=backends)
+    assert resumed["outcome"] == "complete"
+    assert [attempt["attempt"] for attempt in resumed["attempts"]] == [1, 2]
+    assert resumed["attempts"][0]["state"] == "infrastructure_error"
+    assert resumed["attempts"][0]["exception_type"] == "interrupted"
+    assert resumed["summary"]["groups"][0]["replacements"] == 1
 
 
 def test_exhausted_replacements_keep_main_rate_missing(tmp_path):

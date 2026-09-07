@@ -20,7 +20,7 @@ from benchmarking.inference import (
 from benchmarking.model_config import load_run_config
 from benchmarking.recorder import recover_submissions
 from benchmarking.report import summarize_batch
-from benchmarking.swarm import execute_plan, load_plan
+from benchmarking.swarm import execute_plan, load_plan, resume_plan
 from benchmarking.tasks import load_task
 from benchmarking.toolchains import load_toolchain
 
@@ -98,8 +98,11 @@ def main() -> None:
     batch_parser.add_argument("plan", type=Path)
     batch_parser.add_argument("--output", type=Path, required=True)
     batch_parser.add_argument("--prepare-only", action="store_true", help="Freeze conditions for operator review without starting solvers")
+    batch_parser.add_argument("--resume", action="store_true", help="Resume an unfinished batch in place")
     batch_parser.add_argument("--policy", type=Path, help="Operator-reviewed admission policy; requires an independent pin")
     batch_parser.add_argument("--policy-sha256", help="Trusted operator's policy digest")
+    batch_parser.add_argument("--concurrency", type=int,
+                              help="Maximum independent solve attempts running at once")
     summary_parser = subcommands.add_parser("summarize", help="Verify and recompute internal batch statistics")
     summary_parser.add_argument("directory", type=Path)
     inference_parser = subcommands.add_parser(
@@ -113,10 +116,20 @@ def main() -> None:
     args = parser.parse_args()
     try:
         if args.command == "batch":
+            if args.resume and args.prepare_only:
+                raise ValueError("--resume and --prepare-only are mutually exclusive")
             if bool(args.policy) != bool(args.policy_sha256):
                 raise ValueError("--policy and --policy-sha256 must be supplied together by the operator")
             policy = load_policy(args.policy, args.policy_sha256) if args.policy else None
-            batch = execute_plan(load_plan(args.plan), args.output, policy=policy, prepare_only=args.prepare_only)
+            plan = load_plan(args.plan)
+            if args.resume:
+                if policy is not None:
+                    raise ValueError("--resume does not accept a new admission policy")
+                batch = resume_plan(plan, args.output, concurrency=args.concurrency)
+            else:
+                batch = execute_plan(plan, args.output, policy=policy,
+                                     prepare_only=args.prepare_only,
+                                     concurrency=1 if args.concurrency is None else args.concurrency)
             result = {"report": str(args.output / "batch.json"), "outcome": batch["outcome"]}
             if args.prepare_only:
                 result["conditions_sha256"] = batch["conditions_sha256"]
