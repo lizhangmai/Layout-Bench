@@ -1,0 +1,53 @@
+schema_version = 1
+source_checkout = "third_party/TO_Apr2025"
+source_commit = "63e203a0eccfb6028a1a0a8364553e4e979b55b3"
+source_license = "Apache-2.0 upstream root; file-level notices apply"
+circuit_source_count = 1
+artifact_count = 6
+
+[[circuits]]
+id = "TO_Apr2025.Mixer5GHz"
+title = "TO_Apr2025: 5 GHz up-converter mixer with cross-coupled oscillator"
+source_path = "Mixer5GHz/design_data/xschem/Mixer5GHz.sch"
+source_sha256 = "9d6ba0d47a052db524d36e6bfc1221f327cd16ba1ee2fe20d64b19c4daa6cd08"
+source_bytes = 10242
+source_format = "xschem"
+role = "design"
+status = "candidate"
+intake_path = "Mixer5GHz/intake.toml"
+
+[[artifacts]]
+path = "Mixer5GHz/design_data/xschem/simulations/Mixer5GHz.spice"
+kind = "simulation-deck"
+sha256 = "bda82ee4843ae3f7cf60662b96e2bcafd560d53cbc61d1d49a6e2d1b73674df6"
+bytes = 1834
+
+[[artifacts]]
+path = "Mixer5GHz/design_data/lvs/Mixer5GHz.cdl"
+kind = "netlist"
+sha256 = "cd9b8e8ae70c0144453e073de775a59fda1591f3dbca057fabedc6b7a2724ed6"
+bytes = 1698
+
+[[artifacts]]
+path = "Mixer5GHz/design_data/lvs/Mixer5GHz_extracted.cir"
+kind = "extraction"
+sha256 = "ebc3f3600ddc1c4af279dd0fb73f793ffe10a093bcd10a87cc8a73a15434060a"
+bytes = 2055
+
+[[artifacts]]
+path = "Mixer5GHz/design_data/gds/FMD_QNC_16_Mixer5GHz.gds"
+kind = "layout"
+sha256 = "8d16d09dfc132c3d72f863759a8a65f242269938395aee0ff968fb7d1ba4a89a"
+bytes = 28047916
+
+[[artifacts]]
+path = "Mixer5GHz/design_data/drc/Mixer5GHz.lyrdb"
+kind = "drc-report"
+sha256 = "9ba1299dc63de7f5c909e24a90a333e3f77759c089059166bdf1d93286c1c237"
+bytes = 18628
+
+[[artifacts]]
+path = "Mixer5GHz/design_data/lvs/Mixer5GHz.lvsdb"
+kind = "lvs-report"
+sha256 = "16ef344daea1ad9692cb274a2a1c171bc0a5c497d2bfeb556b7d399153f2bf47"
+bytes = 7501369
