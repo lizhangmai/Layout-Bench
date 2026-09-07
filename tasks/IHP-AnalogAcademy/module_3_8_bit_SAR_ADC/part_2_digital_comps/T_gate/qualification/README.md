@@ -1,6 +1,6 @@
 # 传输门资格与校准
 
-2026-09-06 开发预览版切换为统一工具镜像后，重新准备支持包并完成全部 14 场景和前仿校准；独立 checkout 另行验证了一键准备、参考重评、提交与批量统计入口。公开摘要已更新为统一镜像的实际身份；参考 GDS 字节及全部场景和前后仿测量值与原先分镜像记录一致。
+本目录提供 `academy-tgate` 的公开资格套件，包括 14 个裁判场景和原理图/后仿校准。资格和校准均固定在 `sg13g2-klayout-main-magic-c-v1` 工具环境中；机器可读的结果、实际工具身份和每个场景的测量值分别记录在 [qualification.json](qualification.json) 和 [calibration.json](calibration.json) 中。
 
 本题已在 `sg13g2-klayout-main-magic-c-v1` 环境通过下列 14 场景验证。[qualification.json](qualification.json) 保存任务、候选、生成脚本、裁判和实际工具身份，以及各场景的检查状态和测量值；[calibration.json](calibration.json) 保存使用相同工况和测量定义得到的前后仿结果。公开参考见 [reference](../reference/README.md)。
 
