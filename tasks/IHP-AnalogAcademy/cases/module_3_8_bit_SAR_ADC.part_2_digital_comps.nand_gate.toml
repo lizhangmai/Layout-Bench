@@ -3,7 +3,7 @@ kind = "layout_case"
 id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.nand_gate"
 title = "IHP AnalogAcademy nand_gate"
 role = "design"
-status = "candidate"
+status = "supporting-source"
 
 [origin]
 checkout = "third_party/IHP-AnalogAcademy"
@@ -25,3 +25,7 @@ role = "testbench"
 format = "xschem"
 sha256 = "3633625c415e45a66a5359e4b37493c4a08129b32330e88a0c27f4a163f9a563"
 bytes = 2574
+
+[screening]
+decision = "exclude"
+reason = "Four-MOS schematic and logic testbench only; no upstream layout is available for public reuse."

@@ -17,3 +17,7 @@ role = "design"
 format = "qucs"
 sha256 = "75172c34ac577dd0d46c15ba2379288f355b729c361529132a60cef036a893f5"
 bytes = 3005
+
+[screening]
+decision = "exclude"
+reason = "Qucs stability analysis with an external HBT model, not a reproducible public transistor layout case."

@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_cli_batch_fresh_sessions_and_recomputed_summary(tmp_path):
-    task_path = ROOT / "tasks/IHP-AnalogAcademy/cases/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.toml"
+    task_path = ROOT / "examples/sg13g2/checked-switch/task.toml"
     task = load_task(task_path)
     # Nothing is submitted, so these fixture bindings are never invoked as a judge.
     tools = 'schema_version = 1\n[backends.fixture]\ntype = "klayout-docker"\nsettings = {image = "layout-bench-tools:local", check = "artifact"}\n[bindings]\n'

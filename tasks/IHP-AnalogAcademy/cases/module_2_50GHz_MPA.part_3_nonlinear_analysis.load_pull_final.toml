@@ -17,3 +17,7 @@ role = "design"
 format = "qucs"
 sha256 = "9482f8d3b832d73943cb793689f893664317f01f7b8057ebae40d8ebe2f81c5f"
 bytes = 3792
+
+[screening]
+decision = "exclude"
+reason = "Qucs/Xyce load-pull simulation with an external HBT model; no public reusable transistor layout implementation is present."

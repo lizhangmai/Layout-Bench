@@ -56,11 +56,9 @@ def test_catalog_has_one_unified_config_per_case():
     assert all(source["path"].endswith(".sch") for source in sources)
 
     qualified = [data for data in configs.values() if data["status"] == "qualified"]
-    assert [data["id"] for data in qualified] == [
-        "module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate"
-    ]
-    assert "task" in qualified[0]
-    assert "source_export" in qualified[0]
+    assert qualified == []
+    assert all(data.get("screening", {}).get("decision") in {"include", "defer", "exclude"}
+               for data in configs.values())
     assert not list(CATALOG.parent.glob("**/intake.toml"))
     assert not list(CATALOG.parent.glob("**/task.toml"))
     assert not list(CATALOG.parent.glob("**/source.toml"))

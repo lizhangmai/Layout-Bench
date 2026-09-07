@@ -35,7 +35,7 @@ def _preview_evidence_is_complete(output):
     summary = json.loads((output / "run/preview.json").read_text())
     expected = {
         "run_kind": "public_preview_smoke",
-        "task": "module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate",
+        "task": "sg13g2-checked-switch-fixture",
         "reference": "passed",
         "protocol_probe": "expected_failure",
         "canonical_probe": "expected_failure",

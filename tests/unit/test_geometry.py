@@ -1,13 +1,21 @@
 import copy
-import json
-from pathlib import Path
 
 import pytest
 
 from benchmarking.geometry import validate_constraints
 
 pytestmark = pytest.mark.unit
-DATA = json.loads((Path(__file__).resolve().parents[2] / 'tasks/IHP-AnalogAcademy/cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/inputs/constraints.json').read_text())
+DATA = {
+    'schema_version': 1,
+    'hard': [
+        {'id': 'outline', 'type': 'bbox_max', 'functional_layers': [[1, 0]],
+         'max_width_um': 10.0, 'max_height_um': 10.0},
+        {'id': 'ports', 'type': 'named_metal_ports', 'names': ['VIN'],
+         'drawing_layer': [8, 0], 'pin_layer': [8, 0], 'text_layer': [8, 0],
+         'connectivity_layer': 'metal1', 'min_access_square_um': 0.1},
+    ],
+    'quality': [{'id': 'area', 'type': 'functional_bbox_area', 'layers_from': 'outline'}],
+}
 
 
 @pytest.mark.parametrize('change', ['unknown', 'negative', 'duplicate', 'wrong_layer', 'unbound_area', 'nan'])

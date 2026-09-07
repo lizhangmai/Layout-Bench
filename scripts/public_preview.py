@@ -1,7 +1,6 @@
-"""Build and reproduce the public transmission-gate preview without a model account."""
+"""Build and reproduce the public SG13G2 integration preview without a model account."""
 
 import argparse
-import hashlib
 import ipaddress
 import json
 import os
@@ -14,9 +13,9 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
-CASE_ID = "module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate"
-TASK = ROOT / f"tasks/IHP-AnalogAcademy/cases/assets/{CASE_ID}"
-CONFIG = ROOT / f"tasks/IHP-AnalogAcademy/cases/{CASE_ID}.toml"
+CASE_ID = "sg13g2-checked-switch-fixture"
+TASK = ROOT / "examples/sg13g2/checked-switch"
+CONFIG = TASK / "task.toml"
 IMAGE = "layout-bench-tools:local"
 RUNS = "build/runs"
 SUPPORT = "build/support"
@@ -179,10 +178,11 @@ def prepare(destination, image=IMAGE):
     for name in ("magic", "mos-models", "klayout"):
         print(f"Preparing {name} from the reviewed PDK files", flush=True)
         prepare_support(pdk, ROOT / f"technology/sg13g2/{name}.json", destination / name, compiler_image=image_id)
-    # This example composes this public task's existing configuration; the framework
-    # still accepts arbitrary task/toolchain files and has no task-specific branches.
-    config = (TASK / "qualification/toolchain.toml").read_text()
-    for old, name in (("magic", "magic"), ("mos-models", "mos-models"), ("klayout-ports", "klayout")):
+    # This preview composes the repository's generic checked-switch fixture;
+    # the framework still accepts arbitrary task/toolchain files and has no
+    # task-specific branches.
+    config = (TASK / "toolchain.toml").read_text()
+    for old, name in (("magic", "magic"), ("mos-models", "mos-models"), ("klayout", "klayout")):
         # Accept the historical .cache paths while new task templates use the
         # repository-wide build/support output namespace.
         for prefix in (SUPPORT, ".cache"):
@@ -203,37 +203,15 @@ def prepare(destination, image=IMAGE):
 
 
 
-def calibration_summary(output, qualification):
-    """Reproduce the public calibration digest/metrics summary from retained reports."""
-    raw = (output / "calibration/measurements/report.json").read_bytes()
-    pre = json.loads(raw)
-    post = qualification["cases"]["reference"]
-    result = {"schema_version": 1, "task_sha256": qualification["task_sha256"],
-              "environment": qualification["environment"],
-              "preparation": json.loads((output / "calibration/preparation.json").read_text()),
-              "pre_layout": {"engine_sha256": pre["engine_sha256"], "backends": pre["backends"],
-                             "report_sha256": hashlib.sha256(raw).hexdigest(), "metrics": pre["metrics"]},
-              "post_layout": {key: post[key] for key in ("candidate", "report_sha256", "metrics")}}
-    (output / "calibration.json").write_text(json.dumps(result, indent=2) + "\n")
-
-
 def run(prepared, output, qualification):
     toolchain = prepared.absolute() / "toolchain.toml"
     if not toolchain.is_file():
         raise ValueError(f"Prepared tools missing: {toolchain}. Run 'prepare' first, or set --prepared.")
     output = new_directory(output)
     if qualification:
-        python(TASK / "qualification/run.py", prepared / "pdk-view", output / "qualification", "--toolchain", toolchain)
-        python(TASK / "qualification/calibrate.py", output / "calibration", "--toolchain", toolchain,
-               "--support", prepared / "klayout")
-        summary = json.loads((output / "qualification/qualification.json").read_text())
-        calibration = json.loads((output / "calibration/measurements/report.json").read_text())
-        if summary["qualified"] is not True or calibration["outcome"] != "passed":
-            raise ValueError("Public qualification or calibration did not pass; inspect the retained reports.")
-        calibration_summary(output, summary)
-        print(f"PASS: {len(summary['cases'])} qualification scenarios and schematic calibration. No model was called.")
-        return
-    python(ROOT / "main.py", "evaluate", CONFIG, TASK / "reference/reference.gds",
+        print("Running the same deterministic fixture checks under the 'qualify' alias.", flush=True)
+    python(ROOT / "examples/sg13g2/generate.py", prepared / "pdk-view", output / "fixtures", "--suite", "checks")
+    python(ROOT / "main.py", "evaluate", CONFIG, output / "fixtures/valid.gds",
            "--toolchain", toolchain, "--output", output / "reference", log=output / "reference.log")
     agent = prepared.absolute() / "protocol-probe.toml"
     python(ROOT / "main.py", "run", CONFIG, "--agent", agent,
@@ -250,8 +228,8 @@ def run(prepared, output, qualification):
             or not canonical["candidate"]):
         raise ValueError("Expected a completed canonical probe with a rejected rectangular layout.")
     plan = (ROOT / "examples/plans/protocol-probe.toml").read_text()
-    for old, path in (("../../tasks/IHP-AnalogAcademy/cases/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.toml", CONFIG),
-                      ("../../tasks/IHP-AnalogAcademy/cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/qualification/toolchain.toml", toolchain),
+    for old, path in (("../sg13g2/checked-switch/task.toml", CONFIG),
+                      ("../sg13g2/checked-switch/toolchain.toml", toolchain),
                       ("../agents/protocol-probe.toml", agent)):
         plan = plan.replace(json.dumps(old), json.dumps(str(path)))
     (output / "plan.toml").write_text(plan)
@@ -300,7 +278,7 @@ def main():
     preparation.add_argument("--output", type=Path, default=ROOT / RUNS / "preview")
     preparation.add_argument("--image", default=IMAGE)
     for name in ("run", "qualify"):
-        command = commands.add_parser(name, help="Run public reference/probe/batch checks" if name == "run" else "Rebuild and verify the 14 qualification scenarios and calibration")
+        command = commands.add_parser(name, help="Run public reference/probe/batch checks" if name == "run" else "Repeat the public fixture checks as a qualification smoke test")
         command.add_argument("--prepared", type=Path, default=ROOT / RUNS / "preview")
         command.add_argument("--output", type=Path, required=True, help="New directory for reports; existing evidence is never overwritten")
     args = parser.parse_args()

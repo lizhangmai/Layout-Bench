@@ -17,3 +17,7 @@ role = "design"
 format = "qucs"
 sha256 = "7ab61118b436a154677f48c1daf09b6e718974c37d59140e7456ea8e34a5e494"
 bytes = 2423
+
+[screening]
+decision = "exclude"
+reason = "Qucs RF/HBT biasing deck with an external user library; no public PDK transistor layout contract or GDS/LVS/DRC task evidence exists."

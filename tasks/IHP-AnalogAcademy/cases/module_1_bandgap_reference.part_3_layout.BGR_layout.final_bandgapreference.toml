@@ -17,3 +17,7 @@ role = "design"
 format = "xschem"
 sha256 = "df8058fab1b7b8e25758231687d219d020d4cf3b6b0f16b3096d72f14fee191a"
 bytes = 16368
+
+[screening]
+decision = "defer"
+reason = "Upstream provides GDS and an extracted netlist, but the top subcircuit exposes only vdd and has no directly corresponding post-layout testbench; it is not task-ready without source-to-layout reconciliation."

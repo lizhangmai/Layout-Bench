@@ -17,3 +17,7 @@ role = "design"
 format = "qucs"
 sha256 = "2bb93851751181225b889c8f21be430741b39ac3d07a202178c118116d4b3f68"
 bytes = 1979
+
+[screening]
+decision = "exclude"
+reason = "OpenEMS core/port geometry produces an S-parameter reduced-order model, not a normal DRC/LVS transistor layout task."

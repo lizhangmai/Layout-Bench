@@ -17,3 +17,7 @@ role = "design"
 format = "qucs"
 sha256 = "2e31797a261b106a351e8940ededb4ce4d1be927427e9eb8b855d03acef75819"
 bytes = 4216
+
+[screening]
+decision = "exclude"
+reason = "Qucs/Xyce harmonic-balance characterization deck only; it is not a PDK layout input and has no reusable upstream layout."

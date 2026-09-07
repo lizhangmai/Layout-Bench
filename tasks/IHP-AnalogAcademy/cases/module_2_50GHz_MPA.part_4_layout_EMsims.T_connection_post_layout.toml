@@ -17,3 +17,7 @@ role = "design"
 format = "qucs"
 sha256 = "3b345841a9bc56bee1c3b880ae6b5a5cf0b14ec54c45639cd9bbd24af5e0742f"
 bytes = 4064
+
+[screening]
+decision = "exclude"
+reason = "Post-layout Qucs simulation consumes an existing EM T-connection model; it has no public source netlist and layout task contract for a Layout Agent."

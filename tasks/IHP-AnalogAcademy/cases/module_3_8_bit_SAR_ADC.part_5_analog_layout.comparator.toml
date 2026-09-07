@@ -49,3 +49,7 @@ role = "testbench"
 format = "xschem"
 sha256 = "0b39ecd3eda4fe38a942281a2b3937b7c1aec253a23ea8a26c1e3ec9d1876d02"
 bytes = 3564
+
+[screening]
+decision = "include"
+reason = "Upstream provides DIFF_COMPARATOR GDS/flat GDS, LVS netlist, PEX outputs, layout schematic, and post-layout comparator/offset testbenches."

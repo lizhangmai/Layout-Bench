@@ -3,7 +3,7 @@ kind = "layout_case"
 id = "module_1_bandgap_reference.part_1_OTA.gmid_example"
 title = "IHP AnalogAcademy gmid_example"
 role = "design"
-status = "candidate"
+status = "supporting-source"
 
 [origin]
 checkout = "third_party/IHP-AnalogAcademy"
@@ -33,3 +33,7 @@ role = "testbench"
 format = "xschem"
 sha256 = "61dbf163affdaabfe1417c48ce28d06e65015c3b682495b2cdf024937736b348"
 bytes = 2310
+
+[screening]
+decision = "exclude"
+reason = "GM/Id tutorial schematic and simulation deck only; no corresponding upstream GDS/LVS layout implementation is available for public reuse."

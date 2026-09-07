@@ -17,3 +17,7 @@ role = "design"
 format = "xschem"
 sha256 = "4e05fb497d65fd5e47d110928ec8d442c74aa5b45cff6e4784f3a6c04854c4e6"
 bytes = 2415
+
+[screening]
+decision = "include"
+reason = "Upstream provides the output-stage schematic, CDL, GDS, and extracted netlist for the same physical block."

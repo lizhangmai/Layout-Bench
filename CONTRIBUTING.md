@@ -83,7 +83,6 @@ bash tests/integration/test_pdk_view.sh
 bash tests/integration/test_task_preparation.sh
 uv run --locked pytest tests/integration/test_characterization.py \
   tests/integration/test_sg13g2.py tests/integration/test_physical_checks.py \
-  tests/integration/test_tgate.py -m integration
 ```
 
 Task preparation also needs the optional source submodule. Evaluator changes must satisfy the [qualification requirements](docs/tasks.md#qualification); protocol tests and synthetic hidden fixtures do not replace real circuit evidence. Public CI uses public or synthetic inputs; hidden qualification materials stay in the authorized environment. Run upstream PDK regressions in that submodule, separately from framework checks.

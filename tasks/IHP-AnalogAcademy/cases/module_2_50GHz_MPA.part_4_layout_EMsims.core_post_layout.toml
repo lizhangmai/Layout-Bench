@@ -17,3 +17,7 @@ role = "design"
 format = "qucs"
 sha256 = "0d18b8af728835890edc4aa087966554830815cc32b9eb3ce6cc296a59336df3"
 bytes = 3810
+
+[screening]
+decision = "exclude"
+reason = "Qucs/Xyce source consuming the EM core model; it lacks an independent layout input, DRC/LVS contract, and ordinary post-layout circuit evaluation."

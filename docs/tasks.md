@@ -1,6 +1,6 @@
 # Adding Tasks and Validating the Judge
 
-See the complete example in [the IHP AnalogAcademy transmission-gate case](../tasks/IHP-AnalogAcademy/cases/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.toml). The complete upstream circuit inventory is [catalogued under `tasks/IHP-AnalogAcademy/`](../tasks/IHP-AnalogAcademy/README.md); source review proceeds by checking sources, freezing inputs, defining constraints and an evaluation plan, preparing tool bindings, and then validating with a reference solution and counterexamples. Models, budgets, repetitions, and access policy belong to the outer [run plan](running.md).
+See the framework fixture in [`examples/sg13g2/checked-switch`](../examples/sg13g2/checked-switch/task.toml) for the task schema. The complete upstream circuit inventory is [catalogued under `tasks/IHP-AnalogAcademy/`](../tasks/IHP-AnalogAcademy/README.md); an IHP case may be promoted only when the pinned upstream checkout already contains the reusable layout and corresponding physical evidence. Source review then freezes inputs, constraints, evaluation, tool bindings, and independent qualification. Models, budgets, repetitions, and access policy belong to the outer [run plan](running.md).
 
 The catalog is an inventory index, not a shortcut around task qualification. A
 `candidate` record becomes a benchmark task only after its authoritative
@@ -134,7 +134,7 @@ These tests validate the judge implementation and task measurability; they do no
 
 When a public task is fully entered, provide its reference GDS, generator script, reproduction steps, check configuration, expected results, and counterexamples for key rejection paths. Archive pre-layout/post-layout calibration under the same conditions and record the actual tool identity. Pre-layout simulation cannot replace candidate post-layout simulation, and a witness is not an optimum-quality baseline. Fix families and measurement conditions before comparison; size variants of one template do not constitute independent circuit knowledge.
 
-See the [transmission-gate qualification materials](../tasks/IHP-AnalogAcademy/cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/qualification/README.md) for the example's scope, calibration, and requalification commands. Qualification applies only to the fixed case, tools, rules, and declared conditions; requalify the affected scope after an environment change.
+Qualification applies only to the fixed case, tools, rules, and declared conditions; requalify the affected scope after an environment change. An IHP case without upstream layout evidence must remain excluded rather than receiving a generated replacement reference.
 
 <a id="input-isolation"></a>
 

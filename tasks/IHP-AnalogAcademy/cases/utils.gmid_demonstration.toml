@@ -25,3 +25,7 @@ role = "testbench"
 format = "xschem"
 sha256 = "b0d30c8e3357fbd128384eaa0322e894ae39277b00e7026e7a423643dba52ad1"
 bytes = 2039
+
+[screening]
+decision = "exclude"
+reason = "GM/Id demonstration support files only; there is no design source or upstream layout to reuse."

@@ -23,7 +23,7 @@ Measure whether an agent can turn a circuit netlist, physical constraints, and p
 
 Layout-Bench runs an Agent in an isolated container, records an explicit GDS submission, and evaluates the frozen candidate with independent EDA tools. DRC/LVS establish physical validity; a complete task also checks the declared geometry and post-layout performance limits.
 
-> **Public preview.** The repository ships one qualified public task, `module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate`, its reference solution, and 14 qualification scenarios. The complete IHP AnalogAcademy source catalog is [under `tasks/IHP-AnalogAcademy/`](tasks/IHP-AnalogAcademy/README.md); circuits without task-specific netlists, constraints, evaluation, and qualification remain case records rather than runnable tasks. This package is intended for local, reproducible evaluation.
+> **Public preview.** The repository ships a framework integration fixture (`examples/sg13g2/checked-switch`) for local smoke checks. The IHP AnalogAcademy catalog is [under `tasks/IHP-AnalogAcademy/`](tasks/IHP-AnalogAcademy/README.md); an IHP circuit enters the public Bench only when the pinned upstream checkout already provides a reusable layout together with the corresponding netlist and physical evidence. Schematic-only circuits remain source records, not runnable tasks.
 
 ## Why Layout-Bench?
 
@@ -68,14 +68,14 @@ A successful smoke run ends with `PASS` and writes:
 | File | Expected result |
 | --- | --- |
 | `build/runs/preview/run/preview.json` | Reference passed, protocol failure expected, batch complete, and no model called. |
-| `build/runs/preview/run/reference/report.json` | The published reference passes DRC/LVS, geometry, and post-layout limits. |
+| `build/runs/preview/run/reference/report.json` | The checked-switch fixture passes the framework reference evaluation. |
 | `build/runs/preview/run/probe/run.json` | The offline probe submits a rectangle, then fails task evaluation as expected. |
 | `build/runs/preview/run/canonical-probe/run.json` | The provider-neutral canonical loop executes its deterministic adapter and fails task evaluation as expected. |
 | `build/runs/preview/run/batch/summary.json` | Two independent probe runs, complete coverage, and zero task successes. |
 
 The wrapper exits **0** when these expectations hold. Detailed output stays in `.log` files in the run directory. Individual commands distinguish a rejected layout from an infrastructure error: `main.py run` returns **1** for a rejected layout, while `main.py batch` returns **0** when all scheduled measurements finish, even if every layout fails.
 
-To rebuild the reference and counterexamples and rerun qualification plus schematic calibration:
+To repeat the deterministic fixture checks under the qualification-smoke alias:
 
 ```bash
 uv run --locked python scripts/public_preview.py qualify \
@@ -83,7 +83,7 @@ uv run --locked python scripts/public_preview.py qualify \
   --output build/runs/preview-qualification
 ```
 
-The [reference solution](tasks/IHP-AnalogAcademy/cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/reference/README.md) and [qualification evidence](tasks/IHP-AnalogAcademy/cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/qualification/README.md) are public for debugging. Standard Agent runs receive only the declared task inputs and never the reference solution.
+IHP reference and qualification assets are published only for cases that pass the upstream-complete screening gate. Standard Agent runs receive only the declared task inputs and never a reference solution.
 
 <a id="run-your-agent"></a>
 
@@ -91,7 +91,7 @@ The [reference solution](tasks/IHP-AnalogAcademy/cases/assets/module_3_8_bit_SAR
 
 The workflow is simple:
 
-1. **Choose a task** — start with the public transmission-gate case and its declared inputs.
+1. **Choose a task** — start with the checked-switch integration fixture or an IHP case that has passed the upstream-complete screening gate.
 2. **Configure a harness** — provide any executable command, reviewed files, resources, and budgets; an optional harness profile records its protocol and execution semantics.
 3. **Submit a candidate** — work in `/workspace`, then run `python -I /protocol/submit.py` to submit the configured GDS explicitly.
 4. **Evaluate and compare** — use the independent evaluator for one candidate, or a frozen batch plan for task × configuration × repetition measurements.
@@ -101,7 +101,7 @@ The configured harness receives `/protocol/prompt.txt`, `/protocol/task.json`, `
 To connect a model through the host-owned gateway, start from the provider-neutral [canonical harness and adapter contract](examples/agents/README.md#provider-neutral-canonical-harness), then copy [inference.example.toml](examples/agents/inference.example.toml), fill in your endpoint, model, and host key-variable name, and run your harness configuration:
 
 ```bash
-uv run --locked python main.py run tasks/IHP-AnalogAcademy/cases/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.toml \
+uv run --locked python main.py run examples/sg13g2/checked-switch/task.toml \
   --agent path/to/agent.toml \
   --resources build/runs/preview/prepared/agent-resources \
   --toolchain build/runs/preview/prepared/toolchain.toml \
@@ -143,14 +143,14 @@ DRC/LVS are physical-validity gates. Task success additionally requires every ha
 | Understand CI/CD and release triggers | [Contributing](CONTRIBUTING.md#ci-cd) |
 | Contribute or report a problem | [CONTRIBUTING.md](CONTRIBUTING.md) |
 
-Framework checks need no Docker images, PDK, or model credentials. CI runs lint, unit tests, and local documentation-link checks. The manual [Public EDA preview](.github/workflows/public-eda.yml) workflow exercises the public task in real containers.
+Framework checks need no Docker images, PDK, or model credentials. CI runs lint, unit tests, and local documentation-link checks. The manual [Public EDA preview](.github/workflows/public-eda.yml) workflow exercises the checked-switch integration fixture in real containers.
 
 ## FAQ
 
 <details>
 <summary><strong>Do I need a model key to run the benchmark?</strong></summary>
 
-No. The public quick start uses a deterministic offline probe and the published reference. A model key is needed only when you configure a real inference endpoint for your own Agent run.
+No. The public quick start uses a deterministic offline probe and generated backend fixtures. A model key is needed only when you configure a real inference endpoint for your own Agent run.
 
 </details>
 
@@ -171,7 +171,7 @@ Yes. Any executable that follows the session protocol can be configured with its
 <details>
 <summary><strong>Does a standard Agent receive the reference solution?</strong></summary>
 
-No. The reference GDS and qualification evidence are public for debugging, but standard runs materialize only the task inputs declared by the case TOML's `[task]` section.
+No. Reference GDS and qualification evidence are public for debugging when a task has passed admission, but standard runs materialize only the task inputs declared by the case TOML's `[task]` section.
 
 </details>
 
@@ -183,17 +183,17 @@ No. This is a local preview package. Hosted evaluation, identity authentication,
 </details>
 
 <details>
-<summary><strong>Why are there 14 qualification scenarios?</strong></summary>
+<summary><strong>What is the public preview fixture?</strong></summary>
 
-They exercise the judge's positive, negative, geometry, extraction, performance, and stability paths for the public task. They are qualification cases, not 14 separate benchmark tasks.
+It is a deterministic SG13G2 checked-switch integration fixture. It exercises the framework protocol and backend wiring; it is not an IHP AnalogAcademy benchmark case.
 
 </details>
 
 ## Scope
 
-This package includes the public task and its qualification materials, the common executable-harness session protocol, a provider-neutral canonical harness example, a host-owned model gateway, configurable EDA backends, and local batch statistics. It does not include hosted evaluation, identity authentication, or an official leaderboard.
+This package includes the common executable-harness session protocol, a provider-neutral canonical harness example, a host-owned model gateway, configurable EDA backends, a deterministic integration fixture, and local batch statistics. It does not include hosted evaluation, identity authentication, or an official leaderboard.
 
-The framework is licensed under [MIT](LICENSE). The public transmission-gate case retains its [Apache-2.0 license](tasks/IHP-AnalogAcademy/cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/LICENSE). The IHP AnalogAcademy source records retain the upstream license and per-file notices; submodules, tools, and dependencies retain their own licenses and notices; source and resource preparation are described in the [tool guide](docs/tools.md#external-sources).
+The framework is licensed under [MIT](LICENSE). IHP AnalogAcademy source records retain the upstream license and per-file notices; any later derived task assets must retain the corresponding upstream notices. Submodules, tools, and dependencies retain their own licenses and notices; source and resource preparation are described in the [tool guide](docs/tools.md#external-sources).
 
 <p align="center">
 <a href="README_CN.md">阅读中文文档 →</a>

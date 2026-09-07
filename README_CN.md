@@ -24,7 +24,7 @@
 
 Layout-Bench 在隔离容器中运行 Agent，记录明确提交的 GDS，并使用独立的 EDA 工具评估冻结后的候选版图。DRC/LVS 用于建立物理有效性；完整任务还会检查声明的几何约束和后仿性能限值。
 
-> **公开预览版。** 当前仓库包含一个已资格验证的公开任务 `module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate`、对应参考解和 14 个资格验证场景；IHP AnalogAcademy 的全部电路来源已按统一 case 配置录入 [`tasks/IHP-AnalogAcademy/`](tasks/IHP-AnalogAcademy/README.md)，没有专属网表、约束、评估和资格材料的电路仍是 case 记录，不是可运行任务。本公开包用于本地、可复现的评测。
+> **公开预览版。** 当前仓库用 `examples/sg13g2/checked-switch` 作为框架集成 smoke fixture。本公开 Bench 只接受 pinned upstream 已经提供可公开复用版图、对应网表和物理证据的 IHP 电路；只有原理图的电路仍保留为 [`tasks/IHP-AnalogAcademy/`](tasks/IHP-AnalogAcademy/README.md) 下的来源记录，不是可运行任务。
 
 ## 为什么选择 Layout-Bench？
 
@@ -69,14 +69,14 @@ uv run --python 3.12 --locked python scripts/public_preview.py quickstart --outp
 | 文件 | 预期结果 |
 | --- | --- |
 | `build/runs/preview/run/preview.json` | 参考解通过、协议失败符合预期、批量运行完成，且未调用模型。 |
-| `build/runs/preview/run/reference/report.json` | 发布的参考解通过 DRC/LVS、几何和后仿限值。 |
+| `build/runs/preview/run/reference/report.json` | checked-switch 集成 fixture 通过框架参考评估。 |
 | `build/runs/preview/run/probe/run.json` | 离线探针成功提交矩形，然后按预期在任务评估中失败。 |
 | `build/runs/preview/run/canonical-probe/run.json` | 不绑定厂商的标准循环执行确定性 adapter，然后按预期在任务评估中失败。 |
 | `build/runs/preview/run/batch/summary.json` | 两次独立探针运行、样本完整覆盖、任务成功数为 0。 |
 
 当这些预期都满足时，包装脚本返回 **0**。详细输出保存在运行目录的 `.log` 文件中。各命令会区分版图被拒绝和基础设施错误：`main.py run` 在版图被拒绝时返回 **1**；`main.py batch` 在所有计划测量都完成时返回 **0**，即使每个版图都失败。
 
-重建参考解和反例，并重新执行完整资格验证及原理图校准：
+使用 qualification-smoke 别名重复执行确定性 fixture 检查：
 
 ```bash
 uv run --locked python scripts/public_preview.py qualify \
@@ -84,13 +84,13 @@ uv run --locked python scripts/public_preview.py qualify \
   --output build/runs/preview-qualification
 ```
 
-[参考解](tasks/IHP-AnalogAcademy/cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/reference/README.md)和[资格证据](tasks/IHP-AnalogAcademy/cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/qualification/README.md)公开用于调试。标准 Agent 运行只接收 case TOML 的 `[task]` 段声明的输入，永远不会挂载参考解。
+IHP 的参考解和 qualification 资产只会随通过“上游已有完整实现”门槛的电路公开。标准 Agent 运行只接收 case TOML 的 `[task]` 段声明的输入，永远不会挂载参考解。
 
 ## 如何使用
 
 工作流程如下：
 
-1. **选择任务**：从公开的传输门 case 及其声明输入开始。
+1. **选择任务**：从 checked-switch 集成 fixture 或已经通过“上游有完整实现”筛选的 IHP case 开始。
 2. **配置 harness**：提供任意可执行命令、经过审查的文件、资料和预算；可选 harness profile 只记录协议和执行语义。
 3. **提交候选版图**：在 `/workspace` 中工作，然后运行 `python -I /protocol/submit.py`，明确提交配置的 GDS。
 4. **评估和比较**：单个候选使用独立评估器；批量测量使用冻结的“任务 × 配置 × 重复次数”计划。
@@ -100,7 +100,7 @@ uv run --locked python scripts/public_preview.py qualify \
 通过主机持有的 gateway 连接模型时，先参考[不绑定厂商的 canonical harness 与适配器契约](examples/agents/README.md#provider-neutral-canonical-harness)，再复制 [inference.example.toml](examples/agents/inference.example.toml)，填写端点、模型和主机密钥变量名，再运行自己的 harness 配置：
 
 ```bash
-uv run --locked python main.py run tasks/IHP-AnalogAcademy/cases/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.toml \
+uv run --locked python main.py run examples/sg13g2/checked-switch/task.toml \
   --agent path/to/agent.toml \
   --resources build/runs/preview/prepared/agent-resources \
   --toolchain build/runs/preview/prepared/toolchain.toml \
@@ -142,14 +142,14 @@ DRC/LVS 是物理有效性门槛。任务成功还要求所有硬约束、必需
 | 了解 CI/CD 和发布触发条件 | [参与贡献](CONTRIBUTING.md#ci-cd) |
 | 参与贡献或报告问题 | [CONTRIBUTING.md](CONTRIBUTING.md) |
 
-框架检查不需要 Docker 镜像、PDK 或模型凭据。CI 会运行 lint、单元测试和本地文档链接检查；手动的[公开 EDA 预览](.github/workflows/public-eda.yml)工作流会在真实容器中执行公开任务。
+框架检查不需要 Docker 镜像、PDK 或模型凭据。CI 会运行 lint、单元测试和本地文档链接检查；手动的[公开 EDA 预览](.github/workflows/public-eda.yml)工作流会在真实容器中执行 checked-switch 集成 fixture。
 
 ## 常见问题
 
 <details>
 <summary><strong>运行 benchmark 需要模型密钥吗？</strong></summary>
 
-不需要。公开快速开始使用确定性的离线探针和已发布参考解。只有在为自己的 Agent 运行配置真实推理端点时才需要模型密钥。
+不需要。公开快速开始使用确定性的离线探针和生成的后端 fixture。只有在为自己的 Agent 运行配置真实推理端点时才需要模型密钥。
 
 </details>
 
@@ -170,7 +170,7 @@ DRC/LVS 是物理有效性门槛。任务成功还要求所有硬约束、必需
 <details>
 <summary><strong>标准 Agent 会收到参考解吗？</strong></summary>
 
-不会。参考 GDS 和资格证据公开用于调试，但标准运行只会物化 case TOML 的 `[task]` 段声明的任务输入。
+不会。通过准入的任务才会公开参考 GDS 和资格证据用于调试；标准运行只会物化 case TOML 的 `[task]` 段声明的任务输入。
 
 </details>
 
@@ -182,17 +182,17 @@ DRC/LVS 是物理有效性门槛。任务成功还要求所有硬约束、必需
 </details>
 
 <details>
-<summary><strong>为什么有 14 个资格验证场景？</strong></summary>
+<summary><strong>公开预览 fixture 是什么？</strong></summary>
 
-它们覆盖公开任务的正例、负例、几何、提取、性能和稳定性路径，是裁判资格用例，并不是 14 个独立的 benchmark 任务。
+它是确定性的 SG13G2 checked-switch 集成 fixture，用于验证框架协议和后端连线，不是 IHP AnalogAcademy benchmark 电路。
 
 </details>
 
 ## 范围
 
-本公开包包含公开任务及资格材料、通用可执行 harness 会话协议、不绑定厂商的 canonical harness 示例、由主机持有的模型 gateway、可配置 EDA 后端和本地批量统计。不包含托管评测、身份认证或官方排行榜。
+本公开包包含通用可执行 harness 会话协议、不绑定厂商的 canonical harness 示例、由主机持有的模型 gateway、可配置 EDA 后端、确定性集成 fixture 和本地批量统计。不包含托管评测、身份认证或官方排行榜。
 
-框架采用 [MIT](LICENSE) 许可。公开的传输门 case 保留其 [Apache-2.0 许可](tasks/IHP-AnalogAcademy/cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/LICENSE)。IHP AnalogAcademy 录入清单保留上游许可和逐文件声明；Submodule、工具和依赖保留各自的许可与声明；来源和资料准备见[工具指南](docs/tools.md#external-sources)。
+框架采用 [MIT](LICENSE) 许可。IHP AnalogAcademy 录入清单保留上游许可和逐文件声明；后续派生任务资产也必须保留对应上游声明。Submodule、工具和依赖保留各自的许可与声明；来源和资料准备见[工具指南](docs/tools.md#external-sources)。
 
 <p align="center">
 <a href="README.md">阅读英文文档 →</a>

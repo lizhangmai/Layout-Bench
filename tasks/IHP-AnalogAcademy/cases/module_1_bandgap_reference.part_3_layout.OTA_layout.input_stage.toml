@@ -17,3 +17,7 @@ role = "design"
 format = "xschem"
 sha256 = "ae58b1348de8baae74b0ad553a55b6baf1c482c466a2025b92b6368909fdff6f"
 bytes = 1990
+
+[screening]
+decision = "defer"
+reason = "Upstream has GDS and an extracted netlist, but no source CDL, DRC evidence, or independent testbench; it is better treated as an internal full-OTA block until closed."

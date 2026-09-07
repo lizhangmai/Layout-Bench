@@ -1,7 +1,0 @@
-** sch_path: /source/T_gate.sch
-.subckt T_gate Vout Vin !Control Control gnd vdd
-*.PININFO Vout:B Vin:B !Control:B Control:B gnd:B vdd:B
-MM1 Vin Control Vout gnd sg13_lv_nmos w=1u l=0.13u ng=1 m=1
-MM2 Vin !Control Vout vdd sg13_lv_pmos w=2u l=0.13u ng=1 m=1
-.ends
-.end

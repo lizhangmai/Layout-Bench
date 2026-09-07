@@ -2,8 +2,8 @@ schema_version = 2
 kind = "layout_case"
 id = "module_0_foundations.inverter"
 title = "IHP AnalogAcademy inverter"
-role = "design"
-status = "candidate"
+role = "supporting-source"
+status = "supporting-source"
 
 [origin]
 checkout = "third_party/IHP-AnalogAcademy"
@@ -27,8 +27,8 @@ sha256 = "521464a42c5352cad371a8b091d71d9a083686749ef49c69b3f07ec838a3cb82"
 bytes = 1606
 
 [screening]
-decision = "include"
-reason = "PDK-native CMOS inverter with explicit four-port interface and transient testbench; suitable as the smallest functional layout baseline."
+decision = "exclude"
+reason = "The pinned upstream case has schematic/testbench only. Its only upstream inverter GDS is the historical PEX_Demo fixture, which is explicitly excluded from public task inputs; no reusable public layout is available."
 
 [source_export]
 tool = "xschem-lvs"

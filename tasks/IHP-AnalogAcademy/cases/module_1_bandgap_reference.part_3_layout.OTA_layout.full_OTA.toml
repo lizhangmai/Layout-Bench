@@ -17,3 +17,7 @@ role = "design"
 format = "xschem"
 sha256 = "565fff885a4400cf1e83657cfa6e4d87b6d8d5529c8ce025419b8192e9524233"
 bytes = 8608
+
+[screening]
+decision = "include"
+reason = "Upstream provides the layout schematic, CDL, GDS, extracted netlist, and minimal/maximal DRC reports for the same two-stage OTA."

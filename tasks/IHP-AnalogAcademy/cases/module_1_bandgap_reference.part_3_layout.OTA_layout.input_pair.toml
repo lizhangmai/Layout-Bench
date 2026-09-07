@@ -17,3 +17,7 @@ role = "design"
 format = "xschem"
 sha256 = "a378667699cf81eff1a49baa7a075836d5641b95836a4063810d06f11a303aef"
 bytes = 2981
+
+[screening]
+decision = "include"
+reason = "Upstream provides the common-centroid schematic, CDL, GDS, and extracted netlist for the same input-pair layout block."

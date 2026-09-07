@@ -17,3 +17,7 @@ role = "design"
 format = "qucs"
 sha256 = "6ffe5efb35f0c75a88d7ee0d3d0614d238417da8ae23635bf91ce1df4f44f364"
 bytes = 3201
+
+[screening]
+decision = "exclude"
+reason = "Qucs Smith-chart and ideal L/C matching source with no process-native physical implementation or candidate-GDS judge."

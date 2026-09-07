@@ -25,19 +25,13 @@ Non-configuration material uses one separate namespace:
 tasks/IHP-AnalogAcademy/cases/assets/<case-id>/
 ```
 
-The qualified transmission-gate case is the current runnable example:
-
-```text
-cases/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.toml
-cases/assets/module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate/
-```
-
-Its single case TOML contains the source records, `[source_export]`, the
-complete `[task]`, reference/qualification asset declarations, and
-`status = "qualified"`. The assets directory contains payload files only; it
-does not contain another `task.toml`, `source.toml`, or circuit configuration.
-Reference and qualification assets are evaluator/debugging materials and are
-not materialized by a standard Agent run.
+Only an upstream-complete implementation may receive an assets directory and
+an executable `[task]` section. The assets must be copied from the pinned
+upstream checkout with their provenance and license preserved; this repository
+must not synthesize a replacement layout, reference GDS, or qualification
+fixture. Source-only cases remain inventory records and are not Bench tasks.
+Reference and qualification assets, when present, are evaluator/debugging
+materials and are not materialized by a standard Agent run.
 
 Statuses distinguish source review from readiness:
 

@@ -3,7 +3,7 @@ kind = "layout_case"
 id = "module_3_8_bit_SAR_ADC.part_3_array_components.C-DAC"
 title = "IHP AnalogAcademy C-DAC"
 role = "design"
-status = "candidate"
+status = "supporting-source"
 
 [origin]
 checkout = "third_party/IHP-AnalogAcademy"
@@ -17,3 +17,7 @@ role = "design"
 format = "xschem"
 sha256 = "3d90b8ca6bb186ce02e1ffe59ef1794ce0a8d35f39f83de9289f55491abb200e"
 bytes = 2220
+
+[screening]
+decision = "exclude"
+reason = "CMIM array schematic only; no upstream GDS, extraction, DRC, or LVS implementation exists."

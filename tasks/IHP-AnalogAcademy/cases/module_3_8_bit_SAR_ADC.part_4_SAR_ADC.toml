@@ -3,7 +3,7 @@ kind = "layout_case"
 id = "module_3_8_bit_SAR_ADC.part_4_SAR_ADC"
 title = "IHP AnalogAcademy part_4_SAR_ADC"
 role = "design"
-status = "candidate"
+status = "supporting-source"
 
 [origin]
 checkout = "third_party/IHP-AnalogAcademy"
@@ -25,3 +25,7 @@ role = "design"
 format = "xschem"
 sha256 = "3189d42d9663f90709dac722f08fd63010080366b0217357b4fdbe2eff23ccf1"
 bytes = 16169
+
+[screening]
+decision = "exclude"
+reason = "Mixed-signal tutorial combining Verilog, bridges, switch/C-DAC, and comparator sources; it has no complete transistor physical implementation."

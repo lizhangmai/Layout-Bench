@@ -41,3 +41,7 @@ role = "testbench"
 format = "xschem"
 sha256 = "b34fc859718f1e831a0710ea587c949b8be04c88e26f79699c0e2a46472bc19f"
 bytes = 2288
+
+[screening]
+decision = "defer"
+reason = "The BGR has schematic, temperature, and Monte Carlo variants, but its canonical variant, hierarchical netlist, and physical correspondence are not yet closed."

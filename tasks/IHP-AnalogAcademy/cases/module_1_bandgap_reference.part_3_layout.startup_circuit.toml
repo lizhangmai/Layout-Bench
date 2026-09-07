@@ -17,3 +17,7 @@ role = "design"
 format = "xschem"
 sha256 = "82b9a7e45468a401691ca806f7a9a8e228e23d556cfb86a327c5b174ffd05d95"
 bytes = 2825
+
+[screening]
+decision = "defer"
+reason = "Upstream has a startup schematic and GDS but no corresponding source/extracted netlist, DRC/LVS evidence, or startup testbench; keep it as a BGR internal reference."

@@ -33,3 +33,7 @@ role = "testbench"
 format = "xschem"
 sha256 = "d9f288760b3f740636f31f7557bccd6f1eed46f328329d46bc43e3d09588e864"
 bytes = 3595
+
+[screening]
+decision = "defer"
+reason = "Dynamic comparator schematic, transient, and mismatch testbench have no GDS for this case; first reconcile it with the physical comparator in part 5."

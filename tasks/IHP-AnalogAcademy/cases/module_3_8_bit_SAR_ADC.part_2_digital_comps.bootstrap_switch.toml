@@ -3,7 +3,7 @@ kind = "layout_case"
 id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.bootstrap_switch"
 title = "IHP AnalogAcademy bootstrap_switch"
 role = "design"
-status = "candidate"
+status = "supporting-source"
 
 [origin]
 checkout = "third_party/IHP-AnalogAcademy"
@@ -33,3 +33,7 @@ role = "testbench"
 format = "xschem"
 sha256 = "3d99cb4540489390017efcd357c4cb15793c78aa039f6709ff2f6281ca500d26"
 bytes = 2402
+
+[screening]
+decision = "exclude"
+reason = "MOS/CMIM schematic and testbench only; no upstream GDS/LVS/DRC physical implementation is available and no replacement may be drawn here."

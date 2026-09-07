@@ -17,3 +17,7 @@ role = "design"
 format = "qucs"
 sha256 = "58ff08e557059c651fe472da7b25762d7cd6e3dfa0223913a27b0b4e44cb6ca6"
 bytes = 1474
+
+[screening]
+decision = "exclude"
+reason = "OpenEMS S-parameter wrapper with custom ports, not a PDK transistor netlist-to-GDS case."

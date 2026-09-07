@@ -3,7 +3,7 @@ kind = "layout_case"
 id = "module_1_bandgap_reference.part_1_OTA"
 title = "IHP AnalogAcademy part_1_OTA"
 role = "design"
-status = "candidate"
+status = "supporting-source"
 
 [origin]
 checkout = "third_party/IHP-AnalogAcademy"
@@ -33,3 +33,7 @@ role = "testbench"
 format = "xschem"
 sha256 = "605f2d3cec5122d9d6f5245f1ded959f6d83d5d19d3c6fbc116351390ffe1c03"
 bytes = 2342
+
+[screening]
+decision = "exclude"
+reason = "The PDK-native OTA has schematic and testbenches but no same-case upstream layout; another case's GDS cannot be used as its reference."
