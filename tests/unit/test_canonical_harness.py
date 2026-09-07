@@ -9,7 +9,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.acceptance, pytest.mark.acceptance_f
 
 
 def _harness_module():
-    path = Path(__file__).parents[2] / "examples/agents/canonical_harness.py"
+    path = Path(__file__).parents[2] / "tests/fixtures/agents/canonical_harness.py"
     spec = importlib.util.spec_from_file_location("layout_bench_canonical_harness", path)
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module

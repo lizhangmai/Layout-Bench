@@ -104,12 +104,12 @@ Before the first tagged release, allow GitHub Actions to write packages in the r
 | Contribution | Start here | Evidence to include |
 |---|---|---|
 | Public task | [Task design](docs/tasks.md#task-design), `tasks/IHP-AnalogAcademy/` | Source and license, explicit input list, executable constraints/metrics, passing witness and rejected counterexamples |
-| Harness or wire adapter | [Harness examples](examples/agents/README.md), `benchmarking/model_config.py`, `benchmarking/inference.py` | Frozen command/files, budgets, protocol metadata, and clear result labels |
+| Harness or wire adapter | [Running guide](docs/running.md#offline-cli), `benchmarking/model_config.py`, `benchmarking/inference.py` | Frozen command/files, budgets, protocol metadata, and clear result labels |
 | EDA backend | [Architecture](docs/architecture.md#architecture), `benchmarking/toolchains.py` | Tool identity, isolated inputs, structured evidence and tests of passing/failing/error cases |
 | Runner or statistics | `benchmarking/session.py`, `swarm.py`, `report.py` | Relevant lifecycle, evidence-integrity or measurement tests |
 | Documentation or preparation UX | `README.md`, `scripts/public_preview.py` | Commands that work from a clean checkout and repository-local links |
 
-Keep general mechanisms in `benchmarking/`; task-specific preparation and qualification belong with their public task or example. `third_party/` contains independent upstream submodules. Search and test the framework separately; upstream changes follow that project's contribution rules and must be recorded by commit.
+Keep general mechanisms in `benchmarking/`; task-specific preparation and qualification belong with their public task or test fixture. `third_party/` contains independent upstream submodules. Search and test the framework separately; upstream changes follow that project's contribution rules and must be recorded by commit.
 
 Task success is defined by that task's declared requirements. A DRC/LVS pass alone is not a successful layout, and a deterministic endpoint test is not a model score. Public reference and qualification materials remain available for debugging but outside standard solver inputs.
 

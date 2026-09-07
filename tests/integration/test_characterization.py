@@ -11,16 +11,16 @@ from benchmarking.files import Asset
 from benchmarking.toolchains import load_toolchain
 
 pytestmark = pytest.mark.integration
-EXAMPLES = Path(__file__).resolve().parents[2] / "examples/characterization"
+FIXTURES = Path(__file__).resolve().parents[2] / "tests/fixtures/characterization"
 
 
 @pytest.fixture(scope="module")
 def backends():
-    return load_toolchain(EXAMPLES / "toolchain.toml")
+    return load_toolchain(FIXTURES / "toolchain.toml")
 
 
 def asset(name):
-    return Asset((EXAMPLES / name).read_bytes(), "spice")
+    return Asset((FIXTURES / name).read_bytes(), "spice")
 
 
 def rc_inputs():
@@ -29,7 +29,7 @@ def rc_inputs():
 
 
 def test_rc_transient_and_ac_match_analytic_values_and_retain_waveforms(tmp_path, backends):
-    plan = parse_evaluation((EXAMPLES / "rc.toml").read_bytes())
+    plan = parse_evaluation((FIXTURES / "rc.toml").read_bytes())
     report = run_evaluation(plan, rc_inputs(), backends, tmp_path / "rc")
     assert report["outcome"] == "passed", report["jobs"]
     assert report["task_success"] is None
@@ -44,7 +44,7 @@ def test_rc_transient_and_ac_match_analytic_values_and_retain_waveforms(tmp_path
 
 
 def test_another_circuit_and_metric_set_uses_same_backend_and_core(tmp_path, backends):
-    plan = parse_evaluation((EXAMPLES / "divider.toml").read_bytes())
+    plan = parse_evaluation((FIXTURES / "divider.toml").read_bytes())
     report = run_evaluation(plan, {"input:dut": asset("divider.spice"), "input:dc": asset("divider_dc.spice")},
                             backends, tmp_path / "divider")
     assert report["outcome"] == "passed", report["jobs"]
@@ -53,7 +53,7 @@ def test_another_circuit_and_metric_set_uses_same_backend_and_core(tmp_path, bac
 
 
 def test_slower_rc_fails_specs_without_becoming_a_tool_error(tmp_path, backends):
-    raw = (EXAMPLES / "rc.toml").read_bytes().replace(b"2000.0", b"4000.0")
+    raw = (FIXTURES / "rc.toml").read_bytes().replace(b"2000.0", b"4000.0")
     report = run_evaluation(parse_evaluation(raw), rc_inputs(), backends, tmp_path / "slow")
     assert all(job["status"] == "passed" for job in report["jobs"].values())
     assert report["outcome"] == "failed"
@@ -63,7 +63,7 @@ def test_slower_rc_fails_specs_without_becoming_a_tool_error(tmp_path, backends)
 
 
 def test_simulator_exit_success_without_measurement_is_an_error(tmp_path, backends):
-    raw = (EXAMPLES / "divider.toml").read_bytes().replace(b"ratio =", b"absent_measurement =")
+    raw = (FIXTURES / "divider.toml").read_bytes().replace(b"ratio =", b"absent_measurement =")
     report = run_evaluation(parse_evaluation(raw),
                             {"input:dut": asset("divider.spice"), "input:dc": asset("divider_dc.spice")},
                             backends, tmp_path / "missing")

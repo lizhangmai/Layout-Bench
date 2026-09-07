@@ -14,7 +14,7 @@ pytestmark = pytest.mark.unit
 
 
 def _bridge_module():
-    path = Path(__file__).parents[2] / "examples/agents/inference_bridge.py"
+    path = Path(__file__).parents[2] / "tests/fixtures/agents/inference_bridge.py"
     spec = importlib.util.spec_from_file_location("layout_bench_inference_bridge", path)
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module

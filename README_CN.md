@@ -24,7 +24,7 @@
 
 Layout-Bench 在隔离容器中运行 Agent，记录明确提交的 GDS，并使用独立的 EDA 工具评估冻结后的候选版图。DRC/LVS 用于建立物理有效性；完整任务还会检查声明的几何约束和后仿性能限值。
 
-> **公开预览版。** 当前仓库用 `examples/sg13g2/checked-switch` 作为框架集成 smoke fixture。当前公开电路目录为 [`tasks/IHP-AnalogAcademy/catalog.toml`](tasks/IHP-AnalogAcademy/catalog.toml) 和 [`tasks/TO_Apr2025/catalog.toml`](tasks/TO_Apr2025/catalog.toml)；两者目前都只包含 4 个已筛选电路，且 pinned upstream 均已提供可公开复用版图、对应网表和物理证据。只有原理图的电路不会纳入公开 Bench。
+> **公开预览版。** 当前仓库用 `tests/fixtures/sg13g2/checked-switch` 作为框架集成 smoke fixture。当前公开电路目录为 [`tasks/IHP-AnalogAcademy/catalog.toml`](tasks/IHP-AnalogAcademy/catalog.toml) 和 [`tasks/TO_Apr2025/catalog.toml`](tasks/TO_Apr2025/catalog.toml)；两者目前都只包含 4 个已筛选电路，且 pinned upstream 均已提供可公开复用版图、对应网表和物理证据。只有原理图的电路不会纳入公开 Bench。
 
 ## 为什么选择 Layout-Bench？
 
@@ -97,10 +97,10 @@ IHP 和 TO_Apr2025 的参考解和 qualification 资产只会随通过“上游�
 
 配置的 harness 会收到 `/protocol/prompt.txt`、`/protocol/task.json`、`/protocol/harness.json`、`/protocol/resources.json` 和只读的 `/task` 输入。标准运行不会收到公开参考解。Runner 不解析 harness 内部会话；harness 只需按协议显式提交候选版图。挂载经过审查的 PDK 资源包时，Runner 会自动提供容器内的 `KLAYOUT`/`PYTHONPATH`，并在 `/protocol/resources.json` 中给出导入 preflight。
 
-通过主机持有的 gateway 连接模型时，先参考[不绑定厂商的 canonical harness 与适配器契约](examples/agents/README.md#provider-neutral-canonical-harness)，再复制 [inference.example.toml](examples/agents/inference.example.toml)，填写端点、模型和主机密钥变量名，再运行自己的 harness 配置：
+通过主机持有的 gateway 连接模型时，按[运行指南](docs/running.md#model-inference)创建 schema 1 推理配置，填写端点、模型和主机密钥变量名，再运行自己的 harness 配置：
 
 ```bash
-uv run --locked python main.py run examples/sg13g2/checked-switch/task.toml \
+uv run --locked python main.py run tests/fixtures/sg13g2/checked-switch/task.toml \
   --agent path/to/agent.toml \
   --resources build/runs/preview/prepared/agent-resources \
   --toolchain build/runs/preview/prepared/toolchain.toml \
@@ -134,7 +134,7 @@ DRC/LVS 是物理有效性门槛。任务成功还要求所有硬约束、必需
 | 需求 | 链接 |
 | --- | --- |
 | 重现无需模型密钥的公开预览 | [快速开始](#quick-start) |
-| 接入自定义 harness | [Harness 示例](examples/agents/README.md) |
+| 接入自定义 harness | [运行指南](docs/running.md#offline-cli) |
 | 添加任务并验证裁判 | [任务与评估](docs/tasks.md) |
 | 了解运行计划、推理限制和评分 | [运行指南](docs/running.md) |
 | 准备 PDK/EDA 资料或排错 | [工具指南](docs/tools.md) |

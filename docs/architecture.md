@@ -83,7 +83,7 @@ never becomes a submission and never changes the independent final evaluation;
 `run.json.process_feedback` is reported separately. A harness without the
 capability does not receive the helper or feedback instructions.
 
-The public examples include a provider-neutral `managed` reference harness.
+The public preview includes a provider-neutral `managed` reference harness.
 Its fixed loop owns the prompt, conversation history, bounded `run_command`
 tool, and explicit `submit_layout` tool. A separate adapter process converts a
 provider or local model into the normalized JSONL request/response contract;

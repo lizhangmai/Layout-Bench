@@ -14,7 +14,8 @@ from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 CASE_ID = "sg13g2-checked-switch-fixture"
-TASK = ROOT / "examples/sg13g2/checked-switch"
+FIXTURES = ROOT / "tests/fixtures"
+TASK = FIXTURES / "sg13g2/checked-switch"
 CONFIG = TASK / "task.toml"
 IMAGE = "layout-bench-tools:local"
 RUNS = "build/runs"
@@ -189,16 +190,16 @@ def prepare(destination, image=IMAGE):
             config = config.replace(f'"{prefix}/sg13g2-{old}"', json.dumps(str(destination / name)))
     config = config.replace('"layout-bench-tools:local"', json.dumps(image_id))
     (destination / "toolchain.toml").write_text(config)
-    examples = {
+    probes = {
         "protocol-probe": ("protocol_probe.py",),
         "canonical-probe": ("canonical_harness.py", "canonical_probe_adapter.py"),
     }
-    for name, files in examples.items():
-        config = (ROOT / f"examples/agents/{name}.toml").read_text()
+    for name, files in probes.items():
+        config = (FIXTURES / f"agents/{name}.toml").read_text()
         config = config.replace('"layout-bench-tools:local"', json.dumps(image_id))
         (destination / f"{name}.toml").write_text(config)
         for filename in files:
-            (destination / filename).write_bytes((ROOT / "examples/agents" / filename).read_bytes())
+            (destination / filename).write_bytes((FIXTURES / "agents" / filename).read_bytes())
     print(f"Prepared public task tools: {destination / 'toolchain.toml'}", flush=True)
 
 
@@ -210,7 +211,7 @@ def run(prepared, output, qualification):
     output = new_directory(output)
     if qualification:
         print("Running the same deterministic fixture checks under the 'qualify' alias.", flush=True)
-    python(ROOT / "examples/sg13g2/generate.py", prepared / "pdk-view", output / "fixtures", "--suite", "checks")
+    python(FIXTURES / "sg13g2/generate.py", prepared / "pdk-view", output / "fixtures", "--suite", "checks")
     python(ROOT / "main.py", "evaluate", CONFIG, output / "fixtures/valid.gds",
            "--toolchain", toolchain, "--output", output / "reference", log=output / "reference.log")
     agent = prepared.absolute() / "protocol-probe.toml"
@@ -227,7 +228,7 @@ def run(prepared, output, qualification):
     if (canonical["termination"] != "completed" or canonical["outcome"] != "failed"
             or not canonical["candidate"]):
         raise ValueError("Expected a completed canonical probe with a rejected rectangular layout.")
-    plan = (ROOT / "examples/plans/protocol-probe.toml").read_text()
+    plan = (FIXTURES / "plans/protocol-probe.toml").read_text()
     for old, path in (("../sg13g2/checked-switch/task.toml", CONFIG),
                       ("../sg13g2/checked-switch/toolchain.toml", toolchain),
                       ("../agents/protocol-probe.toml", agent)):
@@ -256,7 +257,7 @@ def quickstart(output, image, network, skip_build):
     ensure_pdk()
     prepare(output / "prepared", image)
     run(output / "prepared", output / "run", False)
-    print(f"Ready with the bundled harness examples: {output / 'prepared/protocol-probe.toml'} and "
+    print(f"Ready with the bundled harness probes: {output / 'prepared/protocol-probe.toml'} and "
           f"{output / 'prepared/canonical-probe.toml'}\n"
           f"Reviewed resources: {output / 'prepared/agent-resources'}\n"
           f"Judge configuration: {output / 'prepared/toolchain.toml'}", flush=True)

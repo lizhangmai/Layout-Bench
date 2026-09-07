@@ -26,7 +26,7 @@ IMAGE = os.environ.get("LAYOUT_BENCH_TEST_IMAGE", "layout-bench-tools:local")
 
 pytestmark = pytest.mark.integration
 ROOT = Path(__file__).resolve().parents[2]
-TASK = ROOT / "examples/sg13g2/checked-switch/task.toml"
+TASK = ROOT / "tests/fixtures/sg13g2/checked-switch/task.toml"
 PREAMBLE = '''import json, os, subprocess, time
 from pathlib import Path
 task = json.loads(Path('/protocol/task.json').read_text())
@@ -201,8 +201,8 @@ def test_scripted_generation_submission_and_real_postlayout_evaluation(tmp_path)
         prepare_support(pdk, ROOT/f"technology/sg13g2/{profile}.json", tmp_path/profile,
                         compiler_image=os.environ.get("LAYOUT_BENCH_TEST_IMAGE", "layout-bench-tools:local"))
     resources = dict(prepare_pdk_bundle(pdk, tmp_path/"resources").files)
-    task = load_task(ROOT/"examples/sg13g2/checked-switch/task.toml")
-    toolchain_text = (ROOT/"examples/sg13g2/checked-switch/toolchain.toml").read_text()
+    task = load_task(ROOT/"tests/fixtures/sg13g2/checked-switch/task.toml")
+    toolchain_text = (ROOT/"tests/fixtures/sg13g2/checked-switch/toolchain.toml").read_text()
     for name in ("magic", "mos-models", "klayout"):
         toolchain_text = toolchain_text.replace(f"build/support/sg13g2-{name}", str(tmp_path/name))
     toolchain = tmp_path/"toolchain.toml"
@@ -215,7 +215,7 @@ assert submit()['accepted']
 output.write_bytes(b'post-submission corruption')
 ''', seconds=30)
     config = replace(config, memory_mb=1024,
-                     files={**config.files, "generate.py": Asset((ROOT/"examples/sg13g2/make_checked_switch.py").read_bytes(), "python")})
+                     files={**config.files, "generate.py": Asset((ROOT/"tests/fixtures/sg13g2/make_checked_switch.py").read_bytes(), "python")})
     report = run_agent(task, config, resources, load_toolchain(toolchain), tmp_path/"run")
     assert report["termination"] == "completed", report
     assert report["task_success"] is True, report

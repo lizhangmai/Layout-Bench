@@ -10,7 +10,7 @@ Tools, materials, input modalities, and budgets are measurement conditions. Reco
 
 ## 1. Configure and Run One Agent
 
-`main.py run <task.toml> --agent <agent.toml> --toolchain <toolchain.toml> --output <new-directory>` starts one offline development run. See [examples/agents](../examples/agents/README.md) for executable configurations and protocol probes that are expected to fail evaluation. `--resources <bundle>` may provide a reviewed, frozen resource bundle; the CLI does not read an arbitrary resource directory or a complete upstream checkout. Image and resource preparation and final evaluation are outside solve time. Timing starts before launching the prepared container and making the task message readable, so it includes a small amount of startup overhead.
+`main.py run <task.toml> --agent <agent.toml> --toolchain <toolchain.toml> --output <new-directory>` starts one offline development run. The command accepts any executable harness that follows the session protocol; the schema and isolation rules are described below. `--resources <bundle>` may provide a reviewed, frozen resource bundle; the CLI does not read an arbitrary resource directory or a complete upstream checkout. Image and resource preparation and final evaluation are outside solve time. Timing starts before launching the prepared container and making the task message readable, so it includes a small amount of startup overhead.
 
 The current Agent configuration is schema 1:
 
@@ -48,7 +48,7 @@ Use mode `0700` for run directories and the host temporary root, `0600` for even
 
 ## 2. Connect a Model Gateway
 
-Copy [inference.example.toml](../examples/agents/inference.example.toml), fill in your endpoint, model, and host key-variable name, and use the command in [README](../README.md#run-your-agent). Only a `main.py run` command whose harness forwards a request contacts the selected model; the public preview and protocol tests do not require a model account.
+Create a schema 1 inference profile with the fields below, fill in your endpoint, model, and host key-variable name, and use the command in [README](../README.md#run-your-agent). Only a `main.py run` command whose harness forwards a request contacts the selected model; the public preview and protocol tests do not require a model account.
 
 Run `uv run --locked python main.py inference-check <profile.toml> [--agent <agent.toml>]`
 before a paid run. This validates the fixed HTTPS profile, credential presence,
@@ -57,7 +57,7 @@ request. It reports only the credential variable name and a boolean presence
 flag, never the value. It is a compatibility preflight, not a network or
 provider-version guarantee.
 
-A run configuration normally uses `command` and optional `[[files]]`; the session runner does not require a particular Agent framework. The `[harness]` table records protocol metadata only; the harness supplies its own command, bridge, and reviewed files. The public [canonical harness example](../examples/agents/README.md#provider-neutral-canonical-harness) fixes the conversation and tool loop while a separate adapter translates any model provider into normalized JSONL. Model communication and EDA backends are separate; the session does not parse provider sessions or the task circuit.
+A run configuration normally uses `command` and optional `[[files]]`; the session runner does not require a particular Agent framework. The `[harness]` table records protocol metadata only; the harness supplies its own command, bridge, and reviewed files. Model communication and EDA backends are separate; the session does not parse provider sessions or the task circuit.
 
 `--inference <profile.toml>` selects a schema 1 configuration supplied by the trusted operator:
 
@@ -104,7 +104,7 @@ open a new Unix-socket connection, send one compact JSON line
 then read one JSON response line `{"status":S,"type":"...","bytes":M}` and
 exactly `M` response bytes. A connection carries one request and one response;
 the path set is owned by the selected wire adapter. The reference
-dependency-free client is [inference_bridge.py](../examples/agents/inference_bridge.py)
+dependency-free client is [inference_bridge.py](../tests/fixtures/agents/inference_bridge.py)
 for the optional `responses` family.
 The client must treat status, media type, and body as untrusted and leave
 Responses JSON/SSE semantic handling to the harness or a reviewed adapter.
@@ -148,7 +148,7 @@ uv run --locked python main.py batch build/runs/preview/run/plan.toml --output b
 uv run --locked python main.py summarize build/runs/probe-batch
 ```
 
-This plan repeats an offline rectangle probe and is expected to have a task success rate of 0. To customize it, start from the generated file or [protocol-probe.toml](../examples/plans/protocol-probe.toml); use the single prepared toolchain image described in the [tools guide](tools.md#manual-tools). Batch-plan schema 1 is shown below; unknown fields and versions are rejected:
+This plan repeats an offline rectangle probe and is expected to have a task success rate of 0. To customize it, start from the generated file or [protocol-probe.toml](../tests/fixtures/plans/protocol-probe.toml); use the single prepared toolchain image described in the [tools guide](tools.md#manual-tools). Batch-plan schema 1 is shown below; unknown fields and versions are rejected:
 
 | Field | Semantics |
 |---|---|

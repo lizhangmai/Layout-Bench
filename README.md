@@ -23,7 +23,7 @@ Measure whether an agent can turn a circuit netlist, physical constraints, and p
 
 Layout-Bench runs an Agent in an isolated container, records an explicit GDS submission, and evaluates the frozen candidate with independent EDA tools. DRC/LVS establish physical validity; a complete task also checks the declared geometry and post-layout performance limits.
 
-> **Public preview.** The repository ships a framework integration fixture (`examples/sg13g2/checked-switch`) for local smoke checks. The selected public circuit catalogs are [`tasks/IHP-AnalogAcademy/catalog.toml`](tasks/IHP-AnalogAcademy/catalog.toml) and [`tasks/TO_Apr2025/catalog.toml`](tasks/TO_Apr2025/catalog.toml); each currently contains only four cases whose pinned upstream checkout already provides a reusable layout together with the corresponding netlist and physical evidence. Schematic-only circuits are intentionally not included.
+> **Public preview.** The repository ships a framework integration fixture (`tests/fixtures/sg13g2/checked-switch`) for local smoke checks. The selected public circuit catalogs are [`tasks/IHP-AnalogAcademy/catalog.toml`](tasks/IHP-AnalogAcademy/catalog.toml) and [`tasks/TO_Apr2025/catalog.toml`](tasks/TO_Apr2025/catalog.toml); each currently contains only four cases whose pinned upstream checkout already provides a reusable layout together with the corresponding netlist and physical evidence. Schematic-only circuits are intentionally not included.
 
 ## Why Layout-Bench?
 
@@ -98,10 +98,10 @@ The workflow is simple:
 
 The configured harness receives `/protocol/prompt.txt`, `/protocol/task.json`, `/protocol/harness.json`, `/protocol/resources.json`, and read-only `/task` inputs. It does not receive the public reference solution during a standard run. The harness is opaque to the runner: it only needs to produce the session's explicit submission. When a reviewed PDK bundle is mounted, the runner automatically exposes its container-local `KLAYOUT`/`PYTHONPATH` settings and publishes the import preflight in `/protocol/resources.json`.
 
-To connect a model through the host-owned gateway, start from the provider-neutral [canonical harness and adapter contract](examples/agents/README.md#provider-neutral-canonical-harness), then copy [inference.example.toml](examples/agents/inference.example.toml), fill in your endpoint, model, and host key-variable name, and run your harness configuration:
+To connect a model through the host-owned gateway, create the schema 1 inference profile described in the [running guide](docs/running.md#model-inference), fill in your endpoint, model, and host key-variable name, and run your harness configuration:
 
 ```bash
-uv run --locked python main.py run examples/sg13g2/checked-switch/task.toml \
+uv run --locked python main.py run tests/fixtures/sg13g2/checked-switch/task.toml \
   --agent path/to/agent.toml \
   --resources build/runs/preview/prepared/agent-resources \
   --toolchain build/runs/preview/prepared/toolchain.toml \
@@ -135,7 +135,7 @@ DRC/LVS are physical-validity gates. Task success additionally requires every ha
 | Need | Link |
 | --- | --- |
 | Reproduce the no-key public preview | [Quick Start](#quick-start) |
-| Connect a custom harness | [Harness examples](examples/agents/README.md) |
+| Connect a custom harness | [Running guide](docs/running.md#offline-cli) |
 | Add a task and qualify its judge | [Tasks and evaluation](docs/tasks.md) |
 | Understand run plans, inference limits, and scoring | [Running](docs/running.md) |
 | Prepare PDK/EDA resources or troubleshoot tools | [Tools](docs/tools.md) |

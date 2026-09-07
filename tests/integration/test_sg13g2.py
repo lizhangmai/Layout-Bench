@@ -17,7 +17,7 @@ from benchmarking.prepare_support import prepare_support
 
 pytestmark = pytest.mark.integration
 ROOT = Path(__file__).resolve().parents[2]
-EXAMPLES = ROOT / "examples/sg13g2"
+FIXTURES = ROOT / "tests/fixtures/sg13g2"
 
 
 @pytest.fixture(scope="module")
@@ -27,7 +27,7 @@ def context(tmp_path_factory):
     prepare_support(pdk, ROOT / "technology/sg13g2/magic.json", root / "magic")
     prepare_support(pdk, ROOT / "technology/sg13g2/mos-models.json", root / "models")
     prepare_pdk(pdk, root / "view")
-    generate = runpy.run_path(str(EXAMPLES / "generate.py"))["generate_fixtures"]
+    generate = runpy.run_path(str(FIXTURES / "generate.py"))["generate_fixtures"]
     fixtures = generate(root / "view", root / "fixtures")
     backends = {
         "layout.extract_capacitance": MagicCapacitanceDocker(
@@ -39,13 +39,13 @@ def context(tmp_path_factory):
 
 
 def inputs(fixture, deck, role):
-    return {"input:layout": fixture, f"input:{role}": Asset((EXAMPLES / deck).read_bytes(), "spice")}
+    return {"input:layout": fixture, f"input:{role}": Asset((FIXTURES / deck).read_bytes(), "spice")}
 
 
 def test_reviewed_psp_models_load_and_distinguish_on_and_off(tmp_path, context):
     _, backends = context
-    plan = parse_evaluation((EXAMPLES / "mos.toml").read_bytes())
-    report = run_evaluation(plan, {"input:dc": Asset((EXAMPLES / "mos_dc.spice").read_bytes(), "spice")},
+    plan = parse_evaluation((FIXTURES / "mos.toml").read_bytes())
+    report = run_evaluation(plan, {"input:dc": Asset((FIXTURES / "mos_dc.spice").read_bytes(), "spice")},
                             backends, tmp_path / "mos")
     assert report["outcome"] == "passed", report["jobs"]
     assert report["metrics"]["on_current"]["value"] > 1e5 * report["metrics"]["off_current"]["value"]
@@ -55,7 +55,7 @@ def test_reviewed_psp_models_load_and_distinguish_on_and_off(tmp_path, context):
 
 def test_gds_capacitance_matches_technology_area_and_perimeter_formula(tmp_path, context):
     fixtures, backends = context
-    plan = parse_evaluation((EXAMPLES / "plate.toml").read_bytes())
+    plan = parse_evaluation((FIXTURES / "plate.toml").read_bytes())
     for width in (20, 40):
         report = run_evaluation(plan, inputs(fixtures[f"plate{width}"], "plate_ac.spice", "ac"),
                                 backends, tmp_path / f"plate{width}")
@@ -68,7 +68,7 @@ def test_gds_capacitance_matches_technology_area_and_perimeter_formula(tmp_path,
 
 def test_mos_layout_capacitance_changes_the_actual_post_extraction_delay(tmp_path, context):
     fixtures, backends = context
-    raw = (EXAMPLES / "switch.toml").read_bytes()
+    raw = (FIXTURES / "switch.toml").read_bytes()
     # This limit is solely a test fixture: it is not a calibrated task spec.
     plan = parse_evaluation(raw + b"\nupper = 1e-10\n")
     reports = []
@@ -107,7 +107,7 @@ assert {p.name(): x.net_for_pin(p.id()).name for p in x.circuit_ref().each_pin()
 @pytest.mark.parametrize("change", ["missing_top", "missing_pin", "corrupt_gds"])
 def test_extraction_errors_block_simulation_and_preserve_diagnostics(tmp_path, context, change):
     fixtures, backends = context
-    raw = (EXAMPLES / "plate.toml").read_bytes()
+    raw = (FIXTURES / "plate.toml").read_bytes()
     if change == "missing_top":
         raw = raw.replace(b'top_cell = "PLATE"', b'top_cell = "ABSENT"')
     elif change == "missing_pin":

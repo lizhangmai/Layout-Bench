@@ -36,7 +36,7 @@ def test_default_build_network_explains_loopback_proxy(preview, monkeypatch):
 def test_one_resolved_image_for_compilation_judge_and_agents(preview, tmp_path, monkeypatch):
     root = tmp_path / "checkout with spaces"
     (root / "third_party/IHP-Open-PDK/ihp-sg13g2").mkdir(parents=True)
-    shutil.copytree(ROOT / "examples/agents", root / "examples/agents")
+    shutil.copytree(ROOT / "tests/fixtures/agents", root / "tests/fixtures/agents")
     monkeypatch.setattr(preview, "ROOT", root)
     monkeypatch.setattr(environment, "prepare_pdk", lambda source, output: output.mkdir())
     monkeypatch.setattr(environment, "prepare_pdk_bundle", lambda source, output: output.mkdir())
@@ -64,12 +64,12 @@ def test_one_resolved_image_for_compilation_judge_and_agents(preview, tmp_path, 
             assert Path(path).is_dir() and Path(path).parent == destination
     probe = load_run_config(destination / "protocol-probe.toml")
     assert probe.image == identity
-    assert probe.files["protocol_probe.py"].content == (ROOT / "examples/agents/protocol_probe.py").read_bytes()
+    assert probe.files["protocol_probe.py"].content == (ROOT / "tests/fixtures/agents/protocol_probe.py").read_bytes()
     canonical = load_run_config(destination / "canonical-probe.toml")
     assert canonical.image == identity
-    assert canonical.files["canonical_harness.py"].content == (ROOT / "examples/agents/canonical_harness.py").read_bytes()
+    assert canonical.files["canonical_harness.py"].content == (ROOT / "tests/fixtures/agents/canonical_harness.py").read_bytes()
     assert canonical.files["canonical_probe_adapter.py"].content == (
-        ROOT / "examples/agents/canonical_probe_adapter.py"
+        ROOT / "tests/fixtures/agents/canonical_probe_adapter.py"
     ).read_bytes()
     assert (destination / "agent-resources").is_dir()
 

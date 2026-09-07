@@ -18,7 +18,7 @@ from benchmarking.toolchains import load_toolchain
 
 pytestmark = [pytest.mark.integration, pytest.mark.acceptance, pytest.mark.acceptance_eda]
 ROOT = Path(__file__).resolve().parents[2]
-EXAMPLES = ROOT / "examples/sg13g2"
+FIXTURES = ROOT / "tests/fixtures/sg13g2"
 COMPARATOR_CASE = ROOT / (
     "tasks/IHP-AnalogAcademy/cases/"
     "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.toml"
@@ -36,13 +36,13 @@ def context(tmp_path_factory):
     for profile, dest in [("klayout", "klayout"), ("magic", "magic"), ("mos-models", "models")]:
         prepare_support(pdk, ROOT / f"technology/sg13g2/{profile}.json", root / dest)
     prepare_pdk(pdk, root / "view")
-    generate = runpy.run_path(str(EXAMPLES / "generate.py"))["generate_fixtures"]
+    generate = runpy.run_path(str(FIXTURES / "generate.py"))["generate_fixtures"]
     fixtures = generate(root / "view", root / "fixtures", suite="checks")
-    config = (EXAMPLES / "checked-switch/toolchain.toml").read_text()
+    config = (FIXTURES / "checked-switch/toolchain.toml").read_text()
     for old, new in [("klayout", "klayout"), ("magic", "magic"), ("mos-models", "models")]:
         config = config.replace(f"build/support/sg13g2-{old}", str(root / new))
     (root / "toolchain.toml").write_text(config)
-    return fixtures, load_toolchain(root / "toolchain.toml"), load_task(EXAMPLES / "checked-switch/task.toml")
+    return fixtures, load_toolchain(root / "toolchain.toml"), load_task(FIXTURES / "checked-switch/task.toml")
 
 
 def run_fixture(context, name, destination):
