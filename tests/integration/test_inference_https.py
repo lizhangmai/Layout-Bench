@@ -62,7 +62,7 @@ def test_https_auth_redirects_and_secret_reflection(tmp_path, monkeypatch):
     monkeypatch.setenv("LB_TEST_INFERENCE_KEY", secret)
     monkeypatch.setenv("SSL_CERT_FILE", str(cert))
     profile = InferenceConfig(f"https://localhost:{server.server_port}/v1", "test-model", "LB_TEST_INFERENCE_KEY",
-                              4, 5, Asset(b"test-profile", "text"))
+                              4, 5, Asset(b"test-profile", "text"), "responses")
     gateway = ResponsesGateway(profile)
     gateway.recorder = RunRecorder(tmp_path / "run")
     gateway.deadline = time.monotonic()+20

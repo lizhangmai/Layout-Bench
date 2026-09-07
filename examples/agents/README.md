@@ -29,13 +29,15 @@ uv run --locked python main.py run tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_AD
 
 每个工具调用必须是 `{"id", "name", "arguments"}`；`run_command` 只接受参数列表并固定在 `/workspace` 执行，`submit_layout` 不接受参数。适配器负责把任意模型服务的返回值转换成这套格式，harness 负责执行工具和保存提交语义。适配器的命令、版本、提示和工具条件都应随 Agent 配置冻结。
 
+适配器只返回这套规范字段：`stop_reason` 为 `tool_calls` 时必须有工具调用，为 `stop`、`length` 或 `error` 时不得有调用；上游厂商错误应映射为 `error`，不得把原始异常或凭据写入 JSONL。模型 token/成本统计由 host gateway 按所选 `wire_api` 的终态响应记录，canonical JSONL 不携带厂商字段，因此替换 wire adapter 不需要修改固定工具循环。
+
 [canonical-probe-adapter.py](canonical_probe_adapter.py) 和 [canonical-probe.toml](canonical-probe.toml) 是不调用模型的确定性协议探针，只验证这个固定循环能创建并提交一个矩形；它预期评估失败，不能当作模型成绩。要接入真实模型，只替换 adapter，并保持 harness、工具定义、预算和 prompt 不变。适配器若需要访问主机 gateway，可同时加入 [inference_bridge.py](inference_bridge.py)；该桥接器不读取密钥，具体服务商协议只存在于适配器中。
 
 `canonical_harness.py` 要求 adapter 的标准输出只写 JSONL 响应；调试信息请写标准错误。quickstart 会把该 harness、确定性 adapter 和配置一起放入 `prepared/`，因此可以先运行协议探针，再替换 adapter 文件和对应摘要。
 
 复制 [inference.example.toml](inference.example.toml) 到本地配置，填写真实端点、模型和主机密钥变量名。付费请求前可运行 `uv run --locked python main.py inference-check <profile.toml> --agent <agent.toml>` 做无请求预检；然后执行根 [README 的模型命令](../../README.md#run-your-agent)。密钥不写入配置文件或 harness 环境。推理请求限制、用量与错误语义见[推理配置](../../docs/running.md#model-inference)。
 
-如果 harness 需要访问 gateway，可直接把 [inference_bridge.py](inference_bridge.py) 作为 reviewed file 放入 `[[files]]`。它不读取密钥，只实现每次连接一条请求的 framing：发送 `{"path": "/responses", "bytes": N}` 加换行和 N 个 JSON 字节，随后读取同样由 JSON header 与定长 body 组成的响应。最小调用方式是：
+如果 harness 选择可选的 `responses` wire family，可直接把 [inference_bridge.py](inference_bridge.py) 作为 reviewed file 放入 `[[files]]`。它不读取密钥，只实现每次连接一条请求的 framing：发送 `{"path": "/responses", "bytes": N}` 加换行和 N 个 JSON 字节，随后读取同样由 JSON header 与定长 body 组成的响应。其他 wire family 应提供自己的 reviewed bridge；最小调用方式是：
 
 ```python
 from inference_bridge import InferenceClient

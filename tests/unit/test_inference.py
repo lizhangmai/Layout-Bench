@@ -8,13 +8,49 @@ import pytest
 from benchmarking.files import Asset
 from benchmarking.inference import (
     InferenceConfig,
+    InferenceGateway,
     ResponsesGateway,
+    WireRequest,
+    available_wire_adapters,
     load_inference_config,
+    normalize_usage,
+    register_wire_adapter,
+    unregister_wire_adapter,
     validate_harness_wire,
     validate_request,
 )
 
 pytestmark = pytest.mark.unit
+
+
+class FakeWireAdapter:
+    """Deterministic second wire family used only at the public seam."""
+
+    id = "fake-json"
+
+    def validate_request(self, path, body, model):
+        if path != "/generate":
+            raise ValueError("fake adapter only supports /generate")
+        value = json.loads(body)
+        if value.get("model") != model:
+            raise ValueError("model mismatch")
+        return json.dumps(value, separators=(",", ":")).encode()
+
+    def prepare_request(self, path, body, model, credential):
+        return WireRequest("POST", path, {"X-Fake-Credential": credential,
+                                           "Content-Type": "application/json"})
+
+    def response_semantics(self, path, content_type, body):
+        value = json.loads(body)
+        if value.get("status") != "done":
+            raise ValueError("fake response is not terminal")
+        return {"outcome": "completed", "reason": None,
+                "usage": normalize_usage(value.get("usage"))}
+
+
+def _fake_config():
+    return InferenceConfig("https://example.invalid/v1", "fake-model", "UNUSED", 2, 10,
+                           Asset(b"fake-profile", "text"), "fake-json")
 
 
 @pytest.mark.parametrize("path,extra", [
@@ -27,11 +63,12 @@ pytestmark = pytest.mark.unit
 ])
 def test_gateway_rejects_other_destinations_models_and_remote_tools(path, extra):
     with pytest.raises(ValueError):
-        validate_request(path, json.dumps({"model": "test-model", **extra}).encode(), "test-model")
+        validate_request(path, json.dumps({"model": "test-model", **extra}).encode(), "test-model", "responses")
 
 
 def test_request_bound_usage_and_no_error_body_exposure():
-    config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 1, 10, Asset(b"profile", "text"))
+    config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 1, 10,
+                             Asset(b"profile", "text"), "responses")
     def transport(path, body, timeout):
         assert json.loads(body)["store"] is False
         return 200, "application/json", b'{"status":"completed","usage":{"input_tokens":10,"output_tokens":3}}'
@@ -55,7 +92,8 @@ def test_request_bound_usage_and_no_error_body_exposure():
 
 
 def test_no_forwarded_requests_are_not_classified_as_model_usage():
-    config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 1, 10, Asset(b"profile", "text"))
+    config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 1, 10,
+                             Asset(b"profile", "text"), "responses")
     gateway = ResponsesGateway(config, transport=lambda *args: pytest.fail("Denied request was forwarded"))
     gateway.deadline = time.monotonic()+10
     assert gateway.request("/responses", b'{"model":"test-model","input":[{"file_id":"remote"}]}')[0] == 400
@@ -70,6 +108,7 @@ def test_no_forwarded_requests_are_not_classified_as_model_usage():
 def test_credential_stays_out_of_public_identity_and_profile_requires_tls(tmp_path, monkeypatch):
     source = Path(tmp_path / "profile.toml")
     source.write_text('''schema_version = 1
+wire_api = "responses"
 base_url = "https://example.invalid/v1"
 model = "test-model"
 api_key_env = "LAYOUT_BENCH_TEST_KEY"
@@ -100,6 +139,59 @@ request_timeout_seconds = 5
         load_inference_config(source)
 
 
+def test_profile_requires_an_explicit_wire_family(tmp_path):
+    source = Path(tmp_path / "profile.toml")
+    source.write_text('''schema_version = 1
+base_url = "https://example.invalid/v1"
+model = "test-model"
+api_key_env = "LAYOUT_BENCH_TEST_KEY"
+max_requests = 2
+request_timeout_seconds = 5
+''')
+    with pytest.raises(ValueError, match="wire_api"):
+        load_inference_config(source)
+
+
+def test_registered_fake_wire_adapter_owns_wire_semantics_and_transport_is_deterministic():
+    adapter = FakeWireAdapter()
+    register_wire_adapter(adapter)
+    try:
+        assert "fake-json" in available_wire_adapters()
+        calls = []
+
+        def transport(path, body, timeout):
+            calls.append((path, json.loads(body), timeout))
+            return 200, "application/json", b'{"status":"done","usage":{"input_tokens":4}}'
+
+        gateway = InferenceGateway(_fake_config(), transport=transport)
+        gateway.deadline = time.monotonic() + 10
+        status, content_type, body = gateway.request("/generate", b'{"model":"fake-model"}')
+
+        assert (status, content_type, body) == (200, "application/json",
+                                                  b'{"status":"done","usage":{"input_tokens":4}}')
+        assert calls[0][0] == "/generate" and calls[0][1] == {"model": "fake-model"}
+        assert gateway.wire_adapter.prepare_request("/generate", body, "fake-model", "secret").headers == {
+            "X-Fake-Credential": "secret", "Content-Type": "application/json"}
+        assert gateway.summary()["wire_api"] == "fake-json"
+        assert gateway.summary()["usage"] == {
+            "input_tokens": 4, "output_tokens": None, "cached_input_tokens": None,
+            "reasoning_output_tokens": None, "cost": None,
+        }
+    finally:
+        unregister_wire_adapter("fake-json")
+
+
+def test_registry_rejects_replacing_or_removing_the_builtin_adapter():
+    register_wire_adapter(FakeWireAdapter())
+    try:
+        with pytest.raises(ValueError, match="already registered"):
+            register_wire_adapter(FakeWireAdapter())
+    finally:
+        unregister_wire_adapter("fake-json")
+    with pytest.raises(ValueError, match="cannot be removed"):
+        unregister_wire_adapter("responses")
+
+
 def test_harness_wire_declaration_must_match_gateway():
     validate_harness_wire(None, "responses")
     validate_harness_wire("responses", "responses")
@@ -109,7 +201,8 @@ def test_harness_wire_declaration_must_match_gateway():
 
 def test_http_200_failed_event_is_infrastructure_error():
     response = b'data: {"type":"response.failed","response":{"status":"failed","error":{"code":"server_error"}}}\n\n'
-    config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 1, 10, Asset(b"profile", "text"))
+    config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 1, 10,
+                             Asset(b"profile", "text"), "responses")
     gateway = ResponsesGateway(config, transport=lambda *args: (200, "text/event-stream", response))
     gateway.deadline = time.monotonic() + 10
     gateway.request("/responses", b'{"model":"test-model"}')
@@ -133,7 +226,8 @@ def test_response_semantics_and_usage(stream, state, details, outcome, infra):
     if stream:
         body = b'data: ' + json.dumps({"type": f"response.{state}", "response": response}).encode() + b'\n\n'
         content_type = "text/event-stream; charset=utf-8"
-    config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 1, 10, Asset(b"profile", "text"))
+    config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 1, 10,
+                             Asset(b"profile", "text"), "responses")
     gateway = ResponsesGateway(config, transport=lambda *args: (200, content_type, body))
     gateway.deadline = time.monotonic() + 10
     gateway.request("/responses", b'{"model":"test-model"}')
@@ -155,7 +249,8 @@ def test_response_semantics_and_usage(stream, state, details, outcome, infra):
     b'data: []\n\n',
 ])
 def test_non_success_sse_cannot_be_scored_as_a_model_failure(body):
-    config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 1, 10, Asset(b"profile", "text"))
+    config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 1, 10,
+                             Asset(b"profile", "text"), "responses")
     gateway = ResponsesGateway(config, transport=lambda *args: (200, "text/event-stream", body))
     gateway.deadline = time.monotonic() + 10
     gateway.request("/responses", b'{"model":"test-model"}')
@@ -166,11 +261,13 @@ def test_multiline_sse_and_standalone_compaction():
     from benchmarking.inference import response_semantics
 
     body = b': keepalive\r\nevent: response.completed\r\ndata: {"type":"response.completed",\r\ndata: "response":{"status":"completed"}}\r\n\r\n'
-    assert response_semantics("/responses", "text/event-stream", body)["outcome"] == "completed"
-    request = validate_request("/responses/compact", b'{"model":"test-model","input":[],"store":true}', "test-model")
+    assert response_semantics("/responses", "text/event-stream", body, "responses")["outcome"] == "completed"
+    request = validate_request("/responses/compact", b'{"model":"test-model","input":[],"store":true}',
+                               "test-model", "responses")
     assert "store" not in json.loads(request)
     result = response_semantics("/responses/compact", "application/json",
-                                b'{"object":"response.compaction","output":[],"usage":{"input_tokens":1}}')
+                                b'{"object":"response.compaction","output":[],"usage":{"input_tokens":1}}',
+                                "responses")
     assert result["outcome"] == "completed" and result["usage"]["input_tokens"] == 1
 
 
@@ -190,12 +287,13 @@ def test_function_tool_schema_may_use_resource_like_field_names():
             },
         }],
     }
-    request = validate_request("/responses", json.dumps(body).encode(), "test-model")
+    request = validate_request("/responses", json.dumps(body).encode(), "test-model", "responses")
     assert json.loads(request)["tools"] == body["tools"]
 
 
 def test_malformed_http_200_response_keeps_upstream_status_and_hides_body():
-    config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 1, 10, Asset(b"profile", "text"))
+    config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 1, 10,
+                             Asset(b"profile", "text"), "responses")
     gateway = ResponsesGateway(config, transport=lambda *args: (
         200, "application/json", b'{"status":"in_progress","secret":"must-not-forward"}'))
     gateway.deadline = time.monotonic() + 10
@@ -210,7 +308,8 @@ def test_malformed_http_200_response_keeps_upstream_status_and_hides_body():
 
 
 def test_socket_handler_closes_cleanly_on_recursive_json_header(tmp_path):
-    config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 1, 10, Asset(b"profile", "text"))
+    config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 1, 10,
+                             Asset(b"profile", "text"), "responses")
     gateway = ResponsesGateway(config, transport=lambda *args: pytest.fail("Malformed header reached gateway"))
     path = tmp_path / "inference.sock"
     gateway.start(path, time.monotonic() + 10)
@@ -235,7 +334,8 @@ def test_request_and_response_persist_before_forwarding(tmp_path, monkeypatch):
         assert request["kind"] == "inference.request"
         assert (recorder.root / request["data"]["request"]["path"]).read_bytes() == body
         return 200, "application/json", b'{"status":"completed","output":[]}'
-    config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 2, 10, Asset(b"profile", "text"))
+    config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 2, 10,
+                             Asset(b"profile", "text"), "responses")
     gateway = ResponsesGateway(config, transport=transport)
     gateway.recorder = recorder
     gateway.deadline = time.monotonic() + 10
@@ -256,6 +356,7 @@ def test_conflicting_or_nonterminal_sse_tail_is_rejected():
     completed = b'data: {"type":"response.completed","response":{"status":"completed"}}\n\n'
     for tail in (completed, b'data: {"type":"response.created"}\n\n'):
         with pytest.raises(ValueError, match="terminal"):
-            response_semantics("/responses", "text/event-stream", completed + tail)
+            response_semantics("/responses", "text/event-stream", completed + tail, "responses")
     unicode_message = '{"type":"response.completed","response":{"status":"completed","text":"a\u2028b"}}'
-    assert response_semantics("/responses", "text/event-stream", ('data: '+unicode_message+'\n\n').encode())["outcome"] == "completed"
+    assert response_semantics("/responses", "text/event-stream", ('data: '+unicode_message+'\n\n').encode(),
+                              "responses")["outcome"] == "completed"

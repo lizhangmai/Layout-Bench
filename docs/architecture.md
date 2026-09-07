@@ -27,7 +27,7 @@ flowchart LR
 | Configuration and freezing | `tasks.py`, `model_config.py`, `provenance.py` | Validate inputs, configuration, files, and the actual execution identity; do not interpret the circuit |
 | Run orchestration | `agent.py`, `swarm.py` | One execution and independent batch repetitions; invoke evaluation after stopping |
 | Session and submission | `session.py`, `snapshot.py`, `submit.py` | Isolation, budgets, and the last valid submission; do not judge layout correctness |
-| Harness and model gateway | `harnesses.py`, `session.py`, `inference.py` | Common session protocol, optional harness profiles, fixed wire-family gateway, and host credentials; no EDA dependency |
+| Harness and model gateway | `harnesses.py`, `session.py`, `inference.py` | Common session protocol, optional harness profiles, registered wire-family adapters, and host credentials; no EDA dependency |
 | Evaluation | `evaluation.py`, `evaluate.py`, `toolchains.py` | Execute each task's dependency graph, call backends, and decide metrics |
 | EDA and materials | `klayout.py`, `geometry.py`, `magic.py`, `ngspice.py`; `prepare.py`, `environment.py`, `prepare_support.py` | Tool execution, format interpretation, resource preparation, and validation |
 | Evidence and statistics | `recording.py`, `recorder.py`, `report.py`, `admission.py` | Durable events and artifacts, evidence binding, statistics, and optional admission/export |
@@ -40,7 +40,7 @@ These modules live under `benchmarking/` and are assembled by the root `main.py`
 
 - **New task**: add inputs, constraints, and an evaluation plan, then complete [qualification](tasks.md#qualification). Models, budgets, and repetitions belong to the [run configuration](running.md), not to `task.toml`.
 - **New harness**: use `command` plus reviewed `files` and implement the `layout-session.v1` protocol. Add a profile under the harness seam only when launch preparation or a trusted capability declaration is reusable; the session runner must not learn the framework's internal conversation.
-- **New model wire family**: add one gateway adapter that validates requests and response semantics, then select it with `wire_api`. Do not add one benchmark branch per model or per harness.
+- **New model wire family**: register one adapter implementing `validate_request`, `prepare_request`, and `response_semantics`, then select it with the required `wire_api` field. The adapter owns HTTP method/auth/header conventions, terminal-state parsing, and mapping to the common nullable usage fields. Do not add one benchmark branch per model or per harness.
 - **New EDA backend**: implement `identity` and `run(job, inputs) -> JobResult`, returning measured values with units, declared artifacts, and diagnostic evidence. The backend owns execution isolation and format interpretation and may use a container, a native library, or a controlled remote tool.
 - **New process or environment**: configure support bundles, device mappings, rules, and parameters, then validate the supported range using the [tools guide](tools.md). Individual tools being usable does not mean their combination has passed task qualification.
 
@@ -81,11 +81,27 @@ tool definitions, prompt, and budgets when comparing adapters, and record the
 adapter command and version as part of the Agent configuration. The included
 deterministic adapter is a protocol control only, not a model baseline.
 
-The current host-owned gateway implements the `responses` wire family. A
-harness may provide its own bridge to that socket, while credentials and
-endpoint restrictions remain in the host gateway. Supporting another provider
-API means adding one wire-family Adapter and its semantic tests, not changing
-the session runner or adding a branch for every Agent framework.
+The host-owned gateway is provider-neutral: a frozen `wire_api` selects one
+trusted registry adapter, while credentials, the fixed endpoint, request and
+response limits, socket framing, budgets, and durable evidence remain in the
+gateway. `responses` is one optional built-in wire family, not a benchmark
+assumption. A harness may provide its own bridge to the socket, but the bridge
+must keep the same declared wire family. Supporting another provider API means
+registering one adapter and its semantic tests, not changing the session
+runner or adding a branch for every Agent framework.
+
+The adapter seam is deliberately small:
+
+| Adapter method | Responsibility | Must not do |
+|---|---|---|
+| `validate_request(path, body, model) -> bytes` | Validate and canonicalize one client request for the frozen model and wire paths | Select a destination, read credentials, or spend a request budget |
+| `prepare_request(path, body, model, credential) -> WireRequest` | Choose the relative HTTP path, method, and authentication/header convention | Return an absolute URL or bypass the fixed profile endpoint |
+| `response_semantics(path, content_type, body) -> {outcome, reason, usage}` | Validate a terminal response and map usage to `input_tokens`, `output_tokens`, `cached_input_tokens`, `reasoning_output_tokens`, and `cost` (missing values stay `null`) | Mark a malformed or failed response as a model/layout failure |
+
+Adapters are trusted framework code registered by the host; task files and
+harnesses cannot load arbitrary Python. The canonical harness remains a
+separate normalized JSONL conversation/tool seam and does not import a wire
+adapter or vendor SDK.
 
 ## Design Basis
 

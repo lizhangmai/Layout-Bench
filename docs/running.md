@@ -63,14 +63,21 @@ A run configuration normally uses `command` and optional `[[files]]`; the sessio
 |---|---|
 | `base_url` | Fixed HTTPS base URL; URL credentials, queries, fragments, and dynamic redirects are forbidden |
 | `model` | The model name required for every request; the CLI may not request another model |
-| `wire_api` | Wire-family identity for the host gateway; the current built-in adapter is `responses` |
+| `wire_api` | Required wire-family identity for the host gateway; `responses` is one optional built-in adapter, not a benchmark default |
 | `api_key_env` | Host environment-variable name whose value is read only by the host; the TOML and records contain no key |
 | `max_requests` | Maximum forwarded requests, including failures and compaction; retries count against the limit |
 | `request_timeout_seconds` | Per-connection/response time limit, also bounded by the session deadline |
 
-The configuration specifies the model and wire family; the core does not hard-code a model or harness. If a harness declares `wire_api`, it must match the inference profile. A harness bridge connects to the loopback forwarder through that declared wire family. The forwarder can reach only this run's Unix socket. The host gateway holds the API key and makes the HTTPS connection, reads no HTTP proxy environment, and accepts no target URL, authorization header, or arbitrary method from the client.
+The configuration specifies the model and wire family; the core does not hard-code a model or harness. If a harness declares `wire_api`, it must match the inference profile. A harness bridge connects to the loopback forwarder through that declared wire family. The forwarder can reach only this run's Unix socket. The host gateway holds the credential and makes the HTTPS connection, reads no HTTP proxy environment, and accepts no target URL, authorization header, or arbitrary method from the client. The selected adapter prepares only a relative request for the fixed base URL.
 
-The host allows only `POST /responses` and `POST /responses/compact`, fixes the model, and forces `store=false` on generated requests. Allow only client-executed function/custom/namespace tools. Reject online search, remote MCP, remote file/image references, background execution, and server-side conversation references; inline images are exempt from this restriction. Limit requests to 8 MiB and responses to 16 MiB. Run one inference at a time with a fixed upper bound on Unix handling threads. The proxy currently buffers each complete response before forwarding SSE, rather than streaming incrementally; this delay is part of wall-clock time.
+The selected wire adapter fixes its allowed paths, model binding, request validation, HTTP method/auth headers, and response terminal semantics. The gateway applies the common 8 MiB request and 16 MiB response limits, one-request-at-a-time bound, session deadline, request quota, and generic error redaction. The `responses` adapter currently allows `POST /responses` and `POST /responses/compact`, forces `store=false` on generation, allows only client-executed function/custom/namespace tools, rejects online search/remote MCP/remote file or image references/background execution/server-side conversation references, and treats inline images as local data. The proxy buffers each complete response before forwarding SSE; this delay is part of wall-clock time.
+
+Every adapter returns the same terminal outcome vocabulary: `completed`,
+`service_error`, `budget_truncated`, `content_filtered`,
+`incomplete_error`, or `protocol_or_transport_error`. HTTP status is retained
+separately. The gateway records a forwarded request before transport, records
+the response before returning it, and classifies deadline/quota denials as
+budget events; adapters do not retry or reinterpret those gateway decisions.
 
 For a non-success HTTP response, return only a generic error and do not forward a body that might echo credentials or redirect headers; reject a successful body that contains a key as well. Do not print raw connection exceptions to the Agent. On stop, close the inference entry point and active connections before destroying the container; start no new request after the deadline. Whether a remote request already sent stops computation and billing depends on the provider; cancelling the connection cannot claim zero remote usage.
 
@@ -85,15 +92,16 @@ Record HTTP status separately from response semantics:
 | `incomplete` caused by `max_output_tokens` / `content_filter` | Classify as `budget_truncated` / `content_filtered`, respectively; neither is an infrastructure failure |
 | Unknown or missing `incomplete` cause | `incomplete_error`; extend the mapping only after endpoint validation |
 
-The current `responses` wire adapter follows the semantics of the [Responses API](https://developers.openai.com/api/reference/cli/resources/responses/methods/create); validate compatible endpoints separately. A single truncated response does not force the session to end, so a harness may continue within the remaining budget. Deadline cancellation or an exhausted request quota is a budget stop, and previously accepted candidates are still evaluated. Identify standalone `/responses/compact` results by their independent `response.compaction` object; do not inject its undeclared `store` parameter. A future wire adapter should keep these checks local to its own implementation.
+The optional `responses` wire adapter follows the semantics of the [Responses API](https://developers.openai.com/api/reference/cli/resources/responses/methods/create); validate compatible endpoints separately. A single truncated response does not force the session to end, so a harness may continue within the remaining budget. Deadline cancellation or an exhausted request quota is a budget stop, and previously accepted candidates are still evaluated. The adapter identifies standalone `/responses/compact` results by their independent `response.compaction` object; it does not inject an undeclared `store` parameter. A new wire adapter keeps equivalent provider-specific checks inside its own implementation and returns the common outcome/usage fields.
 
 The socket framing is deliberately small and provider-neutral. For each request,
 open a new Unix-socket connection, send one compact JSON line
-`{"path":"/responses","bytes":N}` followed by exactly `N` UTF-8 JSON bytes,
+`{"path":"/wire-path","bytes":N}` followed by exactly `N` UTF-8 JSON bytes,
 then read one JSON response line `{"status":S,"type":"...","bytes":M}` and
-exactly `M` response bytes. The only request paths are `/responses` and
-`/responses/compact`; a connection carries one request and one response. The
-reference dependency-free client is [inference_bridge.py](../examples/agents/inference_bridge.py).
+exactly `M` response bytes. A connection carries one request and one response;
+the path set is owned by the selected wire adapter. The reference
+dependency-free client is [inference_bridge.py](../examples/agents/inference_bridge.py)
+for the optional `responses` family.
 The client must treat status, media type, and body as untrusted and leave
 Responses JSON/SSE semantic handling to the harness or a reviewed adapter.
 

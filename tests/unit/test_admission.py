@@ -185,6 +185,7 @@ def test_endpoint_requires_exact_reviewed_data_arrangement(tmp_path, bad):
 
     path = make_plan(tmp_path / "input", agents=1)
     (path.parent / "inference.toml").write_text('''schema_version = 1
+wire_api = "responses"
 base_url = "https://example.invalid/v1"
 model = "synthetic-model"
 api_key_env = "UNUSED"

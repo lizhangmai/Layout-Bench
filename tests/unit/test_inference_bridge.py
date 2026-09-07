@@ -25,13 +25,14 @@ def _bridge_module():
 def test_bridge_uses_gateway_framing_and_fixed_model(tmp_path):
     bridge = _bridge_module()
     config = InferenceConfig("https://example.invalid/v1", "test-model", "UNUSED", 2, 10,
-                             Asset(b"profile", "text"))
+                             Asset(b"profile", "text"), "responses")
     gateway = ResponsesGateway(config, transport=lambda path, body, timeout: (
         200, "application/json", b'{"status":"completed","output":[]}'))
     socket_path = tmp_path / "inference.sock"
     gateway.start(socket_path, time.monotonic() + 10)
     try:
-        client = bridge.InferenceClient({"socket": str(socket_path), "model": "test-model"}, timeout=2)
+        client = bridge.InferenceClient({"socket": str(socket_path), "model": "test-model", "wire_api": "responses"},
+                                        timeout=2)
         response = client.create("hello")
         assert response.status == 200
         assert response.content_type == "application/json"
@@ -59,7 +60,8 @@ def test_bridge_rejects_invalid_response_frame(tmp_path):
     worker = threading.Thread(target=serve)
     worker.start()
     try:
-        client = bridge.InferenceClient({"socket": str(socket_path), "model": "test-model"}, timeout=2)
+        client = bridge.InferenceClient({"socket": str(socket_path), "model": "test-model", "wire_api": "responses"},
+                                        timeout=2)
         with pytest.raises(ConnectionError, match="response body"):
             client.create("hello")
     finally:

@@ -1,6 +1,6 @@
 schema_version = 1
-# The gateway currently implements a Responses-shaped wire family.  This is a
-# protocol label, not a provider selection; use any compatible endpoint.
+# Select one registered wire family.  ``responses`` is the optional built-in
+# adapter; the label is a wire contract, not a provider selection.
 wire_api = "responses"
 base_url = "https://inference.example.invalid/v1"
 model = "REPLACE_WITH_YOUR_MODEL"

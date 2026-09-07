@@ -168,6 +168,7 @@ def test_configured_inference_without_forwarded_request_is_labeled_offline(tmp_p
 
     path = make_plan(tmp_path / "input", repetitions=1, tasks=1, agents=1)
     (path.parent / "inference.toml").write_text('''schema_version = 1
+wire_api = "responses"
 base_url = "https://example.invalid/v1"
 model = "synthetic-model"
 api_key_env = "UNUSED"
@@ -411,6 +412,7 @@ def test_each_repeat_has_a_fresh_gateway_and_protocol_results_stay_labelled(tmp_
 
     path = make_plan(tmp_path / "input", tasks=1, agents=1)
     (path.parent / "inference.toml").write_text('''schema_version = 1
+wire_api = "responses"
 base_url = "https://example.invalid/v1"
 model = "synthetic-model"
 api_key_env = "UNUSED"

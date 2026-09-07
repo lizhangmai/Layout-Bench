@@ -1,9 +1,10 @@
-"""Small client for the Layout-Bench host inference socket.
+"""Small optional ``responses``-wire client for the Layout-Bench socket.
 
 This file is intentionally dependency-free so a harness can copy it into its
 reviewed ``files`` without installing an Agent framework.  The host owns the
 provider credential and HTTPS connection; a harness only sends a validated
-Responses request over the per-session Unix socket.
+Responses request over the per-session Unix socket.  Other wire families use
+their own reviewed bridge; this module is not a gateway-wide provider API.
 """
 
 from __future__ import annotations
@@ -62,10 +63,13 @@ def load_profile(path="/protocol/inference.json"):
         raise TypeError("Inference profile must be a JSON object")
     socket_path = value.get("socket", DEFAULT_SOCKET)
     model = value.get("model")
+    wire_api = value.get("wire_api")
     if not isinstance(socket_path, str) or not socket_path.startswith("/"):
         raise ValueError("Inference profile has an invalid socket path")
     if not isinstance(model, str) or not model.strip():
         raise ValueError("Inference profile has no model")
+    if wire_api != "responses":
+        raise ValueError("inference_bridge.py only supports the responses wire family")
     return value
 
 

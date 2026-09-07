@@ -1,19 +1,21 @@
-"""Host-owned model gateway with a provider-wire adapter seam.
+"""Host-owned provider-neutral inference gateway and wire-adapter seam.
 
-The current built-in wire adapter is ``responses``.  Harnesses remain opaque
-to this module; they may use the gateway through a small bridge of their own.
+Harnesses remain opaque to this module; they may use the selected wire family
+through a small reviewed bridge of their own.
 """
 
 import copy
 import hashlib
 import http.client
 import json
+import math
 import os
 import socket
 import socketserver
 import threading
 import time
 import tomllib
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
@@ -28,6 +30,8 @@ INFERENCE_SOCKET = "/protocol/inference.sock"
 LEGACY_INFERENCE_SOCKET = "/protocol/model.sock"
 GENERIC_HTTP_ERROR = b'{"error":"Inference upstream rejected request"}'
 GENERIC_RESPONSE_ERROR = b'{"error":"Inference response failed validation"}'
+USAGE_FIELDS = ("input_tokens", "output_tokens", "cached_input_tokens",
+                "reasoning_output_tokens", "cost")
 
 
 @dataclass(frozen=True)
@@ -38,7 +42,69 @@ class InferenceConfig:
     max_requests: int
     request_timeout_seconds: int
     source: Asset
-    wire_api: str = "responses"
+    wire_api: str
+
+
+@dataclass(frozen=True)
+class WireRequest:
+    """Provider-wire HTTP request prepared by a registered adapter.
+
+    ``path`` is relative to the fixed profile base URL.  An adapter may choose
+    the method, path suffix, and authentication/header convention, while the
+    gateway still owns the destination, body/response limits, and deadline.
+    """
+
+    method: str
+    path: str
+    headers: Mapping[str, str]
+
+
+@dataclass(frozen=True)
+class InferenceUsage:
+    """Normalized observable usage shared by all wire families."""
+
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    cached_input_tokens: int | None = None
+    reasoning_output_tokens: int | None = None
+    cost: float | None = None
+
+    def as_dict(self):
+        return {field: getattr(self, field) for field in USAGE_FIELDS}
+
+
+def normalize_usage(value, *, input_details=None, output_details=None):
+    """Normalize adapter-specific usage to the common nullable fields.
+
+    Missing values remain ``None``.  Invalid values are a wire-protocol error;
+    the gateway never guesses a zero or fills a missing provider field.
+    """
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        raise TypeError("Inference usage must be an object")
+    input_details = input_details if isinstance(input_details, dict) else {}
+    output_details = output_details if isinstance(output_details, dict) else {}
+    raw = {
+        "input_tokens": value.get("input_tokens"),
+        "output_tokens": value.get("output_tokens"),
+        "cached_input_tokens": value.get("cached_input_tokens", input_details.get("cached_tokens")),
+        "reasoning_output_tokens": value.get("reasoning_output_tokens", output_details.get("reasoning_tokens")),
+        "cost": value.get("cost"),
+    }
+    normalized = {}
+    for field, item in raw.items():
+        if item is None:
+            normalized[field] = None
+        elif field == "cost":
+            if isinstance(item, bool) or type(item) not in {int, float} or not math.isfinite(item) or item < 0:
+                raise ValueError(f"Invalid usage field: {field}")
+            normalized[field] = float(item)
+        elif type(item) is not int or item < 0:
+            raise ValueError(f"Invalid usage field: {field}")
+        else:
+            normalized[field] = item
+    return InferenceUsage(**normalized).as_dict()
 
 
 def load_inference_config(path):
@@ -46,7 +112,7 @@ def load_inference_config(path):
     source = Asset(read_file(path.parent, path.name), "toml")
     data = tomllib.loads(source.content.decode())
     keys(data, {"schema_version", "base_url", "model", "api_key_env", "max_requests",
-                "request_timeout_seconds"}, {"wire_api"}, "inference profile")
+                "request_timeout_seconds", "wire_api"}, set(), "inference profile")
     if type(data["schema_version"]) is not int or data["schema_version"] != 1:
         raise ValueError("Unsupported inference profile")
     url = urlsplit(text(data["base_url"], "inference endpoint"))
@@ -59,7 +125,7 @@ def load_inference_config(path):
     for name in ("max_requests", "request_timeout_seconds"):
         if type(data[name]) is not int or data[name] <= 0:
             raise ValueError(f"{name} must be a positive integer")
-    wire_api = text(data.get("wire_api", "responses"), "inference wire_api")
+    wire_api = text(data["wire_api"], "inference wire_api")
     _wire_adapter(wire_api)
     return InferenceConfig(*(data[k] for k in ("base_url", "model", "api_key_env", "max_requests",
                                              "request_timeout_seconds")), source, wire_api)
@@ -165,15 +231,29 @@ def _responses_response_semantics(path, content_type, body):
             reason, "incomplete_error")
     else:
         raise ValueError("Missing terminal response status")
-    return {"outcome": outcome, "reason": reason, "usage": response.get("usage")}
+    usage = response.get("usage")
+    return {"outcome": outcome, "reason": reason,
+            "usage": normalize_usage(usage,
+                                      input_details=usage.get("input_tokens_details")
+                                      if isinstance(usage, dict) else None,
+                                      output_details=usage.get("output_tokens_details")
+                                      if isinstance(usage, dict) else None)}
 
 
 class WireAdapter(Protocol):
-    """Provider-wire semantics kept behind the host gateway seam."""
+    """Interface implemented by one provider-wire family.
+
+    Adapters own wire-specific request validation, HTTP authentication/header
+    conventions, terminal response parsing, and usage mapping.  They must not
+    start threads, persist evidence, or enforce session budgets; those remain
+    the gateway's responsibilities.
+    """
 
     id: str
 
     def validate_request(self, path: str, body: bytes, model: str) -> bytes: ...
+
+    def prepare_request(self, path: str, body: bytes, model: str, credential: str) -> WireRequest: ...
 
     def response_semantics(self, path: str, content_type: str, body: bytes) -> dict: ...
 
@@ -184,11 +264,52 @@ class _ResponsesWireAdapter:
     def validate_request(self, path, body, model):
         return _validate_responses_request(path, body, model)
 
+    def prepare_request(self, path, body, model, credential):
+        return WireRequest("POST", path, {
+            "Authorization": f"Bearer {credential}",
+            "Content-Type": "application/json",
+            "Accept": "text/event-stream, application/json",
+        })
+
     def response_semantics(self, path, content_type, body):
         return _responses_response_semantics(path, content_type, body)
 
 
-_WIRE_ADAPTERS: dict[str, WireAdapter] = {"responses": _ResponsesWireAdapter()}
+_WIRE_ADAPTERS: dict[str, WireAdapter] = {}
+
+
+def register_wire_adapter(adapter: WireAdapter, *, replace=False):
+    """Register a trusted wire-family adapter at the gateway seam.
+
+    An adapter is selected only by the frozen ``wire_api`` profile field.
+    Registration is process-local and intended for framework integrations and
+    deterministic tests; it is not a plugin loader for task-controlled code.
+    """
+    name = getattr(adapter, "id", None)
+    if (not isinstance(name, str) or not name or name != name.strip()
+            or any(not (character.isalnum() or character in "-_.") for character in name)):
+        raise ValueError("Wire adapter id must be a nonempty stable name")
+    required = ("validate_request", "prepare_request", "response_semantics")
+    if any(not callable(getattr(adapter, method, None)) for method in required):
+        raise TypeError(f"Wire adapter {name!r} does not implement the gateway interface")
+    if name in _WIRE_ADAPTERS and not replace:
+        raise ValueError(f"Wire adapter already registered: {name}")
+    _WIRE_ADAPTERS[name] = adapter
+
+
+def unregister_wire_adapter(name):
+    """Remove a process-local adapter, primarily for isolated tests."""
+    if name == "responses":
+        raise ValueError("The built-in responses adapter cannot be removed")
+    _WIRE_ADAPTERS.pop(name, None)
+
+
+def available_wire_adapters():
+    """Return the registered wire-family ids in deterministic order."""
+    return tuple(sorted(_WIRE_ADAPTERS))
+
+
+register_wire_adapter(_ResponsesWireAdapter())
 
 
 def _wire_adapter(name: str) -> WireAdapter:
@@ -207,18 +328,18 @@ def validate_harness_wire(harness_wire_api, gateway_wire_api):
         raise ValueError("Harness wire_api differs from the inference profile")
 
 
-def validate_request(path, body, model, wire_api="responses"):
+def validate_request(path, body, model, wire_api):
     """Validate a request using the selected provider-wire adapter."""
     return _wire_adapter(wire_api).validate_request(path, body, model)
 
 
-def response_semantics(path, content_type, body, wire_api="responses"):
+def response_semantics(path, content_type, body, wire_api):
     """Validate a response using the selected provider-wire adapter."""
     return _wire_adapter(wire_api).response_semantics(path, content_type, body)
 
 
 class InferenceGateway:
-    """One generic gateway implementation backed by the Responses adapter."""
+    """Provider-neutral gateway backed by one registered wire adapter."""
 
     def __init__(self, config, *, transport=None):
         self.config = config
@@ -255,6 +376,17 @@ class InferenceGateway:
     def _https(self, path, body, timeout):
         url = urlsplit(self.config.base_url)
         request_deadline = min(self.deadline, time.monotonic() + timeout)
+        prepared = self.wire_adapter.prepare_request(path, body, self.config.model, self._key)
+        if not isinstance(prepared, WireRequest):
+            raise TypeError("Wire adapter returned an invalid HTTP request")
+        relative = urlsplit(prepared.path)
+        if (prepared.method.upper() != prepared.method or not prepared.method.isalpha()
+                or relative.scheme or relative.netloc or not relative.path.startswith("/")):
+            raise ValueError("Wire adapter returned an unsafe HTTP request")
+        headers = dict(prepared.headers)
+        if (any(not isinstance(name, str) or not name or "\r" in name or "\n" in name for name in headers)
+                or any(not isinstance(value, str) or "\r" in value or "\n" in value for value in headers.values())):
+            raise ValueError("Wire adapter returned unsafe HTTP headers")
         connection = http.client.HTTPSConnection(url.hostname, url.port, timeout=timeout)
         self._connection = connection
         try:
@@ -264,9 +396,8 @@ class InferenceGateway:
             if remaining <= 0:
                 raise TimeoutError("Inference deadline exceeded before sending")
             self._socket.settimeout(remaining)
-            connection.request("POST", url.path.rstrip("/") + path, body=body,
-                               headers={"Authorization": f"Bearer {self._key}", "Content-Type": "application/json",
-                                        "Accept": "text/event-stream, application/json"})
+            connection.request(prepared.method, url.path.rstrip("/") + prepared.path, body=body,
+                               headers=headers)
             response = connection.getresponse()
             if not 200 <= response.status < 300:
                 return response.status, "application/json", b'{"error":"Inference upstream rejected request"}'
@@ -424,15 +555,15 @@ class InferenceGateway:
 
     def summary(self):
         usage = {}
-        for field in ("input_tokens", "output_tokens"):
+        for field in USAGE_FIELDS:
             values = [e["usage"].get(field) if isinstance(e["usage"], dict) else None for e in self.events]
-            usage[field] = sum(values) if values and all(type(v) is int and v >= 0 for v in values) else None
-        usage["cost"] = None
-        for field, group, key in (("cached_input_tokens", "input_tokens_details", "cached_tokens"),
-                                  ("reasoning_output_tokens", "output_tokens_details", "reasoning_tokens")):
-            groups = [e["usage"].get(group) if isinstance(e["usage"], dict) else None for e in self.events]
-            values = [g.get(key) if isinstance(g, dict) else None for g in groups]
-            usage[field] = sum(values) if values and all(type(v) is int and v >= 0 for v in values) else None
+            if not values or any(value is None for value in values):
+                usage[field] = None
+            elif field == "cost":
+                usage[field] = sum(values) if all(type(value) in {int, float} and math.isfinite(value)
+                                                  and value >= 0 for value in values) else None
+            else:
+                usage[field] = sum(values) if all(type(value) is int and value >= 0 for value in values) else None
         # A configured profile is not evidence that a model was contacted.
         # Denied requests never enter ``events``; only a forwarded request is
         # enough to classify a run as a model/protocol run.
@@ -447,4 +578,6 @@ class InferenceGateway:
 
 
 # Compatibility name for callers that used the original implementation name.
+# It does not select a different implementation; profiles still choose the
+# registered wire family through ``wire_api``.
 ResponsesGateway = InferenceGateway
