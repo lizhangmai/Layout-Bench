@@ -317,7 +317,7 @@ class DockerSession:
                                                              "process feedback report path")
                     except RecordingError:
                         raise
-                    except (OSError, ValueError, subprocess.SubprocessError, TypeError) as error:
+                    except Exception as error:  # noqa: BLE001 -- feedback failures are durable diagnostics
                         entry.update(accepted=True, outcome="error",
                                      error=f"{type(error).__name__}: {error}"[:1024])
                     finally:
