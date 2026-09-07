@@ -60,3 +60,7 @@ def test_inference_example_does_not_select_a_model_provider():
     example = (ROOT / 'examples/agents/inference.example.toml').read_text()
     assert 'api.openai.com' not in example
     assert 'inference.example.invalid' in example
+
+
+def test_pending_base_interface_placeholder_is_removed():
+    assert not (ROOT / 'benchmarking/base.py').exists()
