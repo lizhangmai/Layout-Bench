@@ -5,8 +5,7 @@ a 5 GHz up-converter mixer with a cross-coupled oscillator and includes an
 Xschem source, historical GDS, and DRC/LVS artifacts.
 
 This directory currently records only source intake. It is **not** a
-`netlist_to_gds` task yet. The first raw export has been reproduced with the
-manifest in `source.toml`; its findings are recorded in `source-export.md`:
+`netlist_to_gds` task yet:
 
 - the source must be exported in the pinned, network-isolated preparation
   image and checked for a valid top-level port list;
