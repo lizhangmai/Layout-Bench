@@ -24,7 +24,7 @@
 
 Layout-Bench 在隔离容器中运行 Agent，记录明确提交的 GDS，并使用独立的 EDA 工具评估冻结后的候选版图。DRC/LVS 用于建立物理有效性；完整任务还会检查声明的几何约束和后仿性能限值。
 
-> **公开预览版。** 当前仓库用 `examples/sg13g2/checked-switch` 作为框架集成 smoke fixture。本公开 Bench 只接受 pinned upstream 已经提供可公开复用版图、对应网表和物理证据的 IHP 电路；只有原理图的电路仍保留为 [`tasks/IHP-AnalogAcademy/catalog.toml`](tasks/IHP-AnalogAcademy/catalog.toml) 中的来源记录，不是可运行任务。
+> **公开预览版。** 当前仓库用 `examples/sg13g2/checked-switch` 作为框架集成 smoke fixture。[`tasks/IHP-AnalogAcademy/catalog.toml`](tasks/IHP-AnalogAcademy/catalog.toml) 目前只包含 4 个已筛选电路；它们的 pinned upstream 均已提供可公开复用版图、对应网表和物理证据。只有原理图的电路不会纳入公开 Bench。
 
 ## 为什么选择 Layout-Bench？
 

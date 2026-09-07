@@ -23,7 +23,7 @@ Measure whether an agent can turn a circuit netlist, physical constraints, and p
 
 Layout-Bench runs an Agent in an isolated container, records an explicit GDS submission, and evaluates the frozen candidate with independent EDA tools. DRC/LVS establish physical validity; a complete task also checks the declared geometry and post-layout performance limits.
 
-> **Public preview.** The repository ships a framework integration fixture (`examples/sg13g2/checked-switch`) for local smoke checks. The IHP AnalogAcademy catalog is [`tasks/IHP-AnalogAcademy/catalog.toml`](tasks/IHP-AnalogAcademy/catalog.toml); an IHP circuit enters the public Bench only when the pinned upstream checkout already provides a reusable layout together with the corresponding netlist and physical evidence. Schematic-only circuits remain source records, not runnable tasks.
+> **Public preview.** The repository ships a framework integration fixture (`examples/sg13g2/checked-switch`) for local smoke checks. The IHP AnalogAcademy catalog is [`tasks/IHP-AnalogAcademy/catalog.toml`](tasks/IHP-AnalogAcademy/catalog.toml) and currently contains only four selected cases whose pinned upstream checkout already provides a reusable layout together with the corresponding netlist and physical evidence. Schematic-only circuits are intentionally not included.
 
 ## Why Layout-Bench?
 

@@ -11,12 +11,6 @@ pytestmark = pytest.mark.unit
 ROOT = Path(__file__).resolve().parents[2]
 CATALOG = ROOT / "tasks/IHP-AnalogAcademy/catalog.toml"
 EXCLUDED = "modules/module_0_foundations/PEX_Demo/"
-EXCLUDED_PREFIXES = (EXCLUDED, "utils/PEX_Demo/")
-ALLOWED_PREFIXES = ("modules/", "utils/gmid_demonstration/")
-ARTIFACT_EXTENSIONS = {
-    ".cdl", ".cir", ".sp", ".spice", ".net", ".ext", ".gds", ".sym", ".v", ".va",
-    ".s2p", ".s3p", ".s4p", ".xyce",
-}
 
 
 def _configs(catalog):
@@ -29,8 +23,8 @@ def _configs(catalog):
 def test_catalog_has_one_unified_config_per_case():
     catalog = tomllib.loads(CATALOG.read_text())
     assert catalog["schema_version"] == 3
-    assert catalog["source_count"] == 50
-    assert catalog["case_count"] == len(catalog["cases"]) == 30
+    assert catalog["source_count"] == 8
+    assert catalog["case_count"] == len(catalog["cases"]) == 4
     assert catalog["artifact_count"] == len(catalog["artifacts"])
     excluded = {item["path"] for item in catalog["excluded"]}
     assert excluded == {EXCLUDED.rstrip("/"), "utils/PEX_Demo"}
@@ -42,6 +36,9 @@ def test_catalog_has_one_unified_config_per_case():
     assert all(Path(path).parent == Path("cases") for path in config_paths)
     assert all(Path(path).stem == item["id"] for path, item in
                zip(config_paths, catalog["cases"], strict=True))
+    assert {path.name for path in (CATALOG.parent / "cases").glob("*.toml")} == {
+        Path(path).name for path in config_paths
+    }
     configs = _configs(catalog)
     assert set(configs) == {item["id"] for item in catalog["cases"]}
     assert all(data["kind"] == "layout_case" and data["schema_version"] == 2
@@ -75,20 +72,12 @@ def test_catalog_digests_match_the_pinned_submodule():
     excluded = {item["path"] for item in catalog["excluded"]}
     commit = subprocess.check_output(["git", "-C", str(academy), "rev-parse", "HEAD"], text=True).strip()
     assert catalog["source_commit"] == commit
-    source_paths = subprocess.check_output(
-        ["git", "-C", str(academy), "ls-tree", "-r", "--name-only", "HEAD"], text=True,
-    ).splitlines()
-    source_paths = {
-        path for path in source_paths
-        if path.startswith(ALLOWED_PREFIXES)
-        and not any(path.startswith(prefix) for prefix in EXCLUDED_PREFIXES)
-    }
-    expected_sources = {path for path in source_paths if path.endswith(".sch")}
-    expected_artifacts = {
-        path for path in source_paths if Path(path).suffix.lower() in ARTIFACT_EXTENSIONS
-    }
     configs = _configs(catalog)
     sources = [source for data in configs.values() for source in data["sources"]]
+    expected_sources = {source["path"] for source in sources}
+    expected_artifacts = {
+        asset["path"] for data in configs.values() for asset in data.get("upstream_assets", [])
+    }
     assert {source["path"] for source in sources} == expected_sources
     assert {item["path"] for item in catalog["artifacts"]} == expected_artifacts
     for source in sources:

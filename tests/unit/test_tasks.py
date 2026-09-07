@@ -84,8 +84,11 @@ def test_materialization_uses_validated_snapshot_and_configured_io(package, tmp_
     assert (destination / "input/spec.spice").stat().st_mode & 0o222 == 0
 
 
-def test_source_only_circuit_case_is_not_an_executable_task():
-    config = ROOT / "tasks/IHP-AnalogAcademy/cases/module_0_foundations.inverter.toml"
+def test_candidate_circuit_case_without_task_is_not_an_executable_task():
+    config = ROOT / (
+        "tasks/IHP-AnalogAcademy/cases/"
+        "module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA.toml"
+    )
     with pytest.raises(ValueError, match="does not declare an executable task"):
         load_task(config)
 

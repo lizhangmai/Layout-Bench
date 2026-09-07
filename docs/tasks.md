@@ -1,6 +1,6 @@
 # Adding Tasks and Validating the Judge
 
-See the framework fixture in [`examples/sg13g2/checked-switch`](../examples/sg13g2/checked-switch/task.toml) for the task schema. The complete upstream circuit inventory is [`tasks/IHP-AnalogAcademy/catalog.toml`](../tasks/IHP-AnalogAcademy/catalog.toml); an IHP case may be promoted only when the pinned upstream checkout already contains the reusable layout and corresponding physical evidence. Source review then freezes inputs, constraints, evaluation, tool bindings, and independent qualification. Models, budgets, repetitions, and access policy belong to the outer [run plan](running.md).
+See the framework fixture in [`examples/sg13g2/checked-switch`](../examples/sg13g2/checked-switch/task.toml) for the task schema. The selected public IHP cases are listed in [`tasks/IHP-AnalogAcademy/catalog.toml`](../tasks/IHP-AnalogAcademy/catalog.toml); a case may be promoted only when the pinned upstream checkout already contains the reusable layout and corresponding physical evidence. Source review then freezes inputs, constraints, evaluation, tool bindings, and independent qualification. Models, budgets, repetitions, and access policy belong to the outer [run plan](running.md).
 
 The catalog is an inventory index, not a shortcut around task qualification. A
 `candidate` record becomes a benchmark task only after its authoritative
