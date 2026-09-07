@@ -41,3 +41,12 @@ sha256 = "bda338b202c1d421ad1b0fd4745e97fe00ba7b9778fb6978b8fe08a2b2eb502c"
 [screening]
 decision = "include"
 reason = "Upstream provides the common-centroid schematic, CDL, GDS, and extracted netlist for the same input-pair layout block."
+
+[upstream_evaluation]
+layout = "module_1_bandgap_reference.part_3_layout.OTA_layout.input_pair.reference_gds"
+netlist = "module_1_bandgap_reference.part_3_layout.OTA_layout.input_pair.source_cdl"
+top_cell = "input_common_centroid"
+subcircuit = "input_common_centroid"
+drc_profile = "drc-upstream.json"
+lvs_profile = "lvs-analogacademy.json"
+basis = "Use original layout and source LVS netlist. Map current PDK GUI DRC scope and documented course-era LVS compare-only semantics; exact author switches were not archived. See docs/tools.md for option provenance."

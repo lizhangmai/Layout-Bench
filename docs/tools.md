@@ -89,7 +89,9 @@ Magic's `layout.extract_capacitance` takes the top cell and ordered `ports` from
 
 The artifact check uses KLayout's native reader to validate the GDSII stream, the published file-size limit, the specified top cell, non-empty geometry, and unresolved hierarchy references. DRC/LVS configuration is a JSON file in the frozen support bundle that specifies `deck`, fixed `variables`, and explanatory `scope`; DRC also declares `required_categories`. The optional DRC `additional_decks` list contains `{deck, required_categories}` entries sharing the same variables. Every deck runs in its own KLayout process and must complete and produce its required categories. The gate sums their counts and fails if any deck fails; an execution or report error takes precedence. `report.db` and `report-1.db` (and corresponding logs/completion markers) remain separate native evidence, with per-deck results in `result.json`. Required categories guard against skipping rule groups but are not a complete rule list. Exact case-local `parameters.waivers` remain available to other reviewed tasks, but the AnalogAcademy upstream reproduction path supplies none. For LVS, native cross-reference data must confirm that comparison occurred, the reference circuit is non-empty, and the requested circuit participated. The `ignore_top_ports_mismatch` variable controls whether the upstream runset and adapter add named-port checks after comparison. The reader follows KLayout's [LVS database](https://www.klayout.de/doc/code/class_LayoutVsSchematic.html) and [comparison result](https://www.klayout.de/doc/code/class_NetlistCrossReference.html) documentation. A missing report, skipped run, crash, or timeout is `error`; a completed check with unwaived violations is `failed`.
 
-### AnalogAcademy original-asset evaluation
+<a id="original-asset-evaluation"></a>
+
+### Original-asset evaluation
 
 The former `drc.json`, `lvs.json` and `lvs-comparator.json` profiles are removed. Reprepare support from `technology/sg13g2/klayout.json`; old frozen bundles are not updated in place. The profiles now make their upstream scope explicit:
 
@@ -99,15 +101,74 @@ The former `drc.json`, `lvs.json` and `lvs-comparator.json` profiles are removed
 | `lvs-upstream.json` | Current pinned PDK GUI defaults (`tech/macros/sg13g2_lvs.lym`): explicit taps, native simplification, strict named ports. |
 | `lvs-analogacademy.json` | Course-era defaults mapped to the current PDK: explicit taps, native simplification, and comparison without the additional `flag_missing_ports` check. The historical [GUI options](https://github.com/IHP-GmbH/IHP-Open-PDK/blob/eb1b540c58346cf6259285a38d09b2a04feb344a/ihp-sg13g2/libs.tech/klayout/tech/macros/lvs_options.yml) and [LVS runset](https://github.com/IHP-GmbH/IHP-Open-PDK/blob/eb1b540c58346cf6259285a38d09b2a04feb344a/ihp-sg13g2/libs.tech/klayout/tech/lvs/sg13g2.lvs) establish these defaults, not the author's actual saved options. |
 
-`tasks/IHP-AnalogAcademy/evaluate.py` checks the case's upstream commit and asset hashes, takes the original reference GDS and original source netlist, and invokes the existing evaluation API. It does not export or rewrite netlists, remove taps, tie bulk nodes, change device parameters, or supply waivers. Native runset simplification is part of upstream evaluation, not input preprocessing. The comparator task also materializes a byte-for-byte copy of its declared upstream LVS netlist; the former normalization script and record have been removed.
+`python -m benchmarking.upstream` evaluates all eight currently cataloged cases through one API, one case per invocation. Each case's `[upstream_evaluation]` declares the original layout/netlist asset IDs, separate layout and reference circuit names, profile names, and selection basis. The entry point checks the upstream commit and selected asset hashes, invokes the existing evaluation API, and archives the exact case TOML alongside the report. It does not export or rewrite netlists, remove taps, tie bulk nodes, change device parameters, or supply waivers. Native runset simplification is part of upstream evaluation, not input preprocessing. The comparator task also materializes a byte-for-byte copy of its declared upstream LVS netlist; the former normalization script and record have been removed. `tasks/IHP-AnalogAcademy/evaluate.py` remains a thin compatibility entry point. The standalone file-size limit is 64 MiB and the per-job timeout defaults to 600 seconds (`--timeout-seconds`); these do not change executable task limits.
 
 ```bash
-uv run --locked python -m benchmarking.prepare_support third_party/IHP-Open-PDK technology/sg13g2/klayout.json build/support/sg13g2-upstream-api
-uv run --locked python tasks/IHP-AnalogAcademy/evaluate.py \
+uv run --locked python -m benchmarking.prepare_support third_party/IHP-Open-PDK technology/sg13g2/klayout.json build/support/upstream-all
+uv run --locked python -m benchmarking.upstream \
   tasks/IHP-AnalogAcademy/cases/module_1_bandgap_reference.part_3_layout.OTA_layout.input_pair.toml \
-  --top-cell input_common_centroid --support build/support/sg13g2-upstream-api \
+  --support build/support/upstream-all \
   --output build/runs/upstream-input-pair
 ```
+
+Run the same command with any case listed in either `tasks/*/catalog.toml`,
+using a fresh output directory. The metadata supplies the top cell;
+`--top-cell` is an optional assertion and rejects conflicts. `--root` specifies
+the checkout root (default: current working directory).
+
+The TO_Apr2025 `lvs-to-apr2025.json` profile maps native compare-only port
+semantics independently of the course profile. The archived 40 GHz LVS
+database records `Match` with zero layout pins and nine reference pins;
+adding strict named-port checks would change that evaluation policy. Other
+switches use current pinned defaults, since the historical options are not
+archived. DRC uses current main plus extra scope; archived minimal/maximal
+report names do not establish equality with today's rule coverage.
+
+| Case | Original evaluation GDS selection / top cell | Original reference circuit |
+|---|---|---|
+| AnalogAcademy full OTA | Declared reference / `two_stage_OTA_layout` | `two_stage_OTA_layout` |
+| AnalogAcademy input pair | Declared reference / `input_common_centroid` | `input_common_centroid` |
+| AnalogAcademy output stage | Declared reference / `output_stage` | `output_stage` |
+| AnalogAcademy comparator | Hierarchical reference / `DIFF_COMPARATOR` | `DIFF_COMPARATOR` |
+| TO 160 GHz LNA | `design_data/klayout/` variant / `TOP` | `TOP` |
+| TO 40 GHz TIA | `design_data/klayout/` variant / `FDM_QNC_00_LN_TIA` | `FDM_QNC_00_LN_TIA` |
+| TO 97 GHz TIA | `design_data/klayout/` variant / `FMD_QNC_01_LIN_TIA` | `FMD_QNC_01_LIN_TIA` |
+| TO DC–130 GHz TIA design 1 | Declared reference / `FMD_QNC_03a_TIA_1` | `TOP` in `LVS_Check_Netlist.cdl` |
+
+TO cases keep the final delivery GDS in their inventory but explicitly select
+the available KLayout evaluation variant. For 160 GHz, that variant's `TOP`
+name also agrees with the archived LVS database. DC–130 GHz uses the author's
+existing `LVS_Check_Netlist.cdl`, which identifies itself as the modified Qucs-s
+netlist for KLayout LVS; `TOP.cdl` remains inventoried as a source export.
+Layout-Bench performs neither that upstream modification nor cell renaming.
+The 40/97 GHz historical reports refer to `TOP`, unlike the available GDS/CDL
+names; their exact historical input pairing therefore remains unverified.
+
+The complete eight-case run with the pinned PDK and KLayout 0.30.11 produced
+the following native results, without waivers:
+
+| Case | DRC items (main + extra) | LVS job |
+|---|---:|---|
+| full OTA | 1072 | `NoMatch` |
+| input pair | 63 | `NoMatch` |
+| output stage | 727 | `NoMatch` |
+| comparator | 7 | `Match` |
+| 160 GHz LNA | 3289 | Reader error: two-terminal poly resistor |
+| 40 GHz TIA | 1585 | Reader error: two-terminal poly resistor |
+| 97 GHz TIA | 544 | Reader error: two-terminal poly resistor |
+| DC–130 GHz TIA design 1 | 110 | Reader error: two-terminal poly resistor |
+
+All four TO source LVS netlists use two-terminal `rppd` devices. The current
+PDK's `lvs/rule_decks/custom_reader.lvs:create_resistor` unconditionally
+requires three nodes for poly resistors and raises `Poly resistor should
+have 3 nodes, please recheck` before comparison. There is no exposed switch
+for accepting the old two-terminal form. This is a toolchain/input
+compatibility blocker, not `NoMatch` or a port-policy failure. The mapping
+retains the original bytes and records the error; it does not invent a bulk
+connection, replace the reference with extraction, or patch the runset.
+Use each job's status when interpreting the report: the evaluation API may
+return overall `failed` (exit 1) for a completed DRC rejection even when LVS
+has an execution `error`.
 
 Use new support/output directories on subsequent preparations. The result is physical evidence, not qualification: exit 0 means passed, 1 rejected, 2 an evaluation error. With PDK `5e6d592e4002946a4616f798c357f0f3c06cf3b6` and KLayout 0.30.11, the original input pair reports 63 unwaived DRC items (54 main, 9 extra) and fails LVS on tap parameters; the five combined PMOS devices and five ports match. The original comparator (`module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.toml`, top cell `DIFF_COMPARATOR`) passes LVS with the same profiles and reports 7 unwaived DRC items (5 `NBL.b` in main, 2 `NW.d` in extra). Do not alter the source to force a pass. Case-local author's settings and exact historical run identity were not archived upstream, so this is a documented reconstruction on the current toolchain, not an exact historical replay.
 

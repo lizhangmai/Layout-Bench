@@ -41,3 +41,12 @@ sha256 = "59bca36faf904c26ecd297aca07bd5f787f38454404a5819f93f83633290dac4"
 [screening]
 decision = "include"
 reason = "Upstream provides the output-stage schematic, CDL, GDS, and extracted netlist for the same physical block."
+
+[upstream_evaluation]
+layout = "module_1_bandgap_reference.part_3_layout.OTA_layout.output_stage.reference_gds"
+netlist = "module_1_bandgap_reference.part_3_layout.OTA_layout.output_stage.source_cdl"
+top_cell = "output_stage"
+subcircuit = "output_stage"
+drc_profile = "drc-upstream.json"
+lvs_profile = "lvs-analogacademy.json"
+basis = "Use original layout and source LVS netlist. Map current PDK GUI DRC scope and documented course-era LVS compare-only semantics; exact author switches were not archived. See docs/tools.md for option provenance."

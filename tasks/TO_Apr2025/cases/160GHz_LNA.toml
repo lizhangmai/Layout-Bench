@@ -111,3 +111,19 @@ sha256 = "c38c38071e27297ad15a67cf2c682ecc8775e5e62050167f0a03bad5bbb46694"
 [screening]
 decision = "include"
 reason = "The pinned upstream design includes the documented Qucs schematic, GDS, LVS netlist/report, extracted netlist, minimal/maximal DRC reports, and seven OpenEMS S2P files for the 160 GHz LNA implementation."
+
+[[upstream_assets]]
+id = "TO_Apr2025.160GHz_LNA.evaluation_gds"
+path = "160GHz_LNA/design_data/klayout/FMD_QNC_04_160GHz_LNA.gds"
+role = "evaluation-layout"
+format = "gds"
+sha256 = "46a5da873d7da69721382953a2a8e7bd8798792e25c49ad463091a47f084d071"
+
+[upstream_evaluation]
+layout = "TO_Apr2025.160GHz_LNA.evaluation_gds"
+netlist = "TO_Apr2025.160GHz_LNA.lvs_netlist"
+top_cell = "TOP"
+subcircuit = "TOP"
+drc_profile = "drc-upstream.json"
+lvs_profile = "lvs-to-apr2025.json"
+basis = "Use original KLayout evaluation GDS and LVS CDL; archived minimal/maximal reports motivate current main plus extra scope. Archived LVS uses comparison without mandatory top-port agreement (40 GHz: 0 layout vs 9 reference pins, Match). Exact saved switches and historical runset identity are unavailable; current pinned defaults plus compare-only port policy are a reconstruction."

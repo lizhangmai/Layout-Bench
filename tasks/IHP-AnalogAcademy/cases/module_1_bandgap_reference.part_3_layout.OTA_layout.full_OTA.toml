@@ -55,3 +55,12 @@ sha256 = "a17ed83c167b7bffbe9f3b7bffda04cba7bd0a820f6769c2b9030a9c390d6e5e"
 [screening]
 decision = "include"
 reason = "Upstream provides the layout schematic, CDL, GDS, extracted netlist, and minimal/maximal DRC reports for the same two-stage OTA."
+
+[upstream_evaluation]
+layout = "module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA.reference_gds"
+netlist = "module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA.source_cdl"
+top_cell = "two_stage_OTA_layout"
+subcircuit = "two_stage_OTA_layout"
+drc_profile = "drc-upstream.json"
+lvs_profile = "lvs-analogacademy.json"
+basis = "Use original layout and source LVS netlist. Map current PDK GUI DRC scope and documented course-era LVS compare-only semantics; exact author switches were not archived. See docs/tools.md for option provenance."

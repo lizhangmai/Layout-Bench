@@ -104,3 +104,19 @@ sha256 = "5209c44119df97bd722584142a0b2feef2a5b0001c2e50661a461ccc6d34bb35"
 [screening]
 decision = "include"
 reason = "The pinned upstream design includes a Qucs schematic, GDS, LVS netlist/report, extracted netlist, minimal/maximal DRC reports, and the RF S2P evidence used by the documented 40 GHz TIA implementation."
+
+[[upstream_assets]]
+id = "TO_Apr2025.40_GHZ_LOW_NOISE_TIA.evaluation_gds"
+path = "40_GHZ_LOW_NOISE_TIA/design_data/klayout/40_GHz_Low_Noise_TIA.gds"
+role = "evaluation-layout"
+format = "gds"
+sha256 = "1fbe9db0bd1bd6ccc6e01f0eb8bf8001bc07cd1cbcd7d739094e48ec9db2b9ad"
+
+[upstream_evaluation]
+layout = "TO_Apr2025.40_GHZ_LOW_NOISE_TIA.evaluation_gds"
+netlist = "TO_Apr2025.40_GHZ_LOW_NOISE_TIA.lvs_netlist"
+top_cell = "FDM_QNC_00_LN_TIA"
+subcircuit = "FDM_QNC_00_LN_TIA"
+drc_profile = "drc-upstream.json"
+lvs_profile = "lvs-to-apr2025.json"
+basis = "Use original KLayout evaluation GDS and LVS CDL; archived minimal/maximal reports motivate current main plus extra scope. Archived LVS uses comparison without mandatory top-port agreement (40 GHz: 0 layout vs 9 reference pins, Match). Exact saved switches and historical runset identity are unavailable; current pinned defaults plus compare-only port policy are a reconstruction."

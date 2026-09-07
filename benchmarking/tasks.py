@@ -100,7 +100,7 @@ class Task:
 def _validate_case(data: dict) -> None:
     """Validate the inventory half of a unified circuit case."""
     _keys(data, {"schema_version", "kind", "id", "title", "status", "origin", "sources"},
-          {"role", "task", "source_export", "assets", "upstream_assets", "qualification", "screening"}, "case")
+          {"role", "task", "source_export", "assets", "upstream_assets", "upstream_evaluation", "qualification", "screening"}, "case")
     if type(data["schema_version"]) is not int or data["schema_version"] != 2:
         raise ValueError("Unsupported case schema_version")
     if data["kind"] != "layout_case":
@@ -162,6 +162,20 @@ def _validate_case(data: dict) -> None:
         _text(asset["format"], "case.upstream_assets.format")
         if not isinstance(asset["sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", asset["sha256"]):
             raise ValueError("case.upstream_assets.sha256 must be a lowercase SHA-256")
+    mapping = data.get("upstream_evaluation")
+    if mapping is not None:
+        _keys(mapping, {"layout", "netlist", "top_cell", "subcircuit", "drc_profile", "lvs_profile", "basis"},
+              set(), "case.upstream_evaluation")
+        for field, value in mapping.items():
+            _text(value, f"case.upstream_evaluation.{field}")
+        by_id = {asset["id"]: asset for asset in upstream_assets}
+        for field, roles, formats in (("layout", {"reference", "evaluation-layout", "reference-variant"}, {"gds"}),
+                                      ("netlist", {"source-netlist", "lvs-netlist"}, {"spice", "cdl"})):
+            asset = by_id.get(mapping[field])
+            if asset is None or asset["role"] not in roles or asset["format"] not in formats:
+                raise ValueError(f"Upstream evaluation {field} must select a declared original asset of the correct role and format")
+        for field in ("drc_profile", "lvs_profile"):
+            _relative(mapping[field], f"case.upstream_evaluation.{field}")
     qualification = data.get("qualification")
     if qualification is not None:
         _keys(qualification, {"evidence", "reference"}, set(), "case.qualification")

@@ -503,6 +503,10 @@
     "lvs-analogacademy.json": {
       "content": "{\n  \"deck\": \"ihp-sg13g2/libs.tech/klayout/tech/lvs/sg13g2.lvs\",\n  \"variables\": {\n    \"run_mode\": \"flat\",\n    \"no_net_names\": \"false\",\n    \"spice_comments\": \"false\",\n    \"net_only\": \"false\",\n    \"no_simplify\": \"false\",\n    \"no_series_res\": \"false\",\n    \"no_parallel_res\": \"false\",\n    \"combine_devices\": \"false\",\n    \"top_lvl_pins\": \"false\",\n    \"purge\": \"false\",\n    \"purge_nets\": \"false\",\n    \"disable_tap_extraction\": \"false\",\n    \"ignore_top_ports_mismatch\": \"true\"\n  },\n  \"scope\": \"AnalogAcademy documented course-era default semantics mapped to the current pinned runset: original netlist, explicit taps, native simplification, compare without additional flag_missing_ports. Author run-specific options were not archived; this is a reconstruction, not an exact historical replay.\",\n  \"layer_names\": {\n    \"metal1\": \"metal1_con\"\n  }\n}\n",
       "format": "json"
+    },
+    "lvs-to-apr2025.json": {
+      "content": "{\n  \"deck\": \"ihp-sg13g2/libs.tech/klayout/tech/lvs/sg13g2.lvs\",\n  \"variables\": {\n    \"run_mode\": \"flat\",\n    \"no_net_names\": \"false\",\n    \"spice_comments\": \"false\",\n    \"net_only\": \"false\",\n    \"no_simplify\": \"false\",\n    \"no_series_res\": \"false\",\n    \"no_parallel_res\": \"false\",\n    \"combine_devices\": \"false\",\n    \"top_lvl_pins\": \"false\",\n    \"purge\": \"false\",\n    \"purge_nets\": \"false\",\n    \"disable_tap_extraction\": \"false\",\n    \"ignore_top_ports_mismatch\": \"true\"\n  },\n  \"scope\": \"TO_Apr2025 archived LVS comparison semantics mapped to current pinned runset: original author LVS netlist, explicit taps, native simplification, compare without additional flag_missing_ports. Archived 40 GHz report matches 0 layout pins against 9 reference pins. Exact author options and historical run identity are unavailable.\",\n  \"layer_names\": {\n    \"metal1\": \"metal1_con\"\n  }\n}\n",
+      "format": "json"
     }
   }
 }

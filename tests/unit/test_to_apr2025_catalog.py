@@ -24,7 +24,7 @@ def test_catalog_has_one_unified_config_per_case():
     assert catalog["schema_version"] == 3
     assert catalog["source_count"] == 4
     assert catalog["case_count"] == len(catalog["cases"]) == 4
-    assert catalog["artifact_count"] == len(catalog["artifacts"]) == 49
+    assert catalog["artifact_count"] == len(catalog["artifacts"]) == 53
 
     config_paths = [item["config_path"] for item in catalog["cases"]]
     assert len(config_paths) == len(set(config_paths))

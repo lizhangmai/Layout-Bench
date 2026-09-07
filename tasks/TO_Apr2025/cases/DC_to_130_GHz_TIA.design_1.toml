@@ -27,7 +27,7 @@ sha256 = "52f36b8c278855e72a7a2dee70c8e2632661d88de5c0d56369ba95af2465d1e0"
 [[upstream_assets]]
 id = "TO_Apr2025.DC_to_130_GHz_TIA.design_1.lvs_netlist"
 path = "DC_to_130_GHz_TIA/design_1/design_data/lvs/TOP.cdl"
-role = "lvs-netlist"
+role = "source-netlist"
 format = "cdl"
 sha256 = "2ebd5d6cd2b3dcc9f12019298f06234bc567c2072ac7d7190f327795d3841b17"
 
@@ -90,3 +90,19 @@ sha256 = "355d9bdca18f28dfdbaa062f4ba3643ce92b1e4b2eed58bdac8a34af77d81017"
 [screening]
 decision = "include"
 reason = "The pinned design_1 implementation includes a Qucs schematic, GDS, LVS netlist/report, extracted netlist, minimal/maximal DRC reports, and four documented OpenEMS S2P files for the 130 GHz SiGe HBT TIA."
+
+[[upstream_assets]]
+id = "TO_Apr2025.DC_to_130_GHz_TIA.design_1.lvs_check_netlist"
+path = "DC_to_130_GHz_TIA/design_1/design_data/lvs/LVS_Check_Netlist.cdl"
+role = "lvs-netlist"
+format = "cdl"
+sha256 = "b38914fc45d33df5ad9bfa1aab0152d2c123d1aa1f13529ea63cc8acaf0ee6b2"
+
+[upstream_evaluation]
+layout = "TO_Apr2025.DC_to_130_GHz_TIA.design_1.reference_gds"
+netlist = "TO_Apr2025.DC_to_130_GHz_TIA.design_1.lvs_check_netlist"
+top_cell = "FMD_QNC_03a_TIA_1"
+subcircuit = "TOP"
+drc_profile = "drc-upstream.json"
+lvs_profile = "lvs-to-apr2025.json"
+basis = "Use original KLayout evaluation GDS and LVS CDL; archived minimal/maximal reports motivate current main plus extra scope. Archived LVS uses comparison without mandatory top-port agreement (40 GHz: 0 layout vs 9 reference pins, Match). Exact saved switches and historical runset identity are unavailable; current pinned defaults plus compare-only port policy are a reconstruction. LVS_Check_Netlist.cdl explicitly identifies itself as the author-modified Qucs-s netlist for KLayout LVS; TOP.cdl is the unadapted Qucs export. Use the existing LVS file unchanged."

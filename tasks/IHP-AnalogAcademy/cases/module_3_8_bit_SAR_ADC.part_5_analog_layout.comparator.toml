@@ -179,3 +179,12 @@ path = "output/final.gds"
 format = "gds"
 top_cell = "DIFF_COMPARATOR"
 max_bytes = 10485760
+
+[upstream_evaluation]
+layout = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.reference_gds"
+netlist = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.lvs_netlist"
+top_cell = "DIFF_COMPARATOR"
+subcircuit = "DIFF_COMPARATOR"
+drc_profile = "drc-upstream.json"
+lvs_profile = "lvs-analogacademy.json"
+basis = "Use original layout and source LVS netlist. Map current PDK GUI DRC scope and documented course-era LVS compare-only semantics; exact author switches were not archived. See docs/tools.md for option provenance."

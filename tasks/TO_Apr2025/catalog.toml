@@ -4,7 +4,7 @@ source_commit = "63e203a0eccfb6028a1a0a8364553e4e979b55b3"
 source_license = "Apache-2.0 upstream root; file-level notices apply"
 source_count = 4
 case_count = 4
-artifact_count = 49
+artifact_count = 53
 
 [[cases]]
 id = "TO_Apr2025.160GHz_LNA"
@@ -266,3 +266,23 @@ sha256 = "8d737d40b1b7e911e823f877994a63793b9a5948dbce868657b0851866e8030b"
 path = "DC_to_130_GHz_TIA/design_1/design_data/openEMS/s2p files/RF_OUT.s2p"
 kind = "rf-model"
 sha256 = "355d9bdca18f28dfdbaa062f4ba3643ce92b1e4b2eed58bdac8a34af77d81017"
+
+[[artifacts]]
+path = "160GHz_LNA/design_data/klayout/FMD_QNC_04_160GHz_LNA.gds"
+kind = "layout"
+sha256 = "46a5da873d7da69721382953a2a8e7bd8798792e25c49ad463091a47f084d071"
+
+[[artifacts]]
+path = "40_GHZ_LOW_NOISE_TIA/design_data/klayout/40_GHz_Low_Noise_TIA.gds"
+kind = "layout"
+sha256 = "1fbe9db0bd1bd6ccc6e01f0eb8bf8001bc07cd1cbcd7d739094e48ec9db2b9ad"
+
+[[artifacts]]
+path = "97_GHZ_LINEAR_TIA/design_data/klayout/FMD_QNC_01_97_GHZ_LINEAR_TIA.gds"
+kind = "layout"
+sha256 = "f24f7825410b86229e91299864efc13636f70be68151a89514f8e6a0fb229e26"
+
+[[artifacts]]
+path = "DC_to_130_GHz_TIA/design_1/design_data/lvs/LVS_Check_Netlist.cdl"
+kind = "netlist"
+sha256 = "b38914fc45d33df5ad9bfa1aab0152d2c123d1aa1f13529ea63cc8acaf0ee6b2"

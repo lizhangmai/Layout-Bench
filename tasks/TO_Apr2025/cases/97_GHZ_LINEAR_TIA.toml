@@ -118,3 +118,19 @@ sha256 = "5d80418943c303511c6689949b3b96a97748c855befebc8f626a9ddb2c9daad9"
 [screening]
 decision = "include"
 reason = "The pinned upstream design includes the documented Qucs schematic, GDS, LVS netlist/report, extracted netlist, minimal/maximal DRC reports, and eight OpenEMS S2P files for the 97 GHz linear TIA implementation."
+
+[[upstream_assets]]
+id = "TO_Apr2025.97_GHZ_LINEAR_TIA.evaluation_gds"
+path = "97_GHZ_LINEAR_TIA/design_data/klayout/FMD_QNC_01_97_GHZ_LINEAR_TIA.gds"
+role = "evaluation-layout"
+format = "gds"
+sha256 = "f24f7825410b86229e91299864efc13636f70be68151a89514f8e6a0fb229e26"
+
+[upstream_evaluation]
+layout = "TO_Apr2025.97_GHZ_LINEAR_TIA.evaluation_gds"
+netlist = "TO_Apr2025.97_GHZ_LINEAR_TIA.lvs_netlist"
+top_cell = "FMD_QNC_01_LIN_TIA"
+subcircuit = "FMD_QNC_01_LIN_TIA"
+drc_profile = "drc-upstream.json"
+lvs_profile = "lvs-to-apr2025.json"
+basis = "Use original KLayout evaluation GDS and LVS CDL; archived minimal/maximal reports motivate current main plus extra scope. Archived LVS uses comparison without mandatory top-port agreement (40 GHz: 0 layout vs 9 reference pins, Match). Exact saved switches and historical runset identity are unavailable; current pinned defaults plus compare-only port policy are a reconstruction."
