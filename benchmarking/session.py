@@ -10,11 +10,13 @@ import time
 from pathlib import Path
 
 from .files import Asset, relative
+from .harnesses import PROCESS_FEEDBACK_CAPABILITY
 from .inference import INFERENCE_SOCKET, LEGACY_INFERENCE_SOCKET
 from .recorder import RecordingError
 from .recording import SessionResult
 
 MAX_CONSOLE_BYTES = 64 * 1024 * 1024
+MAX_PROCESS_FEEDBACK = 16
 PDK_RESOURCE_KIND = "reviewed-pdk-view"
 PDK_RESOURCE_FILES = (
     "ihp-sg13g2/libs.tech/klayout/python/sg13g2_pycell_lib/__init__.py",
@@ -100,18 +102,24 @@ def _agent_environment(config, resources):
 
 
 def task_message(task, config):
-    return ("Generate a GDS layout implementing the authoritative netlist and all task requirements.\n"
-            "Read /protocol/task.json for input paths, top cell, output path and limits.\n"
-            "Read /protocol/harness.json for the session protocol and declared capabilities.\n"
-            "Read /protocol/resources.json for reviewed resource paths and the optional import preflight.\n"
-            "Task inputs are read-only in /task; reviewed resources are in /resources.\n"
-            "The writable /workspace starts empty. Available tools come from the recorded image.\n"
-            f"Wall-clock budget: {config.wall_seconds:g} seconds, including your tool calls.\n"
-            f"Write {task.description()['output']['path']}, then explicitly submit with:\n"
-            "python -I /protocol/submit.py\n"
-            "Wait for the host receipt. You may replace the submission before the deadline.\n"
-            "Only the last accepted snapshot is evaluated; writing a file alone is not submission.\n"
-            "The receipt confirms file delivery, not DRC/LVS or performance success.\n")
+    message = ("Generate a GDS layout implementing the authoritative netlist and all task requirements.\n"
+               "Read /protocol/task.json for input paths, top cell, output path and limits.\n"
+               "Read /protocol/harness.json for the session protocol and declared capabilities.\n"
+               "Read /protocol/resources.json for reviewed resource paths and the optional import preflight.\n"
+               "Task inputs are read-only in /task; reviewed resources are in /resources.\n"
+               "The writable /workspace starts empty. Available tools come from the recorded image.\n"
+               f"Wall-clock budget: {config.wall_seconds:g} seconds, including your tool calls.\n"
+               f"Write {task.description()['output']['path']}, then explicitly submit with:\n"
+               "python -I /protocol/submit.py\n"
+               "Wait for the host receipt. You may replace the submission before the deadline.\n"
+               "Only the last accepted snapshot is evaluated; writing a file alone is not submission.\n"
+               "The receipt confirms file delivery, not DRC/LVS or performance success.\n")
+    if PROCESS_FEEDBACK_CAPABILITY in config.harness.capabilities:
+        message += ("This harness declares optional same-semantic process feedback. For a read-only\n"
+                     "check of the current output snapshot, run:\n"
+                     "python -I /protocol/process_check.py\n"
+                     "Feedback is diagnostic and never replaces the final independent evaluation.\n")
+    return message
 
 
 class DockerSession:
@@ -124,7 +132,7 @@ class DockerSession:
             raise ValueError("Session images must not declare writable volumes outside the bounded workspace")
         self.image_id = inspected["Id"]
 
-    def run(self, task, config, resources, message, *, inference=None, recorder=None):
+    def run(self, task, config, resources, message, *, inference=None, recorder=None, feedback=None):
         if inference and recorder:
             inference.recorder = recorder
         console = bytearray()
@@ -137,7 +145,7 @@ class DockerSession:
             if recorder:
                 recorder.event(kind, **data)
         truncated = False
-        submissions, candidate = [], None
+        submissions, candidate, process_feedback = [], None, []
         termination, reason, code = "infrastructure_error", "", None
         started = None
         elapsed = 0.0
@@ -179,13 +187,19 @@ class DockerSession:
             root = Path(temporary)
             root.chmod(0o700)
             task.materialize(root / "task")
-            groups = {"agent": config.files, "resources": resources, "protocol": {
+            protocol_files = {
                 "task.json": Asset(json.dumps(task.description()).encode(), "json"),
                 "prompt.txt": Asset(message.encode(), "text"),
                 "harness.json": Asset(json.dumps(config.harness.identity(), sort_keys=True).encode(), "json"),
                 "resources.json": Asset(json.dumps(resource_info, sort_keys=True).encode(), "json"),
                 **{name: Asset(Path(__file__).with_name(name).read_bytes(), "python")
-                   for name in ("snapshot.py", "submit.py")}}}
+                   for name in ("snapshot.py", "submit.py")}}
+            feedback_enabled = (feedback is not None
+                                and PROCESS_FEEDBACK_CAPABILITY in config.harness.capabilities)
+            if feedback_enabled:
+                protocol_files["process_check.py"] = Asset(
+                    Path(__file__).with_name("process_check.py").read_bytes(), "python")
+            groups = {"agent": config.files, "resources": resources, "protocol": protocol_files}
             if inference:
                 profile = Asset(json.dumps(inference.public, sort_keys=True).encode(), "json")
                 groups["protocol"]["inference.json"] = profile
@@ -237,6 +251,82 @@ class DockerSession:
                                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 reader = threading.Thread(target=drain, args=(process.stdout,), daemon=True)
                 reader.start()
+
+                def snapshot_candidate(remaining):
+                    if remaining <= 0:
+                        raise ValueError("Snapshot deadline has passed")
+                    copied = subprocess.run(
+                        ["docker", "exec", *reader_env,
+                         "--env", "LD_PRELOAD=", "--env", "LD_LIBRARY_PATH=", "--env", "LD_AUDIT=",
+                         cid, "/usr/bin/python3", "-I", "/protocol/snapshot.py",
+                         task.output.path, str(task.output.max_bytes)], capture_output=True,
+                        timeout=remaining, check=False)
+                    if copied.returncode:
+                        raise ValueError(copied.stderr.decode(errors="replace")[:1024])
+                    if len(copied.stdout) > task.output.max_bytes:
+                        raise ValueError("Snapshot exceeds the task size limit")
+                    return Asset(copied.stdout, "gds")
+
+                feedback_sequence = 0
+
+                def process_check():
+                    nonlocal feedback_sequence
+                    feedback_sequence += 1
+                    sequence = feedback_sequence
+                    requested_at = time.monotonic()
+                    record("process_feedback.request", sequence=sequence,
+                           request={"action": "process_check"})
+                    entry = {
+                        "sequence": sequence, "accepted": False, "candidate": None,
+                        "tool_identity": None, "elapsed_seconds": 0.0,
+                        "outcome": "denied", "physical_valid": None, "specs_pass": None,
+                        "task_success": None, "report": None, "report_path": None,
+                        "error": None,
+                    }
+                    try:
+                        if sequence > MAX_PROCESS_FEEDBACK:
+                            entry["error"] = "feedback_budget_exhausted"
+                            return {"accepted": False, "sequence": sequence,
+                                    "feedback": entry}
+                        remaining = deadline - requested_at
+                        if remaining <= 0:
+                            entry["error"] = "budget_exhausted"
+                            return {"accepted": False, "sequence": sequence,
+                                    "feedback": entry}
+                        frozen = snapshot_candidate(remaining)
+                        entry["candidate"] = (recorder.archive(frozen) if recorder
+                                               else frozen.identity())
+                        result = feedback(frozen, sequence)
+                        if not isinstance(result, dict) or not isinstance(result.get("report"), dict):
+                            raise TypeError("Process feedback callback must return a report")
+                        evaluated = result["report"]
+                        entry.update(
+                            accepted=True,
+                            outcome=evaluated.get("outcome", "error"),
+                            physical_valid=evaluated.get("physical_valid"),
+                            specs_pass=evaluated.get("specs_pass"),
+                            task_success=evaluated.get("task_success"),
+                            tool_identity=evaluated.get("backends"),
+                            report=result.get("report_ref"),
+                            report_path=result.get("report_path"),
+                        )
+                        if entry["report"] is not None and not isinstance(entry["report"], dict):
+                            raise ValueError("Process feedback report reference is invalid")
+                        if entry["report_path"] is not None:
+                            entry["report_path"] = relative(entry["report_path"],
+                                                             "process feedback report path")
+                    except RecordingError:
+                        raise
+                    except (OSError, ValueError, subprocess.SubprocessError, TypeError) as error:
+                        entry.update(accepted=True, outcome="error",
+                                     error=f"{type(error).__name__}: {error}"[:1024])
+                    finally:
+                        entry["elapsed_seconds"] = time.monotonic() - requested_at
+                        process_feedback.append(entry)
+                        record("process_feedback.result", **entry)
+                    return {"accepted": entry["accepted"], "sequence": sequence,
+                            "feedback": entry}
+
                 while process.poll() is None:
                     if recording_failed.is_set() or (recorder and recorder.error):
                         raise RecordingError("Session evidence is incomplete")
@@ -254,38 +344,35 @@ class DockerSession:
                         receipt = {"accepted": False, "reason": "Invalid submission request"}
                         try:
                             request = connection.makefile("rb").readline(1025)
-                            if len(request) > 1024 or json.loads(request) != {"action": "submit"}:
-                                raise ValueError("Expected a submit action")
-                            remaining = deadline - time.monotonic()
-                            if remaining <= 0:
-                                raise ValueError("Submission deadline has passed")
-                            copied = subprocess.run(
-                                ["docker", "exec", *reader_env,
-                                 "--env", "LD_PRELOAD=", "--env", "LD_LIBRARY_PATH=", "--env", "LD_AUDIT=",
-                                 cid, "/usr/bin/python3", "-I", "/protocol/snapshot.py",
-                                 task.output.path, str(task.output.max_bytes)], capture_output=True,
-                                timeout=remaining, check=False)
-                            if copied.returncode:
-                                raise ValueError(copied.stderr.decode(errors="replace")[:1024])
-                            if len(copied.stdout) > task.output.max_bytes:
-                                raise ValueError("Submission exceeds the task size limit")
-                            frozen = Asset(copied.stdout, "gds")
-                            archived = recorder.archive(frozen) if recorder else None
-                            accepted_at = time.monotonic()
-                            if accepted_at >= deadline:
-                                raise ValueError("Submission snapshot missed the deadline")
-                            receipt = {"accepted": True, "sequence": len(submissions) + 1,
-                                       "elapsed_seconds": accepted_at - started, **frozen.identity()}
-                            # The durable event commits acceptance before the client can see it.
-                            record("submission", receipt=receipt, candidate=archived)
-                            candidate = frozen
+                            if len(request) > 1024:
+                                raise ValueError("Control request is too large")
+                            action = json.loads(request)
+                            if action == {"action": "submit"}:
+                                remaining = deadline - time.monotonic()
+                                frozen = snapshot_candidate(remaining)
+                                accepted_at = time.monotonic()
+                                if accepted_at >= deadline:
+                                    raise ValueError("Submission snapshot missed the deadline")
+                                archived = recorder.archive(frozen) if recorder else None
+                                receipt = {"accepted": True, "sequence": len(submissions) + 1,
+                                           "elapsed_seconds": accepted_at - started, **frozen.identity()}
+                                # The durable event commits acceptance before the client can see it.
+                                record("submission", receipt=receipt, candidate=archived)
+                                candidate = frozen
+                                submissions.append(receipt)
+                            elif action == {"action": "process_check"} and feedback_enabled:
+                                receipt = process_check()
+                            elif action == {"action": "process_check"}:
+                                raise ValueError("Process feedback capability is not declared")
+                            else:
+                                raise ValueError("Expected a submit or process_check action")
                         except RecordingError:
                             raise
                         except (OSError, ValueError, subprocess.SubprocessError) as error:
                             receipt = {"accepted": False, "reason": str(error)[:1024],
                                        "elapsed_seconds": time.monotonic() - started}
                             record("submission", receipt=receipt, candidate=None)
-                        submissions.append(receipt)
+                            submissions.append(receipt)
                         try:
                             connection.sendall(json.dumps(receipt).encode() + b"\n")
                         except OSError:
@@ -332,4 +419,5 @@ class DockerSession:
                exit_code=code, console_bytes=console_bytes,
                console_complete=not recording_failed.is_set())
         return SessionResult(termination, reason, elapsed, code, submissions, candidate,
-                             Asset(bytes(console), "text"), truncated, identity)
+                             Asset(bytes(console), "text"), truncated, identity,
+                             process_feedback)

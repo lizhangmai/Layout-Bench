@@ -13,6 +13,7 @@ from statistics import NormalDist
 from .admission import restore_policy
 from .evaluation import parse_evaluation
 from .files import Asset, read_file
+from .harnesses import PROCESS_FEEDBACK_CAPABILITY
 from .recorder import recover_submissions
 
 
@@ -120,6 +121,72 @@ def _verify_evaluation_inputs(root, run_root, evaluation, report, task):
     for reference, archive in actual.items():
         _read_archived_asset(run_root, archive, f"evaluation input {reference}")
     return evaluated_plan
+
+
+def _verify_process_feedback(root, run_root, report, manifest, task):
+    """Verify optional process checks without making them the final score."""
+    capabilities = report.get("harness", {}).get("capabilities", [])
+    feedback = report.get("process_feedback")
+    if PROCESS_FEEDBACK_CAPABILITY not in capabilities:
+        if feedback is not None:
+            raise ValueError("Process feedback is not declared by the harness")
+        return
+    if (not isinstance(feedback, dict)
+            or feedback.get("capability") != PROCESS_FEEDBACK_CAPABILITY
+            or not isinstance(feedback.get("checks"), list)):
+        raise ValueError("Process feedback evidence is malformed")
+    expected_backends = {op: task["backends"][op] for op in task["operations"]}
+    for sequence, check in enumerate(feedback["checks"], 1):
+        if (not isinstance(check, dict) or check.get("sequence") != sequence
+                or type(check.get("accepted")) is not bool
+                or type(check.get("elapsed_seconds")) not in {int, float}
+                or check["elapsed_seconds"] < 0):
+            raise ValueError("Process feedback sequence is invalid")
+        candidate = check.get("candidate")
+        if candidate is not None:
+            if not isinstance(candidate, dict) or candidate.get("format") != "gds":
+                raise ValueError("Process feedback candidate has the wrong format")
+            _read_archived_asset(run_root, candidate, "process feedback candidate")
+        reference = check.get("report")
+        if reference is None:
+            if check.get("report_path") is not None:
+                raise ValueError("Process feedback report path has no report artifact")
+            continue
+        raw = _read_archived_asset(run_root, reference, "process feedback report")
+        try:
+            evaluated = json.loads(raw)
+        except (TypeError, ValueError) as error:
+            raise ValueError("Process feedback report is not JSON") from error
+        if not isinstance(evaluated, dict):
+            raise TypeError("Process feedback report is not an object")
+        path = check.get("report_path")
+        if not isinstance(path, str) or not path.endswith("/report.json"):
+            raise ValueError("Process feedback report path is invalid")
+        local = read_file(run_root, path)
+        if local != raw:
+            raise ValueError("Process feedback report copy differs from its archive")
+        if (evaluated.get("task_sha256") != task["task_sha256"]
+                or evaluated.get("backends") != expected_backends):
+            raise ValueError("Process feedback report does not match its task or toolchain")
+        for name, digest in evaluated.get("engine_sha256", {}).items():
+            expected = manifest["framework"]["files"].get("benchmarking/" + name)
+            if expected is None or digest != expected["sha256"]:
+                raise ValueError("Process feedback evaluator differs from frozen framework")
+        inputs = evaluated.get("inputs", {})
+        evaluated_candidate = inputs.get("candidate") if isinstance(inputs, dict) else None
+        if candidate is None or not isinstance(evaluated_candidate, dict):
+            raise ValueError("Process feedback report has no frozen candidate")
+        identity = {key: candidate[key] for key in ("sha256", "format", "bytes")}
+        actual_identity = {key: evaluated_candidate.get(key)
+                           for key in ("sha256", "format", "bytes")}
+        if actual_identity != identity:
+            raise ValueError("Process feedback evaluated a different candidate")
+        if (check.get("outcome") != evaluated.get("outcome")
+                or check.get("physical_valid") != evaluated.get("physical_valid")
+                or check.get("specs_pass") != evaluated.get("specs_pass")
+                or check.get("task_success") != evaluated.get("task_success")
+                or check.get("tool_identity") != evaluated.get("backends")):
+            raise ValueError("Process feedback summary differs from its report")
 
 
 def _failure_modes(report, evaluation):
@@ -247,6 +314,7 @@ def verify_run(root, entry, manifest, execution_sha):
         if (evaluation.get("task_sha256") != task["task_sha256"] or evaluation["backends"] != expected_backends):
             raise ValueError("Evaluation does not match its task, candidate or toolchain")
         _verify_evaluation_inputs(root, run_root, evaluation, report, task)
+    _verify_process_feedback(root, run_root, report, manifest, task)
     return report, evaluation
 
 

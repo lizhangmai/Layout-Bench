@@ -17,6 +17,7 @@ SESSION_PROTOCOL = "layout-session.v1"
 DEFAULT_HARNESS_ID = "external-cli"
 DEFAULT_HARNESS_VERSION = "1"
 HARNESS_MODES = frozenset({"opaque", "managed", "native"})
+PROCESS_FEEDBACK_CAPABILITY = "process-feedback.v1"
 
 
 @dataclass(frozen=True)

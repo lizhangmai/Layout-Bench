@@ -1,6 +1,6 @@
 """Session result, separating why execution stopped from the frozen submission."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from .files import Asset
 
@@ -16,3 +16,4 @@ class SessionResult:
     console: Asset
     console_truncated: bool
     environment: dict
+    process_feedback: list[dict] = field(default_factory=list)

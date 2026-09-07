@@ -58,6 +58,7 @@ The external seam is the same for every harness:
 task inputs + /protocol/harness.json
               ↓
         executable harness
+              ├─ python -I /protocol/process_check.py (optional)
               ↓  python -I /protocol/submit.py
        frozen candidate snapshot
               ↓
@@ -71,6 +72,16 @@ conversation. `managed` and `native` are explicit measurement conditions and
 must be kept separate in reports when context ownership changes. The harness
 runtime remains outside the benchmark core and is not part of task or judge
 semantics.
+
+The optional `process-feedback.v1` capability adds a read-only
+`python -I /protocol/process_check.py` request. The host snapshots the current
+output, evaluates that immutable snapshot with the same evaluation plan and
+backend identities used by the final judge, and returns a diagnostic summary.
+Each request and result records the candidate digest, tool identity, elapsed
+time, report artifact, and any error in the durable event journal. Feedback
+never becomes a submission and never changes the independent final evaluation;
+`run.json.process_feedback` is reported separately. A harness without the
+capability does not receive the helper or feedback instructions.
 
 The public examples include a provider-neutral `managed` reference harness.
 Its fixed loop owns the prompt, conversation history, bounded `run_command`

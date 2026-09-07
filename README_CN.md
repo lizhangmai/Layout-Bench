@@ -114,7 +114,7 @@ uv run --locked python main.py run tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_AD
 uv run --locked python main.py inference-check build/runs/inference.toml --agent path/to/agent.toml
 ```
 
-当 harness 实际转发请求时，该命令会调用你配置的模型；快速开始本身不会调用模型。仅配置 profile 但没有转发请求时，报告会明确标记为离线运行。凭据保留在主机上。gateway 通过 provider-neutral adapter registry 选择配置中声明的 wire family；可选的 Responses adapter 只是其中一种，harness 自己负责所需桥接。当前尚未实现同语义的会话内裁判反馈。
+当 harness 实际转发请求时，该命令会调用你配置的模型；快速开始本身不会调用模型。仅配置 profile 但没有转发请求时，报告会明确标记为离线运行。凭据保留在主机上。gateway 通过 provider-neutral adapter registry 选择配置中声明的 wire family；可选的 Responses adapter 只是其中一种，harness 自己负责所需桥接。harness 可以声明 `process-feedback.v1` 来请求同语义的会话内检查；每次检查使用冻结候选快照，并在报告中与最终独立成绩分开。
 
 ## 工作原理
 

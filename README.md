@@ -115,7 +115,7 @@ Before spending a request, validate the profile, optional harness wire declarati
 uv run --locked python main.py inference-check build/runs/inference.toml --agent path/to/agent.toml
 ```
 
-Once the harness forwards a request, this command calls your configured model; quick start itself never does. A configured profile with no forwarded requests is explicitly labeled offline in the report. Credentials stay on the host. The gateway selects the declared wire family through a provider-neutral adapter registry; the optional Responses adapter is one choice, while the harness owns any bridge needed by its model client. Same-semantic in-session judge feedback is not implemented yet.
+Once the harness forwards a request, this command calls your configured model; quick start itself never does. A configured profile with no forwarded requests is explicitly labeled offline in the report. Credentials stay on the host. The gateway selects the declared wire family through a provider-neutral adapter registry; the optional Responses adapter is one choice, while the harness owns any bridge needed by its model client. A harness may opt into same-semantic in-session checks by declaring `process-feedback.v1`; each check uses a frozen candidate snapshot and is reported separately from the final independent score.
 
 ## How It Works
 

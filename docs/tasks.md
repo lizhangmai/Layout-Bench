@@ -128,7 +128,7 @@ Before formal use, the evaluator and every task must pass the checks below. Repe
 - **Extraction and simulation**: Use a small circuit with analytically expected results to validate measurements and error paths, then check the real task's device models, parasitic extraction, and pre/post-layout results. Schema tests and substitutes cannot replace this step.
 - **Equivalent transformations**: Translation, legal hierarchy changes, and allowed instance renaming leave the relevant decisions unchanged. Test rotations only when the task permits them.
 - **Repeated evaluation**: Re-run the same frozen GDS in independent environments and obtain identical hard decisions; document tolerances for floating-point and quality metrics and any tool nondeterminism.
-- **Feedback consistency**: When public process checks are connected, verify that they agree with final checks on the same candidate. A unified entry point is not implemented yet.
+- **Feedback consistency**: When a harness declares `process-feedback.v1`, verify that each immutable process-check snapshot uses the same task plan and backend identities as the final judge and that its report is kept separate from the final score. A harness without the capability has no process-check path.
 
 These tests validate the judge implementation and task measurability; they do not prove that a deck covers every manufacturing requirement. Defer formal tasks that include a requirement backed by an unreliable check.
 

@@ -14,6 +14,7 @@ import pytest
 from benchmarking.agent import run_agent
 from benchmarking.environment import prepare_pdk_bundle
 from benchmarking.files import Asset
+from benchmarking.harnesses import PROCESS_FEEDBACK_CAPABILITY, HarnessSpec
 from benchmarking.model_config import RunConfig
 from benchmarking.prepare_support import prepare_support
 from benchmarking.recorder import RecordingError, RunRecorder, recover_submissions
@@ -62,6 +63,7 @@ assert 'LB_HOST_SECRET' not in os.environ
 assert sorted(p.name for p in Path('/workspace').iterdir()) == ['output']
 assert os.getuid() != 0
 assert Path("/protocol/control.sock").stat().st_mode & 0o777 == 0o600
+assert not Path('/protocol/process_check.py').exists()
 for path in ['/task/new', '/protocol/new', '/agent/new', '/etc/new']:
     try:
         Path(path).write_text('forbidden')
@@ -134,6 +136,44 @@ output.write_bytes(b'last'); assert submit()['accepted']; assert submit()['accep
     assert result.termination == "completed", result.console.content
     assert result.candidate.content == b"last"
     assert [receipt["sequence"] for receipt in result.submissions] == [1, 2, 3, 4]
+
+
+@pytest.mark.acceptance
+@pytest.mark.acceptance_container
+def test_process_feedback_is_opt_in_and_uses_a_frozen_snapshot(tmp_path):
+    task = load_task(TASK)
+    config = replace(configuration('''
+output.write_bytes(b'feedback-candidate')
+feedback = subprocess.run(['python', '-I', '/protocol/process_check.py'],
+                          capture_output=True, text=True, check=True)
+print(feedback.stdout, flush=True)
+feedback = subprocess.run(['python', '-I', '/protocol/process_check.py'],
+                          capture_output=True, text=True, check=True)
+print(feedback.stdout, flush=True)
+'''), harness=HarnessSpec(capabilities=(PROCESS_FEEDBACK_CAPABILITY,)))
+    seen = []
+
+    def feedback(candidate, sequence):
+        seen.append((candidate.content, sequence))
+        if sequence == 2:
+            raise RuntimeError("synthetic feedback error")
+        return {"report": {"outcome": "failed", "physical_valid": True,
+                            "specs_pass": False, "task_success": False,
+                            "backends": {"synthetic": {"version": "1"}}}}
+
+    recorder = RunRecorder(tmp_path / "run")
+    result = DockerSession(config.image).run(
+        task, config, {}, task_message(task, config), recorder=recorder, feedback=feedback)
+    assert result.termination == "completed", result.console.content
+    assert result.candidate is None
+    assert seen == [(b"feedback-candidate", 1), (b"feedback-candidate", 2)]
+    assert result.process_feedback[0]["accepted"] is True
+    assert result.process_feedback[0]["candidate"]["sha256"] == Asset(b"feedback-candidate", "gds").sha256
+    assert result.process_feedback[1]["outcome"] == "error"
+    assert "synthetic feedback error" in result.process_feedback[1]["error"]
+    assert recover_submissions(recorder.root)["candidate"] is None
+    kinds = [json.loads(line)["kind"] for line in (recorder.root / "events.jsonl").read_text().splitlines()]
+    assert kinds.count("process_feedback.request") == kinds.count("process_feedback.result") == 2
 
 
 @pytest.mark.acceptance
