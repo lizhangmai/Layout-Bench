@@ -22,6 +22,17 @@ def preview():
     return module
 
 
+def test_default_build_network_explains_loopback_proxy(preview, monkeypatch):
+    for name in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("HTTPS_PROXY", "http://127.0.0.1:25127")
+
+    with pytest.raises(ValueError, match="loopback proxy"):
+        preview._check_build_network("default")
+
+    preview._check_build_network("host")
+
+
 def test_one_resolved_image_for_compilation_judge_and_agents(preview, tmp_path, monkeypatch):
     root = tmp_path / "checkout with spaces"
     (root / "third_party/IHP-Open-PDK/ihp-sg13g2").mkdir(parents=True)
@@ -67,6 +78,7 @@ def test_existing_evidence_rejected_before_build_or_pdk_update(preview, tmp_path
     evidence = tmp_path / "run.json"
     evidence.write_text("retained evidence")
     monkeypatch.setattr(preview, "doctor", lambda: None)
+    monkeypatch.setattr(preview, "_check_build_network", lambda network: None)
     monkeypatch.setattr(preview, "call", lambda *args, **kwargs: pytest.fail("Must not run preparation commands"))
     with pytest.raises(ValueError, match="Output already exists"):
         preview.quickstart(tmp_path, preview.IMAGE, "default", False)

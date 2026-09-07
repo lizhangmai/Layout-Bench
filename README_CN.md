@@ -58,6 +58,8 @@ uv run --python 3.12 --locked python scripts/public_preview.py quickstart --outp
 
 该命令只构建一个 `layout-bench-tools:local` 镜像，获取固定版本的 PDK，准备经过审查的资料，并运行参考解、提交和批量检查。KLayout、ngspice、Qucs-S/Qucsator、Magic、OpenVAF、Xschem 和 Python 包含在这个镜像中；harness runtime 通过统一会话契约由各 harness 自行提供，因此不需要按 EDA 角色拆分镜像。快速开始不会调用模型账户。
 
+如果主机代理只监听 `127.0.0.1` 或 `localhost`，请在 quick-start 命令中加入 `--network host`，让镜像构建能够访问该代理。该选项只影响镜像构建；评估容器仍然禁用网络。
+
 首次运行需要下载工具和 PDK，可能耗时数分钟。后续运行会复用 Docker 层和 PDK checkout，同时重新准备已验证的资料和全新工作区。每次运行都应选择新的 `--output` 目录；已有证据不会被覆盖。若要复用已构建的镜像，可使用 `--skip-build`。快速开始只初始化 PDK 以及已验证视图所需的两个 KLayout Python 子模块；digital、openEMS 和 Palace 子模块保持可选。若这些必需目录已经有完整文件但没有 Git 元数据，快速开始会复用它们，后续准备阶段仍会逐文件校验哈希。
 
 仓库本地生成的文件统一放在顶层 `build/`：benchmark 运行证据放在 `build/runs/`，手工准备的 PDK 和 EDA 支持包放在 `build/support/`，Python 分发包放在 `build/dist/`。`build/lib/` 和 `build/bdist.*` 是 setuptools 的临时打包目录。该目录已被 Git 忽略；不需要本地报告或已准备资源时可以删除。

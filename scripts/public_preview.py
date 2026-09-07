@@ -2,13 +2,16 @@
 
 import argparse
 import hashlib
+import ipaddress
 import json
+import os
 import platform
 import shlex
 import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 TASK = ROOT / "tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate"
@@ -62,7 +65,46 @@ def doctor():
     print("Host prerequisites OK.", flush=True)
 
 
+def _proxy_hostname(value):
+    """Return a proxy hostname from a URL or a host:port value."""
+    if not value:
+        return None
+    candidate = value if "://" in value else f"//{value}"
+    try:
+        return urlparse(candidate).hostname
+    except ValueError:
+        return None
+
+
+def _loopback_proxy_variables():
+    variables = []
+    for name in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"):
+        value = os.environ.get(name)
+        hostname = _proxy_hostname(value)
+        if hostname == "localhost":
+            variables.append(name)
+            continue
+        try:
+            if hostname and ipaddress.ip_address(hostname).is_loopback:
+                variables.append(name)
+        except ValueError:
+            pass
+    return variables
+
+
+def _check_build_network(network):
+    if network != "default":
+        return
+    variables = _loopback_proxy_variables()
+    if variables:
+        names = ", ".join(variables)
+        raise ValueError(
+            f"{names} point to a loopback proxy, which the default Docker build network cannot reach. "
+            "Rerun with --network host, or unset the proxy variables if direct access is allowed.")
+
+
 def build(image, network):
+    _check_build_network(network)
     call("docker", "build", "--network", network, "--build-arg", "HTTP_PROXY", "--build-arg", "HTTPS_PROXY",
          "--build-arg", "NO_PROXY", "--target", "tools", "-t", image, ".")
 
@@ -225,6 +267,8 @@ def run(prepared, output, qualification):
 
 def quickstart(output, image, network, skip_build):
     doctor()
+    if not skip_build:
+        _check_build_network(network)
     output = new_directory(output or ROOT / RUNS / datetime.now(UTC).strftime("preview-%Y%m%dT%H%M%S%fZ"))
     print(f"Preview directory: {output}", flush=True)
     if not skip_build:
