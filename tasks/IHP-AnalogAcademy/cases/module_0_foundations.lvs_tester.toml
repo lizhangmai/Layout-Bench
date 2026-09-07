@@ -2,8 +2,8 @@ schema_version = 2
 kind = "layout_case"
 id = "module_0_foundations.lvs_tester"
 title = "IHP AnalogAcademy LVS tester"
-role = "design"
-status = "candidate"
+role = "supporting-source"
+status = "supporting-source"
 
 [origin]
 checkout = "third_party/IHP-AnalogAcademy"
@@ -17,3 +17,7 @@ role = "design"
 format = "xschem"
 sha256 = "fb3cbbc33cf8be5961123ef29605958bdcf8aa6f015118232329e9edd81308df"
 bytes = 800
+
+[screening]
+decision = "exclude"
+reason = "LVS fixture only: no functional testbench or task-level performance objective; retained as provenance for framework checks."

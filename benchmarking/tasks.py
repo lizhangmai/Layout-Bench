@@ -100,7 +100,7 @@ class Task:
 def _validate_case(data: dict) -> None:
     """Validate the inventory half of a unified circuit case."""
     _keys(data, {"schema_version", "kind", "id", "title", "status", "origin", "sources"},
-          {"role", "task", "source_export", "assets", "qualification"}, "case")
+          {"role", "task", "source_export", "assets", "qualification", "screening"}, "case")
     if type(data["schema_version"]) is not int or data["schema_version"] != 2:
         raise ValueError("Unsupported case schema_version")
     if data["kind"] != "layout_case":
@@ -109,6 +109,12 @@ def _validate_case(data: dict) -> None:
         _text(data[field], f"case.{field}")
     if data["status"] not in {"candidate", "qualified", "source-only", "supporting-source"}:
         raise ValueError("Case status is not recognized")
+    screening = data.get("screening")
+    if screening is not None:
+        _keys(screening, {"decision", "reason"}, set(), "case.screening")
+        if screening["decision"] not in {"include", "defer", "exclude"}:
+            raise ValueError("Case screening decision is not recognized")
+        _text(screening["reason"], "case.screening.reason")
     origin = data["origin"]
     _keys(origin, {"checkout", "commit", "license"}, set(), "case.origin")
     for field in ("checkout", "commit", "license"):
