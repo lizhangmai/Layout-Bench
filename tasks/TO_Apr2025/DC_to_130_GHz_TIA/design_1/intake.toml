@@ -1,0 +1,12 @@
+schema_version = 1
+id = "TO_Apr2025.DC_to_130_GHz_TIA.design_1"
+title = "TO_Apr2025: DC-to-130-GHz two-stage SiGe HBT TIA"
+source_checkout = "third_party/TO_Apr2025"
+source_commit = "63e203a0eccfb6028a1a0a8364553e4e979b55b3"
+source_path = "DC_to_130_GHz_TIA/design_1/design_data/qucs-s/DC_to_130_GHz_TIA.sch"
+source_sha256 = "9ff042ba555b280b5877f0357ef16e12a1e92663f38d0978c1507786839d9fbb"
+source_bytes = 8700
+source_format = "qucs"
+role = "design"
+status = "source-only"
+license = "Apache-2.0 per upstream design README; PDK, models, and tool licenses apply"

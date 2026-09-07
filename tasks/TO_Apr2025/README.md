@@ -12,6 +12,8 @@ entry point, but its exported top-level interface, physical constraints,
 evaluation plan, and independent qualification still need to be frozen. The
 second slice, `40_GHZ_LOW_NOISE_TIA/`, is recorded as `source-only` because
 the current preparation contract does not yet support its Qucs-S source.
+The third slice, `DC_to_130_GHz_TIA/design_1/`, is likewise source-only until
+the Qucs-S/EM model preparation boundary is reproducible.
 
 The upstream checkout is fixed at commit
 `63e203a0eccfb6028a1a0a8364553e4e979b55b3`. Keep the checkout, PDK, EDA tools,

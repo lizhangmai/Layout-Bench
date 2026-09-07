@@ -18,10 +18,11 @@ def _catalog():
 
 def test_catalog_records_the_incremental_intake():
     catalog = _catalog()
-    assert catalog["circuit_source_count"] == len(catalog["circuits"]) == 2
-    assert catalog["artifact_count"] == len(catalog["artifacts"]) == 20
+    assert catalog["circuit_source_count"] == len(catalog["circuits"]) == 3
+    assert catalog["artifact_count"] == len(catalog["artifacts"]) == 32
     assert {item["id"] for item in catalog["circuits"]} == {
         "TO_Apr2025.Mixer5GHz", "TO_Apr2025.40_GHZ_LOW_NOISE_TIA",
+        "TO_Apr2025.DC_to_130_GHz_TIA.design_1",
     }
     assert {item["status"] for item in catalog["circuits"]} == {"candidate", "source-only"}
     for circuit in catalog["circuits"]:
