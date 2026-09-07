@@ -71,7 +71,7 @@ Keep originals byte-for-byte as supplied upstream and register framework-generat
 
 ### Prepare a Netlist from a Schematic
 
-`benchmarking.prepare` gives a network-isolated preparation container only the files explicitly listed by `source.toml`, invokes Xschem to export the raw LVS netlist, and saves source digests and diagnostic logs. Arguments include the manifest, output directory, and `--checkout NAME=PATH` for each source. Use the unified image with `--image layout-bench-tools:local`. See the [qualification materials](../tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/qualification/README.md#source-reproduction) for the exact re-export command for the public task. See the [task guide](tasks.md) for intake and input-semantics checks.
+`benchmarking.prepare` gives a network-isolated preparation container only the files explicitly listed by `source.toml`, invokes Xschem to export the raw LVS netlist, and saves source digests and diagnostic logs. Arguments include the manifest, output directory, and `--checkout NAME=PATH` for each source. Use the unified image with `--image layout-bench-tools:local`. See the [qualification materials](../tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/qualification/README.md#source-reproduction) for the exact re-export command for the public task. See the [task guide](tasks.md) for source and input-semantics checks.
 
 ## EDA Backend Contract
 

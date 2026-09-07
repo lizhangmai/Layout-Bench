@@ -1,6 +1,6 @@
-# 40_GHZ_LOW_NOISE_TIA source-only intake
+# 40_GHZ_LOW_NOISE_TIA source-only record
 
-The 40 GHz low-noise single-ended TIA is the second TO_Apr2025 intake slice.
+The 40 GHz low-noise single-ended TIA is the second TO_Apr2025 source slice.
 Its upstream documentation provides a useful RF specification and a compact
 set of schematic, layout, LVS, DRC, and openEMS artifacts.
 

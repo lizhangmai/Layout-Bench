@@ -1,10 +1,10 @@
 # Mixer5GHz candidate
 
-`Mixer5GHz` is the first TO_Apr2025 intake candidate. The upstream design is
+`Mixer5GHz` is the first TO_Apr2025 candidate record. The upstream design is
 a 5 GHz up-converter mixer with a cross-coupled oscillator and includes an
 Xschem source, historical GDS, and DRC/LVS artifacts.
 
-This directory currently records only source intake. It is **not** a
+This directory currently records only source metadata. It is **not** a
 `netlist_to_gds` task yet:
 
 - the source must be exported in the pinned, network-isolated preparation

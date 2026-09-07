@@ -1,26 +1,30 @@
-# IHP AnalogAcademy intake
+# IHP AnalogAcademy circuit catalog
 
-This directory is the public intake namespace for the circuits published by
-the pinned `IHP-AnalogAcademy` submodule. It mirrors the upstream module and
-part names so a source record, a task, and its qualification evidence have one
-stable home:
+This directory is the public circuit catalog for the pinned
+`IHP-AnalogAcademy` submodule. It mirrors the upstream module and part names so
+each source record has one stable, named configuration file:
 
 ```text
-tasks/IHP-AnalogAcademy/<module>/<part>/<circuit>/
+tasks/IHP-AnalogAcademy/<module>/<part>/<circuit>.toml
 ```
 
 `catalog.toml` is the complete inventory for submodule commit
 `133ecf657572e021b5921b5a1b7693abfb209623`. It records every non-excluded
 upstream `*.sch` source (50 records, including testbenches and the utility
-gmid demonstration), its source format, role, content digest, and intake status. Each record also has a small
-`intake.toml` at the mirrored path. These files are maintainer metadata; they
-are not mounted as Agent inputs.
+gmid demonstration) and points to the corresponding named configuration file,
+such as `module_0_foundations/inverter/inverter_tb.toml`. The named file is the
+canonical maintainer record for that circuit; it is not mounted as an Agent
+input.
+
+The qualified transmission-gate directory also contains `source.toml` and
+`task.toml`. Those are separate executable interfaces for source preparation
+and benchmark execution, respectively; they do not split the circuit record.
 
 The catalog's artifact section is limited to circuit-bearing netlists, symbols,
 models, RF decks, extraction records, and layouts associated with those source
 records; unrelated utility chip/gallery layouts are not task inputs.
 
-The statuses deliberately distinguish source intake from benchmark
+The statuses deliberately distinguish source review from benchmark
 qualification:
 
 | Status | Meaning |

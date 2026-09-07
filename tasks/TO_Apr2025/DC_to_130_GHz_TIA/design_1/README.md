@@ -1,4 +1,4 @@
-# DC_to_130_GHz_TIA design_1 source-only intake
+# DC_to_130_GHz_TIA design_1 source-only record
 
 This record covers the two-stage `design_1` variant of the TO_Apr2025
 DC-to-130-GHz SiGe HBT TIA. The upstream README explicitly publishes the

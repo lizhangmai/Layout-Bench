@@ -1,4 +1,4 @@
-schema_version = 1
+schema_version = 2
 source_checkout = "third_party/IHP-AnalogAcademy"
 source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
 source_license = "Apache-2.0 upstream root; file-level notices apply"
@@ -14,555 +14,154 @@ path = "utils/PEX_Demo"
 reason = "Historical PEX fixture excluded by docs/tasks.md#input-isolation"
 
 [[circuits]]
-id = "module_0_foundations.inverter.inverter"
-title = "IHP AnalogAcademy: inverter"
-source_path = "modules/module_0_foundations/inverter/inverter.sch"
-source_sha256 = "6a2e03f44df59976b8ba4fca385b104b80802d367789171790bd238f912ec771"
-source_bytes = 715
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_0_foundations/inverter/inverter/intake.toml"
+config_path = "module_0_foundations/inverter/inverter.toml"
 
 [[circuits]]
-id = "module_0_foundations.inverter.inverter_tb"
-title = "IHP AnalogAcademy: inverter_tb"
-source_path = "modules/module_0_foundations/inverter/inverter_tb.sch"
-source_sha256 = "521464a42c5352cad371a8b091d71d9a083686749ef49c69b3f07ec838a3cb82"
-source_bytes = 1606
-source_format = "xschem"
-role = "testbench"
-status = "supporting-source"
-intake_path = "module_0_foundations/inverter/inverter_tb/intake.toml"
+config_path = "module_0_foundations/inverter/inverter_tb.toml"
 
 [[circuits]]
-id = "module_0_foundations.lvs_tester.schematic.lvs_tester"
-title = "IHP AnalogAcademy: lvs_tester"
-source_path = "modules/module_0_foundations/lvs_tester/schematic/lvs_tester.sch"
-source_sha256 = "fb3cbbc33cf8be5961123ef29605958bdcf8aa6f015118232329e9edd81308df"
-source_bytes = 800
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_0_foundations/lvs_tester/schematic/lvs_tester/intake.toml"
+config_path = "module_0_foundations/lvs_tester/schematic/lvs_tester.toml"
 
 [[circuits]]
-id = "module_1_bandgap_reference.part_1_OTA.gmid_example.schematic.two_stage_OTA"
-title = "IHP AnalogAcademy: two_stage_OTA"
-source_path = "modules/module_1_bandgap_reference/part_1_OTA/gmid_example/schematic/two_stage_OTA.sch"
-source_sha256 = "2bfae18e0f02cbf7a2919bd8d219ea2d1edbb32457830365ae4d4965f6a2e232"
-source_bytes = 2175
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_1_bandgap_reference/part_1_OTA/gmid_example/schematic/two_stage_OTA/intake.toml"
+config_path = "module_1_bandgap_reference/part_1_OTA/gmid_example/schematic/two_stage_OTA.toml"
 
 [[circuits]]
-id = "module_1_bandgap_reference.part_1_OTA.gmid_example.testbenches.ota_testbench"
-title = "IHP AnalogAcademy: ota_testbench"
-source_path = "modules/module_1_bandgap_reference/part_1_OTA/gmid_example/testbenches/ota_testbench.sch"
-source_sha256 = "81577b238bdd926731d3ef54ba29e35e7f94c51aea91b0e8dd6dfbd8c4fc60c6"
-source_bytes = 2738
-source_format = "xschem"
-role = "testbench"
-status = "supporting-source"
-intake_path = "module_1_bandgap_reference/part_1_OTA/gmid_example/testbenches/ota_testbench/intake.toml"
+config_path = "module_1_bandgap_reference/part_1_OTA/gmid_example/testbenches/ota_testbench.toml"
 
 [[circuits]]
-id = "module_1_bandgap_reference.part_1_OTA.gmid_example.testbenches.ota_testbench_mc_mis"
-title = "IHP AnalogAcademy: ota_testbench_mc_mis"
-source_path = "modules/module_1_bandgap_reference/part_1_OTA/gmid_example/testbenches/ota_testbench_mc_mis.sch"
-source_sha256 = "61dbf163affdaabfe1417c48ce28d06e65015c3b682495b2cdf024937736b348"
-source_bytes = 2310
-source_format = "xschem"
-role = "testbench"
-status = "supporting-source"
-intake_path = "module_1_bandgap_reference/part_1_OTA/gmid_example/testbenches/ota_testbench_mc_mis/intake.toml"
+config_path = "module_1_bandgap_reference/part_1_OTA/gmid_example/testbenches/ota_testbench_mc_mis.toml"
 
 [[circuits]]
-id = "module_1_bandgap_reference.part_1_OTA.schematic.two_stage_OTA"
-title = "IHP AnalogAcademy: two_stage_OTA"
-source_path = "modules/module_1_bandgap_reference/part_1_OTA/schematic/two_stage_OTA.sch"
-source_sha256 = "4385e81ad81c229b81095fe2060153b2817376cfcfbb6d9adfc908d58d7e34a7"
-source_bytes = 2954
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_1_bandgap_reference/part_1_OTA/schematic/two_stage_OTA/intake.toml"
+config_path = "module_1_bandgap_reference/part_1_OTA/schematic/two_stage_OTA.toml"
 
 [[circuits]]
-id = "module_1_bandgap_reference.part_1_OTA.testbenches.ota_testbench"
-title = "IHP AnalogAcademy: ota_testbench"
-source_path = "modules/module_1_bandgap_reference/part_1_OTA/testbenches/ota_testbench.sch"
-source_sha256 = "861a27e4fcfec15e267ed18816db791460aae1f94f1a7c83ca0c114d4379d4bc"
-source_bytes = 5366
-source_format = "xschem"
-role = "testbench"
-status = "supporting-source"
-intake_path = "module_1_bandgap_reference/part_1_OTA/testbenches/ota_testbench/intake.toml"
+config_path = "module_1_bandgap_reference/part_1_OTA/testbenches/ota_testbench.toml"
 
 [[circuits]]
-id = "module_1_bandgap_reference.part_1_OTA.testbenches.ota_testbench_mc_mis"
-title = "IHP AnalogAcademy: ota_testbench_mc_mis"
-source_path = "modules/module_1_bandgap_reference/part_1_OTA/testbenches/ota_testbench_mc_mis.sch"
-source_sha256 = "605f2d3cec5122d9d6f5245f1ded959f6d83d5d19d3c6fbc116351390ffe1c03"
-source_bytes = 2342
-source_format = "xschem"
-role = "testbench"
-status = "supporting-source"
-intake_path = "module_1_bandgap_reference/part_1_OTA/testbenches/ota_testbench_mc_mis/intake.toml"
+config_path = "module_1_bandgap_reference/part_1_OTA/testbenches/ota_testbench_mc_mis.toml"
 
 [[circuits]]
-id = "module_1_bandgap_reference.part_2_full_bgr.schematic.bandgap_MC"
-title = "IHP AnalogAcademy: bandgap_MC"
-source_path = "modules/module_1_bandgap_reference/part_2_full_bgr/schematic/bandgap_MC.sch"
-source_sha256 = "a32bb973bb5a507403c636cc54ca201239ad31df2a46281f37c5a2023c013612"
-source_bytes = 6533
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_1_bandgap_reference/part_2_full_bgr/schematic/bandgap_MC/intake.toml"
+config_path = "module_1_bandgap_reference/part_2_full_bgr/schematic/bandgap_MC.toml"
 
 [[circuits]]
-id = "module_1_bandgap_reference.part_2_full_bgr.schematic.bandgap_reference"
-title = "IHP AnalogAcademy: bandgap_reference"
-source_path = "modules/module_1_bandgap_reference/part_2_full_bgr/schematic/bandgap_reference.sch"
-source_sha256 = "b7d5bcf322b7bfb14d21f8f76b74a22fb97d9f1d40466c1821d8913d0e844058"
-source_bytes = 6713
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_1_bandgap_reference/part_2_full_bgr/schematic/bandgap_reference/intake.toml"
+config_path = "module_1_bandgap_reference/part_2_full_bgr/schematic/bandgap_reference.toml"
 
 [[circuits]]
-id = "module_1_bandgap_reference.part_2_full_bgr.schematic.bandgap_reference_temp"
-title = "IHP AnalogAcademy: bandgap_reference_temp"
-source_path = "modules/module_1_bandgap_reference/part_2_full_bgr/schematic/bandgap_reference_temp.sch"
-source_sha256 = "df2a7d3f1927f6ff574fafad3e761d7f7615cd78296b619597d0eda0e3ce7088"
-source_bytes = 6153
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_1_bandgap_reference/part_2_full_bgr/schematic/bandgap_reference_temp/intake.toml"
+config_path = "module_1_bandgap_reference/part_2_full_bgr/schematic/bandgap_reference_temp.toml"
 
 [[circuits]]
-id = "module_1_bandgap_reference.part_2_full_bgr.schematic.verilog.veriloga_tbs.tb_diff_amp"
-title = "IHP AnalogAcademy: tb_diff_amp"
-source_path = "modules/module_1_bandgap_reference/part_2_full_bgr/schematic/verilog/veriloga_tbs/tb_diff_amp.sch"
-source_sha256 = "b34fc859718f1e831a0710ea587c949b8be04c88e26f79699c0e2a46472bc19f"
-source_bytes = 2288
-source_format = "xschem"
-role = "testbench"
-status = "supporting-source"
-intake_path = "module_1_bandgap_reference/part_2_full_bgr/schematic/verilog/veriloga_tbs/tb_diff_amp/intake.toml"
+config_path = "module_1_bandgap_reference/part_2_full_bgr/schematic/verilog/veriloga_tbs/tb_diff_amp.toml"
 
 [[circuits]]
-id = "module_1_bandgap_reference.part_3_layout.BGR_layout.final_bandgapreference.schematic_mod.full_bandgap"
-title = "IHP AnalogAcademy: full_bandgap"
-source_path = "modules/module_1_bandgap_reference/part_3_layout/BGR_layout/final_bandgapreference/schematic_mod/full_bandgap.sch"
-source_sha256 = "df8058fab1b7b8e25758231687d219d020d4cf3b6b0f16b3096d72f14fee191a"
-source_bytes = 16368
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_1_bandgap_reference/part_3_layout/BGR_layout/final_bandgapreference/schematic_mod/full_bandgap/intake.toml"
+config_path = "module_1_bandgap_reference/part_3_layout/BGR_layout/final_bandgapreference/schematic_mod/full_bandgap.toml"
 
 [[circuits]]
-id = "module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA.schematic_mod.two_stage_OTA_layout"
-title = "IHP AnalogAcademy: two_stage_OTA_layout"
-source_path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/schematic_mod/two_stage_OTA_layout.sch"
-source_sha256 = "565fff885a4400cf1e83657cfa6e4d87b6d8d5529c8ce025419b8192e9524233"
-source_bytes = 8608
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/schematic_mod/two_stage_OTA_layout/intake.toml"
+config_path = "module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/schematic_mod/two_stage_OTA_layout.toml"
 
 [[circuits]]
-id = "module_1_bandgap_reference.part_3_layout.OTA_layout.input_pair.schematic_mod.input_common_centroid"
-title = "IHP AnalogAcademy: input_common_centroid"
-source_path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/input_pair/schematic_mod/input_common_centroid.sch"
-source_sha256 = "a378667699cf81eff1a49baa7a075836d5641b95836a4063810d06f11a303aef"
-source_bytes = 2981
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_1_bandgap_reference/part_3_layout/OTA_layout/input_pair/schematic_mod/input_common_centroid/intake.toml"
+config_path = "module_1_bandgap_reference/part_3_layout/OTA_layout/input_pair/schematic_mod/input_common_centroid.toml"
 
 [[circuits]]
-id = "module_1_bandgap_reference.part_3_layout.OTA_layout.input_stage.schematic_mod.input_stage"
-title = "IHP AnalogAcademy: input_stage"
-source_path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/input_stage/schematic_mod/input_stage.sch"
-source_sha256 = "ae58b1348de8baae74b0ad553a55b6baf1c482c466a2025b92b6368909fdff6f"
-source_bytes = 1990
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_1_bandgap_reference/part_3_layout/OTA_layout/input_stage/schematic_mod/input_stage/intake.toml"
+config_path = "module_1_bandgap_reference/part_3_layout/OTA_layout/input_stage/schematic_mod/input_stage.toml"
 
 [[circuits]]
-id = "module_1_bandgap_reference.part_3_layout.OTA_layout.output_stage.schematic_mod.output_stage"
-title = "IHP AnalogAcademy: output_stage"
-source_path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/output_stage/schematic_mod/output_stage.sch"
-source_sha256 = "4e05fb497d65fd5e47d110928ec8d442c74aa5b45cff6e4784f3a6c04854c4e6"
-source_bytes = 2415
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_1_bandgap_reference/part_3_layout/OTA_layout/output_stage/schematic_mod/output_stage/intake.toml"
+config_path = "module_1_bandgap_reference/part_3_layout/OTA_layout/output_stage/schematic_mod/output_stage.toml"
 
 [[circuits]]
-id = "module_1_bandgap_reference.part_3_layout.startup_circuit.schematic_mod.startup_circuit"
-title = "IHP AnalogAcademy: startup_circuit"
-source_path = "modules/module_1_bandgap_reference/part_3_layout/startup_circuit/schematic_mod/startup_circuit.sch"
-source_sha256 = "82b9a7e45468a401691ca806f7a9a8e228e23d556cfb86a327c5b174ffd05d95"
-source_bytes = 2825
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_1_bandgap_reference/part_3_layout/startup_circuit/schematic_mod/startup_circuit/intake.toml"
+config_path = "module_1_bandgap_reference/part_3_layout/startup_circuit/schematic_mod/startup_circuit.toml"
 
 [[circuits]]
-id = "module_2_50GHz_MPA.part_1_biasing.schematic.bias_1_fingers.bias_1_fingers"
-title = "IHP AnalogAcademy: bias_1_fingers"
-source_path = "modules/module_2_50GHz_MPA/part_1_biasing/schematic/bias_1_fingers/bias_1_fingers.sch"
-source_sha256 = "7ab61118b436a154677f48c1daf09b6e718974c37d59140e7456ea8e34a5e494"
-source_bytes = 2423
-source_format = "qucs"
-role = "design"
-status = "source-only"
-intake_path = "module_2_50GHz_MPA/part_1_biasing/schematic/bias_1_fingers/bias_1_fingers/intake.toml"
+config_path = "module_2_50GHz_MPA/part_1_biasing/schematic/bias_1_fingers/bias_1_fingers.toml"
 
 [[circuits]]
-id = "module_2_50GHz_MPA.part_1_biasing.schematic.bias_2_stability.bias_2_stability"
-title = "IHP AnalogAcademy: bias_2_stability"
-source_path = "modules/module_2_50GHz_MPA/part_1_biasing/schematic/bias_2_stability/bias_2_stability.sch"
-source_sha256 = "75172c34ac577dd0d46c15ba2379288f355b729c361529132a60cef036a893f5"
-source_bytes = 3005
-source_format = "qucs"
-role = "design"
-status = "source-only"
-intake_path = "module_2_50GHz_MPA/part_1_biasing/schematic/bias_2_stability/bias_2_stability/intake.toml"
+config_path = "module_2_50GHz_MPA/part_1_biasing/schematic/bias_2_stability/bias_2_stability.toml"
 
 [[circuits]]
-id = "module_2_50GHz_MPA.part_2_matching_ideal.schematic.input_matching"
-title = "IHP AnalogAcademy: input_matching"
-source_path = "modules/module_2_50GHz_MPA/part_2_matching_ideal/schematic/input_matching.sch"
-source_sha256 = "6ffe5efb35f0c75a88d7ee0d3d0614d238417da8ae23635bf91ce1df4f44f364"
-source_bytes = 3201
-source_format = "qucs"
-role = "design"
-status = "source-only"
-intake_path = "module_2_50GHz_MPA/part_2_matching_ideal/schematic/input_matching/intake.toml"
+config_path = "module_2_50GHz_MPA/part_2_matching_ideal/schematic/input_matching.toml"
 
 [[circuits]]
-id = "module_2_50GHz_MPA.part_3_nonlinear_analysis.schematic.compression_1.harmonic_balance"
-title = "IHP AnalogAcademy: harmonic_balance"
-source_path = "modules/module_2_50GHz_MPA/part_3_nonlinear_analysis/schematic/compression_1/harmonic_balance.sch"
-source_sha256 = "2e31797a261b106a351e8940ededb4ce4d1be927427e9eb8b855d03acef75819"
-source_bytes = 4216
-source_format = "qucs"
-role = "design"
-status = "source-only"
-intake_path = "module_2_50GHz_MPA/part_3_nonlinear_analysis/schematic/compression_1/harmonic_balance/intake.toml"
+config_path = "module_2_50GHz_MPA/part_3_nonlinear_analysis/schematic/compression_1/harmonic_balance.toml"
 
 [[circuits]]
-id = "module_2_50GHz_MPA.part_3_nonlinear_analysis.schematic.load_pull_2.load_pull_final"
-title = "IHP AnalogAcademy: load_pull_final"
-source_path = "modules/module_2_50GHz_MPA/part_3_nonlinear_analysis/schematic/load_pull_2/load_pull_final.sch"
-source_sha256 = "9482f8d3b832d73943cb793689f893664317f01f7b8057ebae40d8ebe2f81c5f"
-source_bytes = 3792
-source_format = "qucs"
-role = "design"
-status = "source-only"
-intake_path = "module_2_50GHz_MPA/part_3_nonlinear_analysis/schematic/load_pull_2/load_pull_final/intake.toml"
+config_path = "module_2_50GHz_MPA/part_3_nonlinear_analysis/schematic/load_pull_2/load_pull_final.toml"
 
 [[circuits]]
-id = "module_2_50GHz_MPA.part_4_layout_EMsims.em_components.T_connection_2.post_layout_sim.schematic.Tcon_post_sim"
-title = "IHP AnalogAcademy: Tcon_post_sim"
-source_path = "modules/module_2_50GHz_MPA/part_4_layout_EMsims/em_components/T_connection_2/post_layout_sim/schematic/Tcon_post_sim.sch"
-source_sha256 = "3b345841a9bc56bee1c3b880ae6b5a5cf0b14ec54c45639cd9bbd24af5e0742f"
-source_bytes = 4064
-source_format = "qucs"
-role = "design"
-status = "source-only"
-intake_path = "module_2_50GHz_MPA/part_4_layout_EMsims/em_components/T_connection_2/post_layout_sim/schematic/Tcon_post_sim/intake.toml"
+config_path = "module_2_50GHz_MPA/part_4_layout_EMsims/em_components/T_connection_2/post_layout_sim/schematic/Tcon_post_sim.toml"
 
 [[circuits]]
-id = "module_2_50GHz_MPA.part_4_layout_EMsims.em_components.core_1.post_layout_sim.schematic.core_pl_sim"
-title = "IHP AnalogAcademy: core_pl_sim"
-source_path = "modules/module_2_50GHz_MPA/part_4_layout_EMsims/em_components/core_1/post_layout_sim/schematic/core_pl_sim.sch"
-source_sha256 = "0d18b8af728835890edc4aa087966554830815cc32b9eb3ce6cc296a59336df3"
-source_bytes = 3810
-source_format = "qucs"
-role = "design"
-status = "source-only"
-intake_path = "module_2_50GHz_MPA/part_4_layout_EMsims/em_components/core_1/post_layout_sim/schematic/core_pl_sim/intake.toml"
+config_path = "module_2_50GHz_MPA/part_4_layout_EMsims/em_components/core_1/post_layout_sim/schematic/core_pl_sim.toml"
 
 [[circuits]]
-id = "module_2_50GHz_MPA.part_4_layout_EMsims.lumped_modelling.em_models_subcircuits.T_conn_subcircuit.T_connection"
-title = "IHP AnalogAcademy: T_connection"
-source_path = "modules/module_2_50GHz_MPA/part_4_layout_EMsims/lumped_modelling/em_models_subcircuits/T_conn_subcircuit/T_connection.sch"
-source_sha256 = "58ff08e557059c651fe472da7b25762d7cd6e3dfa0223913a27b0b4e44cb6ca6"
-source_bytes = 1474
-source_format = "qucs"
-role = "design"
-status = "source-only"
-intake_path = "module_2_50GHz_MPA/part_4_layout_EMsims/lumped_modelling/em_models_subcircuits/T_conn_subcircuit/T_connection/intake.toml"
+config_path = "module_2_50GHz_MPA/part_4_layout_EMsims/lumped_modelling/em_models_subcircuits/T_conn_subcircuit/T_connection.toml"
 
 [[circuits]]
-id = "module_2_50GHz_MPA.part_4_layout_EMsims.lumped_modelling.em_models_subcircuits.core_subcircuit.BJT_core"
-title = "IHP AnalogAcademy: BJT_core"
-source_path = "modules/module_2_50GHz_MPA/part_4_layout_EMsims/lumped_modelling/em_models_subcircuits/core_subcircuit/BJT_core.sch"
-source_sha256 = "2bb93851751181225b889c8f21be430741b39ac3d07a202178c118116d4b3f68"
-source_bytes = 1979
-source_format = "qucs"
-role = "design"
-status = "source-only"
-intake_path = "module_2_50GHz_MPA/part_4_layout_EMsims/lumped_modelling/em_models_subcircuits/core_subcircuit/BJT_core/intake.toml"
+config_path = "module_2_50GHz_MPA/part_4_layout_EMsims/lumped_modelling/em_models_subcircuits/core_subcircuit/BJT_core.toml"
 
 [[circuits]]
-id = "module_3_8_bit_SAR_ADC.part_1_comparator.schematic.dynamic_comparator"
-title = "IHP AnalogAcademy: dynamic_comparator"
-source_path = "modules/module_3_8_bit_SAR_ADC/part_1_comparator/schematic/dynamic_comparator.sch"
-source_sha256 = "eccfc8e64b340a92f258575cc919cdd9826feacecbb28d51b97857812ee7f7d0"
-source_bytes = 4191
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_3_8_bit_SAR_ADC/part_1_comparator/schematic/dynamic_comparator/intake.toml"
+config_path = "module_3_8_bit_SAR_ADC/part_1_comparator/schematic/dynamic_comparator.toml"
 
 [[circuits]]
-id = "module_3_8_bit_SAR_ADC.part_1_comparator.testbench.comparator_tb"
-title = "IHP AnalogAcademy: comparator_tb"
-source_path = "modules/module_3_8_bit_SAR_ADC/part_1_comparator/testbench/comparator_tb.sch"
-source_sha256 = "3526d2159f17ad8cf53de030af4f84e0395c4cf9706c78197090008ce75a8e59"
-source_bytes = 5626
-source_format = "xschem"
-role = "testbench"
-status = "supporting-source"
-intake_path = "module_3_8_bit_SAR_ADC/part_1_comparator/testbench/comparator_tb/intake.toml"
+config_path = "module_3_8_bit_SAR_ADC/part_1_comparator/testbench/comparator_tb.toml"
 
 [[circuits]]
-id = "module_3_8_bit_SAR_ADC.part_1_comparator.testbench.offset_MC_analysis"
-title = "IHP AnalogAcademy: offset_MC_analysis"
-source_path = "modules/module_3_8_bit_SAR_ADC/part_1_comparator/testbench/offset_MC_analysis.sch"
-source_sha256 = "d9f288760b3f740636f31f7557bccd6f1eed46f328329d46bc43e3d09588e864"
-source_bytes = 3595
-source_format = "xschem"
-role = "testbench"
-status = "supporting-source"
-intake_path = "module_3_8_bit_SAR_ADC/part_1_comparator/testbench/offset_MC_analysis/intake.toml"
+config_path = "module_3_8_bit_SAR_ADC/part_1_comparator/testbench/offset_MC_analysis.toml"
 
 [[circuits]]
-id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.schematic.T_gate"
-title = "IHP AnalogAcademy: T_gate"
-source_path = "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/schematic/T_gate.sch"
-source_sha256 = "c3dc8407942cc88e9cd0ed0fae6549c090a3d753fa95fdf1e97582e5e4a873fd"
-source_bytes = 988
-source_format = "xschem"
-role = "design"
-status = "qualified"
-intake_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/intake.toml"
-task_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/task.toml"
+config_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/T_gate.toml"
 
 [[circuits]]
-id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.T_gate.testbench.T_gate_switch_tb"
-title = "IHP AnalogAcademy: T_gate_switch_tb"
-source_path = "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/testbench/T_gate_switch_tb.sch"
-source_sha256 = "c2af0e445836e43c7c64a19f15082b71edeca7ab5959a4860816165bb3cb740a"
-source_bytes = 3337
-source_format = "xschem"
-role = "testbench"
-status = "supporting-source"
-intake_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/testbench/T_gate_switch_tb/intake.toml"
+config_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/testbench/T_gate_switch_tb.toml"
 
 [[circuits]]
-id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.algorithm.xschem.sar_logic_tb"
-title = "IHP AnalogAcademy: sar_logic_tb"
-source_path = "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/xschem/sar_logic_tb.sch"
-source_sha256 = "e5ec878acc3ab9c90361b6c61e6f0f413961def9cf3e4d9c019b6e32881f2d88"
-source_bytes = 9828
-source_format = "xschem"
-role = "testbench"
-status = "supporting-source"
-intake_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/xschem/sar_logic_tb/intake.toml"
+config_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/algorithm/xschem/sar_logic_tb.toml"
 
 [[circuits]]
-id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.bootstrap_switch.schematic.bootstrap_switch"
-title = "IHP AnalogAcademy: bootstrap_switch"
-source_path = "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/bootstrap_switch/schematic/bootstrap_switch.sch"
-source_sha256 = "92a2156b0ea00df85a60dd11600db7f8208a3cd3aae57a12f5c1bac2ab286263"
-source_bytes = 6400
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/bootstrap_switch/schematic/bootstrap_switch/intake.toml"
+config_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/bootstrap_switch/schematic/bootstrap_switch.toml"
 
 [[circuits]]
-id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.bootstrap_switch.schematic.inverter"
-title = "IHP AnalogAcademy: inverter"
-source_path = "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/bootstrap_switch/schematic/inverter.sch"
-source_sha256 = "c6dea75629e5f536948d095a53ad57cd1d5f8062405fca765b98a0d8c45661ba"
-source_bytes = 948
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/bootstrap_switch/schematic/inverter/intake.toml"
+config_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/bootstrap_switch/schematic/inverter.toml"
 
 [[circuits]]
-id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.bootstrap_switch.testbench.bootstrap_switch_tbs"
-title = "IHP AnalogAcademy: bootstrap_switch_tbs"
-source_path = "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/bootstrap_switch/testbench/bootstrap_switch_tbs.sch"
-source_sha256 = "3d99cb4540489390017efcd357c4cb15793c78aa039f6709ff2f6281ca500d26"
-source_bytes = 2402
-source_format = "xschem"
-role = "testbench"
-status = "supporting-source"
-intake_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/bootstrap_switch/testbench/bootstrap_switch_tbs/intake.toml"
+config_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/bootstrap_switch/testbench/bootstrap_switch_tbs.toml"
 
 [[circuits]]
-id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.nand_gate.schematic.nand_gate"
-title = "IHP AnalogAcademy: nand_gate"
-source_path = "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/nand_gate/schematic/nand_gate.sch"
-source_sha256 = "8adf57d503327740b441b3be3fb32bcdc40dfc8596a1e5cb8b2a3d5a71b680f2"
-source_bytes = 2033
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/nand_gate/schematic/nand_gate/intake.toml"
+config_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/nand_gate/schematic/nand_gate.toml"
 
 [[circuits]]
-id = "module_3_8_bit_SAR_ADC.part_2_digital_comps.nand_gate.testbench.nand_tb"
-title = "IHP AnalogAcademy: nand_tb"
-source_path = "modules/module_3_8_bit_SAR_ADC/part_2_digital_comps/nand_gate/testbench/nand_tb.sch"
-source_sha256 = "3633625c415e45a66a5359e4b37493c4a08129b32330e88a0c27f4a163f9a563"
-source_bytes = 2574
-source_format = "xschem"
-role = "testbench"
-status = "supporting-source"
-intake_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/nand_gate/testbench/nand_tb/intake.toml"
+config_path = "module_3_8_bit_SAR_ADC/part_2_digital_comps/nand_gate/testbench/nand_tb.toml"
 
 [[circuits]]
-id = "module_3_8_bit_SAR_ADC.part_3_array_components.C-DAC.C-DAC"
-title = "IHP AnalogAcademy: C-DAC"
-source_path = "modules/module_3_8_bit_SAR_ADC/part_3_array_components/C-DAC/C-DAC.sch"
-source_sha256 = "3d90b8ca6bb186ce02e1ffe59ef1794ce0a8d35f39f83de9289f55491abb200e"
-source_bytes = 2220
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_3_8_bit_SAR_ADC/part_3_array_components/C-DAC/C-DAC/intake.toml"
+config_path = "module_3_8_bit_SAR_ADC/part_3_array_components/C-DAC/C-DAC.toml"
 
 [[circuits]]
-id = "module_3_8_bit_SAR_ADC.part_3_array_components.switch_array.switch_array"
-title = "IHP AnalogAcademy: switch_array"
-source_path = "modules/module_3_8_bit_SAR_ADC/part_3_array_components/switch_array/switch_array.sch"
-source_sha256 = "432564f88e65ac5ec08edcc62c3243512e6284d8a41383bfc8f6f12da29c9dd4"
-source_bytes = 10275
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_3_8_bit_SAR_ADC/part_3_array_components/switch_array/switch_array/intake.toml"
+config_path = "module_3_8_bit_SAR_ADC/part_3_array_components/switch_array/switch_array.toml"
 
 [[circuits]]
-id = "module_3_8_bit_SAR_ADC.part_4_SAR_ADC.SAR_ADC_tb"
-title = "IHP AnalogAcademy: SAR_ADC_tb"
-source_path = "modules/module_3_8_bit_SAR_ADC/part_4_SAR_ADC/SAR_ADC_tb.sch"
-source_sha256 = "2bcf83ed9e801886aa3888e074ecef4f2f1a86d740b925f019eefa3811382380"
-source_bytes = 15493
-source_format = "xschem"
-role = "testbench"
-status = "supporting-source"
-intake_path = "module_3_8_bit_SAR_ADC/part_4_SAR_ADC/SAR_ADC_tb/intake.toml"
+config_path = "module_3_8_bit_SAR_ADC/part_4_SAR_ADC/SAR_ADC_tb.toml"
 
 [[circuits]]
-id = "module_3_8_bit_SAR_ADC.part_4_SAR_ADC.sar_adc_tutorial"
-title = "IHP AnalogAcademy: sar_adc_tutorial"
-source_path = "modules/module_3_8_bit_SAR_ADC/part_4_SAR_ADC/sar_adc_tutorial.sch"
-source_sha256 = "3189d42d9663f90709dac722f08fd63010080366b0217357b4fdbe2eff23ccf1"
-source_bytes = 16169
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_3_8_bit_SAR_ADC/part_4_SAR_ADC/sar_adc_tutorial/intake.toml"
+config_path = "module_3_8_bit_SAR_ADC/part_4_SAR_ADC/sar_adc_tutorial.toml"
 
 [[circuits]]
-id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.layout.misc.input_pair.schematic_mod.input_pair_cm"
-title = "IHP AnalogAcademy: input_pair_cm"
-source_path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/misc/input_pair/schematic_mod/input_pair_cm.sch"
-source_sha256 = "d1d7332f1f09f1a02705176c47c1a155a1542aed517d523f89bcf4a0fa2b1598"
-source_bytes = 1062
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/misc/input_pair/schematic_mod/input_pair_cm/intake.toml"
+config_path = "module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/misc/input_pair/schematic_mod/input_pair_cm.toml"
 
 [[circuits]]
-id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.layout.misc.load.schematic_mod.load"
-title = "IHP AnalogAcademy: load"
-source_path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/misc/load/schematic_mod/load.sch"
-source_sha256 = "9410cb220454c0b0556eeea7e66499b729b860b6d2c53932f137039f30170640"
-source_bytes = 2477
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/misc/load/schematic_mod/load/intake.toml"
+config_path = "module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/misc/load/schematic_mod/load.toml"
 
 [[circuits]]
-id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.layout.schematic.DIFF_COMPARATOR"
-title = "IHP AnalogAcademy: DIFF_COMPARATOR"
-source_path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/schematic/DIFF_COMPARATOR.sch"
-source_sha256 = "ba403c374a2c4f017c6044083d096abb89f71ffe34c2abaa0f90c351648f213a"
-source_bytes = 5737
-source_format = "xschem"
-role = "design"
-status = "candidate"
-intake_path = "module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/schematic/DIFF_COMPARATOR/intake.toml"
+config_path = "module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/schematic/DIFF_COMPARATOR.toml"
 
 [[circuits]]
-id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.xschem_post_layout.testbench.comparator_tb"
-title = "IHP AnalogAcademy: comparator_tb"
-source_path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/xschem_post_layout/testbench/comparator_tb.sch"
-source_sha256 = "b67a4ebc34e15e5853b3d58b07793c0dec18d27d74ec866db8a45b2ede174237"
-source_bytes = 33365
-source_format = "xschem"
-role = "testbench"
-status = "supporting-source"
-intake_path = "module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/xschem_post_layout/testbench/comparator_tb/intake.toml"
+config_path = "module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/xschem_post_layout/testbench/comparator_tb.toml"
 
 [[circuits]]
-id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.xschem_post_layout.testbench.offset_MC_analysis"
-title = "IHP AnalogAcademy: offset_MC_analysis"
-source_path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/xschem_post_layout/testbench/offset_MC_analysis.sch"
-source_sha256 = "0b39ecd3eda4fe38a942281a2b3937b7c1aec253a23ea8a26c1e3ec9d1876d02"
-source_bytes = 3564
-source_format = "xschem"
-role = "testbench"
-status = "supporting-source"
-intake_path = "module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/xschem_post_layout/testbench/offset_MC_analysis/intake.toml"
+config_path = "module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/xschem_post_layout/testbench/offset_MC_analysis.toml"
 
 [[circuits]]
-id = "utils.gmid_demonstration.testbench.ota_testbench"
-title = "IHP AnalogAcademy: ota_testbench"
-source_path = "utils/gmid_demonstration/testbench/ota_testbench.sch"
-source_sha256 = "169d5b17f12395321473fe2d4a86f5201d1a948fbd58c20eedad782df6ef28ae"
-source_bytes = 2477
-source_format = "xschem"
-role = "testbench"
-status = "supporting-source"
-intake_path = "utils/gmid_demonstration/testbench/ota_testbench/intake.toml"
+config_path = "utils/gmid_demonstration/testbench/ota_testbench.toml"
 
 [[circuits]]
-id = "utils.gmid_demonstration.testbench.schematic"
-title = "IHP AnalogAcademy: schematic"
-source_path = "utils/gmid_demonstration/testbench/schematic.sch"
-source_sha256 = "b0d30c8e3357fbd128384eaa0322e894ae39277b00e7026e7a423643dba52ad1"
-source_bytes = 2039
-source_format = "xschem"
-role = "testbench"
-status = "supporting-source"
-intake_path = "utils/gmid_demonstration/testbench/schematic/intake.toml"
+config_path = "utils/gmid_demonstration/testbench/schematic.toml"
 
 [[artifacts]]
 path = "modules/module_0_foundations/inverter/inverter.sym"

@@ -1,14 +1,14 @@
 # Adding Tasks and Validating the Judge
 
-See the complete example in [the IHP AnalogAcademy transmission-gate task](../tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/task.toml). The complete upstream circuit inventory is [catalogued under `tasks/IHP-AnalogAcademy/`](../tasks/IHP-AnalogAcademy/README.md); intake proceeds by checking sources, freezing inputs, defining constraints and an evaluation plan, preparing tool bindings, and then validating with a reference solution and counterexamples. Models, budgets, repetitions, and access policy belong to the outer [run plan](running.md).
+See the complete example in [the IHP AnalogAcademy transmission-gate task](../tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/task.toml). The complete upstream circuit inventory is [catalogued under `tasks/IHP-AnalogAcademy/`](../tasks/IHP-AnalogAcademy/README.md); source review proceeds by checking sources, freezing inputs, defining constraints and an evaluation plan, preparing tool bindings, and then validating with a reference solution and counterexamples. Models, budgets, repetitions, and access policy belong to the outer [run plan](running.md).
 
-The catalog is an intake index, not a shortcut around task qualification. A
+The catalog is an inventory index, not a shortcut around task qualification. A
 `candidate` record becomes a benchmark task only after its authoritative
 netlist, physical constraints, evaluation plan, and independent qualification
 evidence are frozen. Qucs/RF schematics and testbenches remain explicitly
 typed as `source-only` or `supporting-source`; they are not silently treated as
 `netlist_to_gds` tasks. Each record is bound to the upstream submodule commit
-and source digest, so updating the submodule requires a new intake review.
+and source digest, so updating the submodule requires a new source review.
 
 <a id="task-design"></a>
 

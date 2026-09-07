@@ -23,7 +23,7 @@ Measure whether an agent can turn a circuit netlist, physical constraints, and p
 
 Layout-Bench runs an Agent in an isolated container, records an explicit GDS submission, and evaluates the frozen candidate with independent EDA tools. DRC/LVS establish physical validity; a complete task also checks the declared geometry and post-layout performance limits.
 
-> **Public preview.** The repository ships one qualified public task, `academy-tgate`, its reference solution, and 14 qualification scenarios. The complete IHP AnalogAcademy source intake is [catalogued under `tasks/IHP-AnalogAcademy/`](tasks/IHP-AnalogAcademy/README.md); circuits without task-specific netlists, constraints, evaluation, and qualification remain catalog records rather than runnable tasks. This package is intended for local, reproducible evaluation.
+> **Public preview.** The repository ships one qualified public task, `academy-tgate`, its reference solution, and 14 qualification scenarios. The complete IHP AnalogAcademy source catalog is [under `tasks/IHP-AnalogAcademy/`](tasks/IHP-AnalogAcademy/README.md); circuits without task-specific netlists, constraints, evaluation, and qualification remain catalog records rather than runnable tasks. This package is intended for local, reproducible evaluation.
 
 ## Why Layout-Bench?
 
@@ -193,7 +193,7 @@ They exercise the judge's positive, negative, geometry, extraction, performance,
 
 This package includes the public task and its qualification materials, the common executable-harness session protocol, a provider-neutral canonical harness example, a host-owned model gateway, configurable EDA backends, and local batch statistics. It does not include hosted evaluation, identity authentication, or an official leaderboard.
 
-The framework is licensed under [MIT](LICENSE). The public `academy-tgate` task retains its [Apache-2.0 license](tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/LICENSE). The IHP AnalogAcademy intake records retain the upstream license and per-file notices; submodules, tools, and dependencies retain their own licenses and notices; source and resource preparation are described in the [tool guide](docs/tools.md#external-sources).
+The framework is licensed under [MIT](LICENSE). The public `academy-tgate` task retains its [Apache-2.0 license](tasks/IHP-AnalogAcademy/module_3_8_bit_SAR_ADC/part_2_digital_comps/T_gate/LICENSE). The IHP AnalogAcademy source records retain the upstream license and per-file notices; submodules, tools, and dependencies retain their own licenses and notices; source and resource preparation are described in the [tool guide](docs/tools.md#external-sources).
 
 <p align="center">
 <a href="README_CN.md">阅读中文文档 →</a>
