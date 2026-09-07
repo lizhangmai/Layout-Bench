@@ -11,11 +11,49 @@ from .evaluation import Job
 from .files import Asset, keys, relative, text
 
 
+def validate_drc_waivers(value: object) -> list[dict]:
+    """Validate case-local DRC marker waivers before invoking KLayout.
+
+    A waiver names the report category, exact report cell, and the textual
+    marker values that may be accepted.  Requiring exact markers keeps an
+    exception local to the reviewed geometry instead of turning a rule into a
+    task-wide allow-list.  The runner validates the same shape inside the
+    isolated tool container before applying it to a report.
+    """
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        raise TypeError("DRC waivers must be a list")
+    waivers = []
+    seen = set()
+    for index, waiver in enumerate(value):
+        keys(waiver, {"category", "cell", "markers", "reason"}, set(),
+             f"DRC waiver {index}")
+        category = text(waiver["category"], f"DRC waiver {index} category")
+        cell = text(waiver["cell"], f"DRC waiver {index} cell")
+        reason = text(waiver["reason"], f"DRC waiver {index} reason")
+        markers = waiver["markers"]
+        if not isinstance(markers, list) or not markers:
+            raise ValueError(f"DRC waiver {index} markers must be a nonempty list")
+        markers = [text(marker, f"DRC waiver {index} marker") for marker in markers]
+        if len(set(markers)) != len(markers):
+            raise ValueError(f"DRC waiver {index} markers must be unique")
+        for marker in markers:
+            identity = (category, cell, marker)
+            if identity in seen:
+                raise ValueError(f"Duplicate DRC waiver marker: {identity}")
+            seen.add(identity)
+        waivers.append({"category": category, "cell": cell, "markers": markers,
+                        "reason": reason})
+    return waivers
+
+
 class KLayoutDocker:
     """Check one concern. Technology settings live in a reviewed support bundle.
 
     The profile selects a deck and fixed -rd variables, not arbitrary commands.
     The task supplies only its top cell, authoritative netlist and size limit.
+    DRC jobs may add exact, case-local marker waivers; they never alter the deck.
     """
 
     def __init__(self, *, image: str, check: str, support: str | None = None,
@@ -80,8 +118,12 @@ class KLayoutDocker:
                 or job.outputs and (self.check != "lvs" or dict(job.outputs) != allowed_outputs)):
             raise ValueError("KLayout checks require GDS; only LVS may export database and binding")
         allowed = {"top_cell", "max_bytes"} | ({"subcircuit"} if self.check == "lvs" else set())
+        if self.check == "drc":
+            allowed.add("waivers")
         keys(job.parameters, set(), allowed, "KLayout check parameters")
         params = dict(job.parameters)
+        if self.check == "drc":
+            params["waivers"] = validate_drc_waivers(params.get("waivers"))
         if "task" in inputs:
             if inputs["task"].format != "json":
                 raise ValueError("Task description must be JSON")

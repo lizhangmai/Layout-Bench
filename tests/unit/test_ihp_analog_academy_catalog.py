@@ -111,6 +111,12 @@ def test_comparator_is_a_candidate_executable_task():
     assert task.status == "candidate"
     assert task.evaluation is not None
     assert task.evaluation.mode == "physical"
+    drc = next(job for job in task.evaluation.jobs if job.id == "drc")
+    waiver = drc.parameters["waivers"][0]
+    assert waiver["category"] == "'NBL.b'"
+    assert waiver["cell"] == "DIFF_COMPARATOR"
+    assert len(waiver["markers"]) == 7
+    assert waiver["reason"]
     assert {item.role for item in task.inputs} >= {"netlist", "constraints", "evaluation"}
     materialized = task.evaluation_inputs()
     assert "task" in materialized and "input:netlist" in materialized

@@ -19,6 +19,14 @@ from benchmarking.toolchains import load_toolchain
 pytestmark = [pytest.mark.integration, pytest.mark.acceptance, pytest.mark.acceptance_eda]
 ROOT = Path(__file__).resolve().parents[2]
 EXAMPLES = ROOT / "examples/sg13g2"
+COMPARATOR_CASE = ROOT / (
+    "tasks/IHP-AnalogAcademy/cases/"
+    "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.toml"
+)
+COMPARATOR_GDS = ROOT / (
+    "third_party/IHP-AnalogAcademy/modules/module_3_8_bit_SAR_ADC/"
+    "part_5_analog_layout/comparator/layout/DIFF_COMPARATOR.gds"
+)
 
 
 @pytest.fixture(scope="module")
@@ -58,6 +66,31 @@ def test_physical_success_is_not_sufficient_for_task_success(context, tmp_path):
     assert slow["task_success"] is False and slow["outcome"] == "failed"
     assert slow["metrics"]["fall_delay"]["value"] > 20 * valid["metrics"]["fall_delay"]["value"]
     assert slow["quality_eligible"] is False
+
+
+def test_case_local_drc_waiver_matches_only_reviewed_markers(context, tmp_path):
+    _, backends, _ = context
+    task = load_task(COMPARATOR_CASE)
+    job = next(job for job in task.evaluation.jobs if job.id == "drc")
+    inputs = {"layout": Asset(COMPARATOR_GDS.read_bytes(), "gds"),
+              "task": task.evaluation_inputs()["task"]}
+
+    accepted = backends["layout.drc"].run(job, inputs)
+    assert accepted.status == "passed", accepted.reason
+    details = json.loads(accepted.evidence["result.json"].content)["details"]
+    assert details["violations"] == details["waived_violations"] == 7
+    assert details["unwaived_violations"] == 0
+    assert details["waivers"][0]["matched_markers"] == 7
+    assert details["waivers"][0]["reason"]
+
+    params = job.parameters
+    params["waivers"][0]["markers"] = params["waivers"][0]["markers"][:-1]
+    rejected = backends["layout.drc"].run(
+        replace(job, parameters_json=json.dumps(params, sort_keys=True)), inputs)
+    assert rejected.status == "failed"
+    rejected_details = json.loads(rejected.evidence["result.json"].content)["details"]
+    assert rejected_details["waived_violations"] == 6
+    assert rejected_details["unwaived_violations"] == 1
 
 
 @pytest.mark.parametrize("fault,gate", [("short", "lvs"), ("open", "lvs"), ("parameter", "lvs"),

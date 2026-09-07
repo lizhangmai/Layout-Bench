@@ -8,6 +8,86 @@ from pathlib import Path
 from klayout import db, rdb
 
 
+def _text(value, name):
+    if not isinstance(value, str) or not value.strip() or "\x00" in value:
+        raise ValueError(f"{name} must be a nonempty string without NUL")
+    return value
+
+
+def _validate_waivers(value):
+    """Validate the case-local marker allow-list inside the tool container."""
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        raise TypeError("DRC waivers must be a list")
+    waivers = []
+    seen = set()
+    for index, waiver in enumerate(value):
+        if not isinstance(waiver, dict):
+            raise TypeError(f"DRC waiver {index} must be an object")
+        required = {"category", "cell", "markers", "reason"}
+        if set(waiver) != required:
+            raise ValueError(f"DRC waiver {index} has invalid fields")
+        category = _text(waiver["category"], f"DRC waiver {index} category")
+        cell = _text(waiver["cell"], f"DRC waiver {index} cell")
+        reason = _text(waiver["reason"], f"DRC waiver {index} reason")
+        markers = waiver["markers"]
+        if not isinstance(markers, list) or not markers:
+            raise ValueError(f"DRC waiver {index} markers must be a nonempty list")
+        markers = [_text(marker, f"DRC waiver {index} marker") for marker in markers]
+        if len(set(markers)) != len(markers):
+            raise ValueError(f"DRC waiver {index} markers must be unique")
+        for marker in markers:
+            identity = (category, cell, marker)
+            if identity in seen:
+                raise ValueError(f"Duplicate DRC waiver marker: {identity}")
+            seen.add(identity)
+        waivers.append({"category": category, "cell": cell, "markers": markers,
+                        "reason": reason})
+    return waivers
+
+
+def _drc_item_signature(report, item):
+    category_object = report.category_by_id(item.category_id())
+    cell_object = report.cell_by_id(item.cell_id())
+    category = category_object.path() if category_object is not None else ""
+    cell = cell_object.name() if cell_object is not None else ""
+    values = tuple(value.to_s() for value in item.each_value())
+    return category, cell, values
+
+
+def _apply_drc_waivers(report, waivers):
+    """Return raw/unwaived counts while preserving the native report."""
+    allowed = {
+        (waiver["category"], waiver["cell"], (marker,)): (index, waiver)
+        for index, waiver in enumerate(waivers) for marker in waiver["markers"]
+    }
+    used = set()
+    waived_by_category = {}
+    unwaived_by_category = {}
+    matched_by_waiver = [0] * len(waivers)
+    unwaived = []
+    for item in report.each_item():
+        category, cell, values = _drc_item_signature(report, item)
+        key = (category, cell, values)
+        match = allowed.get(key)
+        if match is not None and key not in used:
+            used.add(key)
+            index, _ = match
+            matched_by_waiver[index] += 1
+            waived_by_category[category] = waived_by_category.get(category, 0) + 1
+        else:
+            unwaived.append((category, cell, values))
+            unwaived_by_category[category] = unwaived_by_category.get(category, 0) + 1
+
+    waiver_details = []
+    for waiver, matched in zip(waivers, matched_by_waiver):
+        waiver_details.append({"category": waiver["category"], "cell": waiver["cell"],
+                               "declared_markers": len(waiver["markers"]),
+                               "matched_markers": matched, "reason": waiver["reason"]})
+    return unwaived, waived_by_category, unwaived_by_category, waiver_details
+
+
 def artifact(config):
     path = Path("candidate.gds")
     if path.stat().st_size > config["max_bytes"]:
@@ -37,6 +117,7 @@ def artifact(config):
 def drc(config):
     report = rdb.ReportDatabase()
     report.load("report.db")
+    waivers = _validate_waivers(config.get("waivers"))
     def all_categories(iterator):
         for category in iterator:
             yield category
@@ -50,8 +131,17 @@ def drc(config):
         return "error", "DRC report does not describe the requested top cell", details
     if not set(config["required_categories"]) <= set(names):
         return "error", "DRC report lacks required categories from the configured rule scope", details
+    unwaived, waived_by_category, unwaived_by_category, waiver_details = _apply_drc_waivers(report, waivers)
+    details.update({"waived_violations": report.num_items() - len(unwaived),
+                    "unwaived_violations": len(unwaived),
+                    "waived_by_category": waived_by_category,
+                    "unwaived_by_category": unwaived_by_category,
+                    "waivers": waiver_details})
+    if unwaived:
+        return "failed", "Unexpected DRC violations found", details
     if report.num_items():
-        return "failed", "DRC violations found", details
+        reasons = sorted({entry["reason"] for entry in waiver_details if entry["matched_markers"]})
+        return "passed", "DRC violations waived: " + " | ".join(reasons), details
     return "passed", "", details
 
 
