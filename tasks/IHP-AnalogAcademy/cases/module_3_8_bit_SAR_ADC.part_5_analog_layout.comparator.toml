@@ -108,20 +108,6 @@ format = "json"
 sha256 = "175d1441f89a114456897a954ccacae409a05216a9a1dcf583a09ea8915987dd"
 
 [[assets]]
-path = "assets/module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator/source-export/normalization.json"
-role = "netlist-normalization-record"
-visibility = "maintainer"
-format = "json"
-sha256 = "f3a0410a53d05f9dd83028a45bbac8a175937f7ccab0ac97d6beb7bebdd2f84d"
-
-[[assets]]
-path = "assets/module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator/source-export/normalize_netlist.py"
-role = "netlist-normalization-script"
-visibility = "maintainer"
-format = "python"
-sha256 = "ffac32ab5cd6f5c0be718514062c3b48adb1b447b6334638466eeb3703eed11e"
-
-[[assets]]
 path = "assets/module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator/inputs/comparator_post_layout.spice"
 role = "derived-testbench-adapter"
 visibility = "maintainer"
@@ -170,11 +156,11 @@ reason = "Upstream provides DIFF_COMPARATOR GDS/flat GDS, LVS netlist, PEX outpu
 [task]
 kind = "netlist_to_gds"
 family = "ihp_sg13g2_analog_comparator"
-environment = "ihp-sg13g2-main-drc-lvs"
+environment = "ihp-sg13g2-upstream-drc-lvs"
 
 [task.inputs.netlist]
 path = "assets/module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator/inputs/circuit.spice"
-sha256 = "0922f97fc3ffeff2ca68ccf3a834f0b8b6f47c9dcdee1e3af8bb814fe22cd77c"
+sha256 = "fb74cb22eebf4ee891956ef779718a9378ef3a5d538c62b527684873f9bec1f5"
 format = "spice"
 subcircuit = "DIFF_COMPARATOR"
 
@@ -185,12 +171,8 @@ format = "json"
 
 [task.inputs.evaluation]
 path = "assets/module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator/evaluation/physical.toml"
-sha256 = "bd0624b794285039470461764ce23b36a7bdb221594f94c204814b5b41ce8812"
+sha256 = "20fcf30d04ac85767277af76718a7c09065c27569a84e57f22b39b599a98b05b"
 format = "toml"
-
-[task.provenance]
-path = "assets/module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator/source-export/normalization.json"
-sha256 = "f3a0410a53d05f9dd83028a45bbac8a175937f7ccab0ac97d6beb7bebdd2f84d"
 
 [task.output]
 path = "output/final.gds"

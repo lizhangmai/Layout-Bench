@@ -56,13 +56,13 @@ def _drc_item_signature(report, item):
     return category, cell, values
 
 
-def _apply_drc_waivers(report, waivers):
+def _apply_drc_waivers(report, waivers, used=None):
     """Return raw/unwaived counts while preserving the native report."""
     allowed = {
         (waiver["category"], waiver["cell"], (marker,)): (index, waiver)
         for index, waiver in enumerate(waivers) for marker in waiver["markers"]
     }
-    used = set()
+    used = set() if used is None else used
     waived_by_category = {}
     unwaived_by_category = {}
     matched_by_waiver = [0] * len(waivers)
@@ -114,9 +114,9 @@ def artifact(config):
     return ""
 
 
-def drc(config):
+def drc(config, report_path="report.db", used=None):
     report = rdb.ReportDatabase()
-    report.load("report.db")
+    report.load(report_path)
     waivers = _validate_waivers(config.get("waivers"))
     def all_categories(iterator):
         for category in iterator:
@@ -131,7 +131,7 @@ def drc(config):
         return "error", "DRC report does not describe the requested top cell", details
     if not set(config["required_categories"]) <= set(names):
         return "error", "DRC report lacks required categories from the configured rule scope", details
-    unwaived, waived_by_category, unwaived_by_category, waiver_details = _apply_drc_waivers(report, waivers)
+    unwaived, waived_by_category, unwaived_by_category, waiver_details = _apply_drc_waivers(report, waivers, used)
     details.update({"waived_violations": report.num_items() - len(unwaived),
                     "unwaived_violations": len(unwaived),
                     "waived_by_category": waived_by_category,
@@ -181,30 +181,63 @@ def main(config):
         return "failed", error, {}
     if config["check"] == "artifact":
         return "passed", "", {}
+    if config["check"] != "drc":
+        return run_deck(config)
+    entries = [{"deck": config["deck"], "required_categories": config["required_categories"]},
+               *config.get("additional_decks", [])]
+    used, results = set(), []
+    for index, entry in enumerate(entries):
+        suffix = f"-{index}" if index else ""
+        status, reason, details = run_deck({**config, **entry}, suffix, used)
+        results.append({"deck": entry["deck"], "report": f"report{suffix}.db",
+                        "status": status, "reason": reason, "details": details})
+    if len(results) == 1:
+        result = results[0]
+        return result["status"], result["reason"], result["details"]
+    totals = {"decks": results}
+    for key in ("violations", "waived_violations", "unwaived_violations"):
+        totals[key] = sum(result["details"].get(key, 0) for result in results)
+    for key in ("by_category", "waived_by_category", "unwaived_by_category"):
+        counts = {}
+        for result in results:
+            for category, count in result["details"].get(key, {}).items():
+                counts[category] = counts.get(category, 0) + count
+        totals[key] = counts
+    for verdict in ("error", "failed"):
+        failures = [result for result in results if result["status"] == verdict]
+        if failures:
+            return verdict, " | ".join(result["deck"] + ": " + result["reason"] for result in failures), totals
+    return "passed", "", totals
+
+
+def run_deck(config, suffix="", used=None):
     mode = config["check"]
-    wrapper = f"check.{mode}"
+    wrapper = f"check{suffix}.{mode}"
     mapping = ", ".join(f'"{name}" => lvs_data.layer_name(lvs_data.layer_of({variable}.data))'
                         for name, variable in config.get("layer_names", {}).items())
     names = ('require "json"\nFile.write("layer-map.json", JSON.generate({' + mapping + '}))\n') if mode == "lvs" else ""
     Path(wrapper).write_text(f'# %include /workspace/support/{config["deck"]}\n' + names +
-                            'File.write("/workspace/complete.txt", "complete\\n")\n')
+                            f'File.write("/workspace/complete{suffix}.txt", "complete\\n")\n')
     variables = {**config["variables"], "input": "/workspace/candidate.gds", "topcell": config["top_cell"],
-                 "report": "/workspace/report.db", "log": "/workspace/deck.log"}
+                 "report": f"/workspace/report{suffix}.db", "log": f"/workspace/deck{suffix}.log"}
     if mode == "lvs":
         variables.update(schematic="/workspace/reference.spice", target_netlist="/workspace/extracted.spice")
     command = ["klayout", "-b", "-r", wrapper]
     command.extend(arg for k, v in variables.items() for arg in ("-rd", f"{k}={v}"))
-    with Path("tool.log").open("wb") as log:
+    with Path(f"tool{suffix}.log").open("wb") as log:
         run = subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, check=False)
-    if run.returncode or Path("complete.txt").read_text() != "complete\n" or not Path("report.db").stat().st_size:
+    if run.returncode or Path(f"complete{suffix}.txt").read_text() != "complete\n" or not Path(f"report{suffix}.db").stat().st_size:
         return "error", "KLayout did not produce a complete check report", {"returncode": run.returncode}
-    return (drc if mode == "drc" else lvs)(config)
+    return drc(config, f"report{suffix}.db", used) if mode == "drc" else lvs(config)
 
 
 if __name__ == "__main__":
     config = json.loads(Path("config.json").read_text())
     for name in ("tool.log", "report.db", "complete.txt", "extracted.spice", "layer-map.json"):
         Path(name).touch()
+    for index, _ in enumerate(config.get("additional_decks", []), 1):
+        for name in (f"report-{index}.db", f"complete-{index}.txt", f"tool-{index}.log"):
+            Path(name).touch()
     try:
         status, reason, details = main(config)
     except Exception as error:  # noqa: BLE001 -- retain tool/report errors as errors, never failures.

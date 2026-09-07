@@ -74,7 +74,7 @@ class KLayoutDocker:
             required = {"deck", "variables", "scope"}
             if check == "drc":
                 required.add("required_categories")
-            keys(self.settings, required, {"layer_names"} if check == "lvs" else set(), "KLayout check profile")
+            keys(self.settings, required, {"layer_names"} if check == "lvs" else {"additional_decks"}, "KLayout check profile")
             for name, variable in self.settings.get("layer_names", {}).items():
                 if not re.fullmatch(r"[a-z][a-z0-9_]*", name) or not re.fullmatch(r"[a-z][a-z0-9_]*", variable):
                     raise ValueError("LVS layer names must be simple identifiers")
@@ -98,6 +98,22 @@ class KLayoutDocker:
                     raise ValueError("DRC requires its required, unique report category list")
                 for category in categories:
                     text(category, "DRC category")
+                additional = self.settings.get("additional_decks", [])
+                if not isinstance(additional, list):
+                    raise TypeError("Additional DRC decks must be a list")
+                seen = {deck}
+                for entry in additional:
+                    keys(entry, {"deck", "required_categories"}, set(), "Additional DRC deck")
+                    path = relative(entry["deck"], "Additional DRC deck")
+                    if (path in seen or path not in dict(self.support.files)
+                            or not path.endswith(".drc") or not re.fullmatch(r"[A-Za-z0-9_./-]+", path)):
+                        raise ValueError("Missing, duplicate or incorrectly typed additional DRC deck")
+                    seen.add(path)
+                    required_names = entry["required_categories"]
+                    if (not isinstance(required_names, list) or not required_names
+                            or any(not isinstance(name, str) or not name.strip() for name in required_names)
+                            or len(set(required_names)) != len(required_names)):
+                        raise ValueError("Additional DRC deck requires unique category names")
         self.tool = DockerTool(image, ["klayout", "-v"], timeout_seconds)
         self.runner = Asset(Path(__file__).with_name("klayout_runner.py").read_bytes(), "python")
 
@@ -152,6 +168,9 @@ class KLayoutDocker:
         exports = {"result.json": "json", "tool.log": "text"}
         if self.check != "artifact":
             exports.update({"report.db": "klayout-" + self.check, "complete.txt": "text"})
+        for index, _ in enumerate(self.settings.get("additional_decks", []), 1):
+            exports.update({f"report-{index}.db": "klayout-drc", f"complete-{index}.txt": "text",
+                            f"tool-{index}.log": "text"})
         if self.check == "lvs":
             exports["extracted.spice"] = "spice"
             exports["layer-map.json"] = "json"
