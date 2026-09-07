@@ -1,0 +1,35 @@
+schema_version = 1
+
+[backends.artifact]
+type = "klayout-docker"
+[backends.artifact.settings]
+image = "layout-bench-tools:local"
+check = "artifact"
+
+[backends.drc]
+type = "klayout-docker"
+[backends.drc.settings]
+image = "layout-bench-tools:local"
+check = "drc"
+support = "build/support/sg13g2-klayout-ports"
+profile = "drc.json"
+
+[backends.lvs]
+type = "klayout-docker"
+[backends.lvs.settings]
+image = "layout-bench-tools:local"
+check = "lvs"
+support = "build/support/sg13g2-klayout-ports"
+profile = "lvs.json"
+
+[backends.geometry]
+type = "klayout-geometry-docker"
+[backends.geometry.settings]
+image = "layout-bench-tools:local"
+timeout_seconds = 120
+
+[bindings]
+"layout.artifact" = "artifact"
+"layout.drc" = "drc"
+"layout.lvs" = "lvs"
+"layout.geometry" = "geometry"

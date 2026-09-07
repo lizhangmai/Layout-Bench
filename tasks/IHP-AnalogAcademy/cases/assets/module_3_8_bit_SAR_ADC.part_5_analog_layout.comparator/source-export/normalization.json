@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "authoritative_source": {
+    "checkout": "third_party/IHP-AnalogAcademy",
+    "commit": "133ecf657572e021b5921b5a1b7693abfb209623",
+    "path": "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/lvs_netlist/DIFF_COMPARATOR.spice",
+    "sha256": "fb74cb22eebf4ee891956ef779718a9378ef3a5d538c62b527684873f9bec1f5"
+  },
+  "source_export": {
+    "path": "DIFF_COMPARATOR.raw.spice",
+    "sha256": "09ba33d566d8547573e4b56d5ffc69dc48f65a4e7ceeae4af4499cc3c5add44d",
+    "provenance": "provenance.json",
+    "provenance_sha256": "175d1441f89a114456897a954ccacae409a05216a9a1dcf583a09ea8915987dd"
+  },
+  "target": {
+    "path": "../inputs/circuit.spice",
+    "sha256": "0922f97fc3ffeff2ca68ccf3a834f0b8b6f47c9dcdee1e3af8bb814fe22cd77c",
+    "script": "normalize_netlist.py",
+    "script_sha256": "ffac32ab5cd6f5c0be718514062c3b48adb1b447b6334638466eeb3703eed11e",
+    "lvs_profile": "technology/sg13g2/klayout.json",
+    "disable_tap_extraction": true
+  },
+  "operations": [
+    {
+      "operation": "drop_device_models",
+      "models": ["ntap1", "ptap1"],
+      "reason": "The public SG13G2 LVS profile treats n-/p-taps as process connectivity, not schematic devices."
+    },
+    {
+      "operation": "tie_bulk_terminal",
+      "from": "well",
+      "to": "vdd",
+      "reason": "The n-well tap connects the PMOS bulk to VDD in the pinned layout."
+    },
+    {
+      "operation": "tie_bulk_terminal",
+      "from": "sub",
+      "to": "gnd",
+      "reason": "The p-substrate tap connects the NMOS bulk to GND in the pinned layout."
+    }
+  ],
+  "postprocessing": "Only the three listed connectivity-preserving operations were applied; device models, parameters, signal nets, and top-level ports were not otherwise edited."
+}

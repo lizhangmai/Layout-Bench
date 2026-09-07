@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "hard": [
+    {
+      "id": "outline",
+      "type": "bbox_max",
+      "functional_layers": [
+        [1, 0],
+        [5, 0],
+        [6, 0],
+        [8, 0],
+        [10, 0],
+        [19, 0],
+        [29, 0],
+        [30, 0],
+        [31, 0],
+        [32, 0],
+        [40, 0],
+        [50, 0],
+        [63, 0],
+        [126, 0],
+        [134, 0]
+      ],
+      "max_width_um": 45,
+      "max_height_um": 45
+    }
+  ],
+  "quality": [
+    {
+      "id": "area",
+      "type": "functional_bbox_area",
+      "layers_from": "outline"
+    }
+  ]
+}

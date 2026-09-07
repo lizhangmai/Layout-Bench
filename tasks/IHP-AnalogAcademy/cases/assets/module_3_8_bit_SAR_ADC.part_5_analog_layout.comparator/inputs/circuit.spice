@@ -1,0 +1,20 @@
+** Source-normalized netlist for the Layout-Bench SG13G2 LVS profile.
+** Derived from the pinned upstream LVS netlist; ntap1/ptap1 are process ties,
+** so their explicit resistor devices are omitted and bulk nodes are tied to
+** the corresponding supply rails.
+.SUBCKT DIFF_COMPARATOR VDD GND V+ V- CLK OUT- OUT+ VBIAS
+*.PININFO VDD:B GND:B V+:I V-:I CLK:I OUT-:O OUT+:O VBIAS:I
+M2 net3 v+ net1 vdd sg13_lv_pmos w=8u l=200n ng=2 m=4
+M1 net2 v- net1 vdd sg13_lv_pmos w=8u l=200n ng=2 m=4
+M4 out- net2 vdd vdd sg13_lv_pmos w=8u l=0.200u ng=2 m=1
+M5 out+ net3 vdd vdd sg13_lv_pmos w=8u l=0.200u ng=2 m=1
+M11 gnd net3 out+ gnd sg13_lv_nmos w=4.0u l=0.200u ng=2 m=1
+M12 gnd net2 out- gnd sg13_lv_nmos w=4.0u l=0.200u ng=2 m=1
+M6 gnd net2 net3 gnd sg13_lv_nmos w=4.0u l=0.200u ng=1 m=1
+M10 gnd clk net3 gnd sg13_lv_nmos w=4.0u l=0.200u ng=1 m=1
+M7 gnd clk net2 gnd sg13_lv_nmos w=4.0u l=0.200u ng=1 m=1
+M8 gnd net3 net2 gnd sg13_lv_nmos w=4.0u l=0.200u ng=1 m=1
+M3 gnd gnd gnd gnd sg13_lv_nmos w=4.0u l=0.200u ng=1 m=4
+M13 net1 clk net4 vdd sg13_lv_pmos w=18u l=0.3u ng=4 m=1
+M9 net4 vbias vdd vdd sg13_lv_pmos w=18u l=0.3u ng=4 m=1
+.ENDS

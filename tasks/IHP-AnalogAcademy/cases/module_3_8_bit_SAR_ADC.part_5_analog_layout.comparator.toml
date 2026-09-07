@@ -45,6 +45,89 @@ role = "testbench"
 format = "xschem"
 sha256 = "0b39ecd3eda4fe38a942281a2b3937b7c1aec253a23ea8a26c1e3ec9d1876d02"
 
+[source_export]
+tool = "xschem-lvs"
+schematic = "DIFF_COMPARATOR.sch"
+netlist = "DIFF_COMPARATOR.spice"
+
+[[source_export.files]]
+checkout = "academy"
+path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/schematic/DIFF_COMPARATOR.sch"
+target = "DIFF_COMPARATOR.sch"
+sha256 = "ba403c374a2c4f017c6044083d096abb89f71ffe34c2abaa0f90c351648f213a"
+
+[[source_export.files]]
+checkout = "pdk"
+path = "ihp-sg13g2/libs.tech/xschem/sg13g2_pr/sg13_lv_pmos.sym"
+target = "sg13g2_pr/sg13_lv_pmos.sym"
+sha256 = "bc03331b71de250641ba1eb34c3b13bd3bb21a53ed7c329ecf6b0b1a7c53a6c1"
+
+[[source_export.files]]
+checkout = "pdk"
+path = "ihp-sg13g2/libs.tech/xschem/sg13g2_pr/sg13_lv_nmos.sym"
+target = "sg13g2_pr/sg13_lv_nmos.sym"
+sha256 = "4c65869259c7aea7ff30d8612c5017419423d55e27dbb0aea28323e7da49ba7d"
+
+[[source_export.files]]
+checkout = "pdk"
+path = "ihp-sg13g2/libs.tech/xschem/sg13g2_pr/ntap1.sym"
+target = "sg13g2_pr/ntap1.sym"
+sha256 = "4793bb1189cb3a44307745c35d7ff8b6fdae3c7b9a36fb62fc549041eb307281"
+
+[[source_export.files]]
+checkout = "pdk"
+path = "ihp-sg13g2/libs.tech/xschem/sg13g2_pr/ptap1.sym"
+target = "sg13g2_pr/ptap1.sym"
+sha256 = "ca93ba7e1aefc330edfa3735186977289b77594f8f137b000e8f432634a8ecb9"
+
+[[source_export.files]]
+checkout = "pdk"
+path = "ihp-sg13g2/libs.tech/xschem/sg13g2_pr/annotate_fet_params.sym"
+target = "sg13g2_pr/annotate_fet_params.sym"
+sha256 = "abcebfdd0ffda54f9e1ef4d8b1f50a4523975cb6da64bf48b37a046c73f930aa"
+
+[[assets]]
+path = "assets/module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator/source-export/DIFF_COMPARATOR.raw.spice"
+role = "source-export-raw-netlist"
+visibility = "maintainer"
+format = "spice"
+sha256 = "09ba33d566d8547573e4b56d5ffc69dc48f65a4e7ceeae4af4499cc3c5add44d"
+
+[[assets]]
+path = "assets/module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator/source-export/netlist.log"
+role = "source-export-log"
+visibility = "maintainer"
+format = "text"
+sha256 = "0deacd1e293d7f92f2d94eb812854ed5d78f6ffd533f8df8eba7ba60c72583ff"
+
+[[assets]]
+path = "assets/module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator/source-export/provenance.json"
+role = "source-export-provenance"
+visibility = "maintainer"
+format = "json"
+sha256 = "175d1441f89a114456897a954ccacae409a05216a9a1dcf583a09ea8915987dd"
+
+[[assets]]
+path = "assets/module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator/source-export/normalization.json"
+role = "netlist-normalization-record"
+visibility = "maintainer"
+format = "json"
+sha256 = "f3a0410a53d05f9dd83028a45bbac8a175937f7ccab0ac97d6beb7bebdd2f84d"
+
+[[assets]]
+path = "assets/module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator/source-export/normalize_netlist.py"
+role = "netlist-normalization-script"
+visibility = "maintainer"
+format = "python"
+sha256 = "ffac32ab5cd6f5c0be718514062c3b48adb1b447b6334638466eeb3703eed11e"
+
+[[assets]]
+path = "assets/module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator/inputs/comparator_post_layout.spice"
+role = "derived-testbench-adapter"
+visibility = "maintainer"
+format = "spice"
+sha256 = "456551616ac34e3d968c07bca20125fc79c23358164ce58e82de17886db8b309"
+
 [[upstream_assets]]
 id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.reference_gds"
 path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/DIFF_COMPARATOR.gds"
@@ -83,3 +166,34 @@ sha256 = "f40a1cb1ba1b4c7366429c2413ff501922db2203d4b1f6b10a9c483e3ef80a85"
 [screening]
 decision = "include"
 reason = "Upstream provides DIFF_COMPARATOR GDS/flat GDS, LVS netlist, PEX outputs, layout schematic, and post-layout comparator/offset testbenches."
+
+[task]
+kind = "netlist_to_gds"
+family = "ihp_sg13g2_analog_comparator"
+environment = "ihp-sg13g2-main-drc-lvs"
+
+[task.inputs.netlist]
+path = "assets/module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator/inputs/circuit.spice"
+sha256 = "0922f97fc3ffeff2ca68ccf3a834f0b8b6f47c9dcdee1e3af8bb814fe22cd77c"
+format = "spice"
+subcircuit = "DIFF_COMPARATOR"
+
+[task.inputs.constraints]
+path = "assets/module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator/inputs/constraints.json"
+sha256 = "a28347804d6293e66e57a190a4aa154bc5c55fb5a6f392ce9072c16168b870cb"
+format = "json"
+
+[task.inputs.evaluation]
+path = "assets/module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator/evaluation/physical.toml"
+sha256 = "20fcf30d04ac85767277af76718a7c09065c27569a84e57f22b39b599a98b05b"
+format = "toml"
+
+[task.provenance]
+path = "assets/module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator/source-export/normalization.json"
+sha256 = "f3a0410a53d05f9dd83028a45bbac8a175937f7ccab0ac97d6beb7bebdd2f84d"
+
+[task.output]
+path = "output/final.gds"
+format = "gds"
+top_cell = "DIFF_COMPARATOR"
+max_bytes = 10485760

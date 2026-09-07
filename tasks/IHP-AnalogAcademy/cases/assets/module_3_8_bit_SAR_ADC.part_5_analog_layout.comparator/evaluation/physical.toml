@@ -1,0 +1,40 @@
+schema_version = 1
+mode = "physical"
+
+[[jobs]]
+id = "artifact"
+stage = "check"
+operation = "layout.artifact"
+gate = "artifact"
+inputs = { layout = "candidate", task = "task" }
+
+[[jobs]]
+id = "drc"
+stage = "check"
+operation = "layout.drc"
+gate = "drc"
+inputs = { layout = "candidate", task = "task" }
+
+[[jobs]]
+id = "lvs"
+stage = "check"
+operation = "layout.lvs"
+gate = "lvs"
+inputs = { layout = "candidate", task = "task", netlist = "input:netlist" }
+outputs = { database = "klayout-lvs", binding = "json" }
+
+[[jobs]]
+id = "geometry"
+stage = "check"
+operation = "layout.geometry"
+gate = "constraint"
+requires = ["artifact", "drc", "lvs"]
+inputs = { layout = "candidate", task = "task", constraints = "input:constraints", database = "job:lvs:database", binding = "job:lvs:binding" }
+
+[[metrics]]
+id = "functional_area"
+category = "physical"
+observations = ["geometry:area"]
+unit = "um2"
+direction = "minimize"
+aggregation = "max"
