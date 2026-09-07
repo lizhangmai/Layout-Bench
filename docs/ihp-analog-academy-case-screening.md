@@ -17,7 +17,8 @@
 
 这 4 个 case 的 TOML 仍需完成任务约束、评估计划和独立 qualification 后才能
 标成 `qualified`；但它们的 reference 必须直接取自 pinned upstream，不能另写
-layout generator。当前没有任何 IHP case 标成 `qualified`。之前为 T_gate 写的
+layout generator。统一 TOML 中的 `[[upstream_assets]]` 只记录这些上游文件的
+原始路径、hash 和大小，不复制二进制，也不把它们作为 Agent 输入。当前没有任何 IHP case 标成 `qualified`。之前为 T_gate 写的
 参考 GDS、qualification 脚本和校准文件已删除；T_gate 只保留上游 schematic 和
 testbench 来源记录。
 

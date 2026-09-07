@@ -100,7 +100,7 @@ class Task:
 def _validate_case(data: dict) -> None:
     """Validate the inventory half of a unified circuit case."""
     _keys(data, {"schema_version", "kind", "id", "title", "status", "origin", "sources"},
-          {"role", "task", "source_export", "assets", "qualification", "screening"}, "case")
+          {"role", "task", "source_export", "assets", "upstream_assets", "qualification", "screening"}, "case")
     if type(data["schema_version"]) is not int or data["schema_version"] != 2:
         raise ValueError("Unsupported case schema_version")
     if data["kind"] != "layout_case":
@@ -150,6 +150,24 @@ def _validate_case(data: dict) -> None:
             raise ValueError("case.assets.sha256 must be a lowercase SHA-256")
         if type(asset["bytes"]) is not int or asset["bytes"] <= 0:
             raise ValueError("case.assets.bytes must be a positive integer")
+    upstream_assets = data.get("upstream_assets", [])
+    if not isinstance(upstream_assets, list):
+        raise TypeError("case.upstream_assets must be an array")
+    seen_upstream = set()
+    for asset in upstream_assets:
+        _keys(asset, {"id", "path", "role", "format", "sha256", "bytes"}, set(),
+              "case.upstream_assets")
+        asset_id = _text(asset["id"], "case.upstream_assets.id")
+        if asset_id in seen_upstream:
+            raise ValueError(f"Duplicate upstream asset: {asset_id}")
+        seen_upstream.add(asset_id)
+        _relative(asset["path"], "case.upstream_assets.path")
+        _text(asset["role"], "case.upstream_assets.role")
+        _text(asset["format"], "case.upstream_assets.format")
+        if not isinstance(asset["sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", asset["sha256"]):
+            raise ValueError("case.upstream_assets.sha256 must be a lowercase SHA-256")
+        if type(asset["bytes"]) is not int or asset["bytes"] <= 0:
+            raise ValueError("case.upstream_assets.bytes must be a positive integer")
     qualification = data.get("qualification")
     if qualification is not None:
         _keys(qualification, {"evidence", "reference"}, set(), "case.qualification")

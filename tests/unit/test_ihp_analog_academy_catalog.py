@@ -59,6 +59,8 @@ def test_catalog_has_one_unified_config_per_case():
     assert qualified == []
     assert all(data.get("screening", {}).get("decision") in {"include", "defer", "exclude"}
                for data in configs.values())
+    upstream_assets = [asset for data in configs.values() for asset in data.get("upstream_assets", [])]
+    assert len({asset["id"] for asset in upstream_assets}) == len(upstream_assets)
     assert not list(CATALOG.parent.glob("**/intake.toml"))
     assert not list(CATALOG.parent.glob("**/task.toml"))
     assert not list(CATALOG.parent.glob("**/source.toml"))
@@ -101,3 +103,11 @@ def test_catalog_digests_match_the_pinned_submodule():
         assert path.is_file(), item["path"]
         assert not any(item["path"].startswith(path + "/") for path in excluded)
         assert hashlib.sha256(path.read_bytes()).hexdigest() == item["sha256"]
+    for data in configs.values():
+        checkout = ROOT / data["origin"]["checkout"]
+        for asset in data.get("upstream_assets", []):
+            path = checkout / asset["path"]
+            assert path.is_file(), asset["path"]
+            content = path.read_bytes()
+            assert hashlib.sha256(content).hexdigest() == asset["sha256"]
+            assert len(content) == asset["bytes"]

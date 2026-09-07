@@ -18,6 +18,46 @@ format = "xschem"
 sha256 = "565fff885a4400cf1e83657cfa6e4d87b6d8d5529c8ce025419b8192e9524233"
 bytes = 8608
 
+[[upstream_assets]]
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA.reference_gds"
+path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/two_stage_OTA_layout.gds"
+role = "reference"
+format = "gds"
+sha256 = "d017eb50df5e546b7632f517104576eca9d044483f8972e538aab56ce60d7980"
+bytes = 397110
+
+[[upstream_assets]]
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA.source_cdl"
+path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/schematic_mod/simulations/two_stage_OTA_layout.cdl"
+role = "source-netlist"
+format = "cdl"
+sha256 = "a02b6a358b04f7c6fd9523cfd3896e4ab45b4ca638e3281245a58665d33efc0b"
+bytes = 1251
+
+[[upstream_assets]]
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA.extracted_netlist"
+path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/two_stage_OTA_layout_extracted.cir"
+role = "extracted-netlist"
+format = "spice"
+sha256 = "d5971719d6fc3bc1eed29ea6f48ad56707c25d63add6bc49b59a670a46f10165"
+bytes = 1430
+
+[[upstream_assets]]
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA.drc_minimal"
+path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/sg13g2_minimal.lyrdb"
+role = "drc-evidence"
+format = "lyrdb"
+sha256 = "c8b070a76948518966a5e7307a72c38feff74352b464e40f34f8f5ff6b50186a"
+bytes = 17575
+
+[[upstream_assets]]
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA.drc_maximal"
+path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/sg13g2_maximal.lyrdb"
+role = "drc-evidence"
+format = "lyrdb"
+sha256 = "a17ed83c167b7bffbe9f3b7bffda04cba7bd0a820f6769c2b9030a9c390d6e5e"
+bytes = 393387
+
 [screening]
 decision = "include"
 reason = "Upstream provides the layout schematic, CDL, GDS, extracted netlist, and minimal/maximal DRC reports for the same two-stage OTA."

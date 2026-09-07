@@ -18,6 +18,30 @@ format = "xschem"
 sha256 = "4e05fb497d65fd5e47d110928ec8d442c74aa5b45cff6e4784f3a6c04854c4e6"
 bytes = 2415
 
+[[upstream_assets]]
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.output_stage.reference_gds"
+path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/output_stage/output_stage.gds"
+role = "reference"
+format = "gds"
+sha256 = "2bfd78a5d85a1465b5c04aee7c019ffe7b04b7a80225fc74b6c04171c6b05d8a"
+bytes = 141708
+
+[[upstream_assets]]
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.output_stage.source_cdl"
+path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/output_stage/schematic_mod/simulations/output_stage.cdl"
+role = "source-netlist"
+format = "cdl"
+sha256 = "22e1009cb94e85b1c35ffb14fb5728108077a61a06b39166aad9f46c3312425d"
+bytes = 585
+
+[[upstream_assets]]
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.output_stage.extracted_netlist"
+path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/output_stage/output_stage_extracted.cir"
+role = "extracted-netlist"
+format = "spice"
+sha256 = "59bca36faf904c26ecd297aca07bd5f787f38454404a5819f93f83633290dac4"
+bytes = 592
+
 [screening]
 decision = "include"
 reason = "Upstream provides the output-stage schematic, CDL, GDS, and extracted netlist for the same physical block."
