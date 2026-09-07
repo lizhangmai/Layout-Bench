@@ -16,7 +16,6 @@ path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/input_pair/s
 role = "design"
 format = "xschem"
 sha256 = "a378667699cf81eff1a49baa7a075836d5641b95836a4063810d06f11a303aef"
-bytes = 2981
 
 [[upstream_assets]]
 id = "module_1_bandgap_reference.part_3_layout.OTA_layout.input_pair.reference_gds"
@@ -24,7 +23,6 @@ path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/input_pair/i
 role = "reference"
 format = "gds"
 sha256 = "72e3412c6f11b713088d9ce6f5e1b143e4485857368f5324be75f6862704e09e"
-bytes = 120058
 
 [[upstream_assets]]
 id = "module_1_bandgap_reference.part_3_layout.OTA_layout.input_pair.source_cdl"
@@ -32,7 +30,6 @@ path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/input_pair/s
 role = "source-netlist"
 format = "cdl"
 sha256 = "329e60bdfd1b64087bd6b147911f508ce30132ecceaa5ff6da11606bc0eb3595"
-bytes = 656
 
 [[upstream_assets]]
 id = "module_1_bandgap_reference.part_3_layout.OTA_layout.input_pair.extracted_netlist"
@@ -40,7 +37,6 @@ path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/input_pair/i
 role = "extracted-netlist"
 format = "spice"
 sha256 = "bda338b202c1d421ad1b0fd4745e97fe00ba7b9778fb6978b8fe08a2b2eb502c"
-bytes = 650
 
 [screening]
 decision = "include"

@@ -34,94 +34,78 @@ config_path = "cases/module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.toml
 path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/two_stage_OTA_layout.gds"
 kind = "layout"
 sha256 = "d017eb50df5e546b7632f517104576eca9d044483f8972e538aab56ce60d7980"
-bytes = 397110
 
 [[artifacts]]
 path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/schematic_mod/simulations/two_stage_OTA_layout.cdl"
 kind = "netlist"
 sha256 = "a02b6a358b04f7c6fd9523cfd3896e4ab45b4ca638e3281245a58665d33efc0b"
-bytes = 1251
 
 [[artifacts]]
 path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/two_stage_OTA_layout_extracted.cir"
 kind = "extraction"
 sha256 = "d5971719d6fc3bc1eed29ea6f48ad56707c25d63add6bc49b59a670a46f10165"
-bytes = 1430
 
 [[artifacts]]
 path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/sg13g2_minimal.lyrdb"
 kind = "drc-report"
 sha256 = "c8b070a76948518966a5e7307a72c38feff74352b464e40f34f8f5ff6b50186a"
-bytes = 17575
 
 [[artifacts]]
 path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/sg13g2_maximal.lyrdb"
 kind = "drc-report"
 sha256 = "a17ed83c167b7bffbe9f3b7bffda04cba7bd0a820f6769c2b9030a9c390d6e5e"
-bytes = 393387
 
 [[artifacts]]
 path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/input_pair/input_common_centroid.gds"
 kind = "layout"
 sha256 = "72e3412c6f11b713088d9ce6f5e1b143e4485857368f5324be75f6862704e09e"
-bytes = 120058
 
 [[artifacts]]
 path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/input_pair/schematic_mod/simulations/input_common_centroid.cdl"
 kind = "netlist"
 sha256 = "329e60bdfd1b64087bd6b147911f508ce30132ecceaa5ff6da11606bc0eb3595"
-bytes = 656
 
 [[artifacts]]
 path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/input_pair/input_common_centroid_extracted.cir"
 kind = "extraction"
 sha256 = "bda338b202c1d421ad1b0fd4745e97fe00ba7b9778fb6978b8fe08a2b2eb502c"
-bytes = 650
 
 [[artifacts]]
 path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/output_stage/output_stage.gds"
 kind = "layout"
 sha256 = "2bfd78a5d85a1465b5c04aee7c019ffe7b04b7a80225fc74b6c04171c6b05d8a"
-bytes = 141708
 
 [[artifacts]]
 path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/output_stage/schematic_mod/simulations/output_stage.cdl"
 kind = "netlist"
 sha256 = "22e1009cb94e85b1c35ffb14fb5728108077a61a06b39166aad9f46c3312425d"
-bytes = 585
 
 [[artifacts]]
 path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/output_stage/output_stage_extracted.cir"
 kind = "extraction"
 sha256 = "59bca36faf904c26ecd297aca07bd5f787f38454404a5819f93f83633290dac4"
-bytes = 592
 
 [[artifacts]]
 path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/DIFF_COMPARATOR.gds"
 kind = "layout"
 sha256 = "2716d3953e42766c1c6ce270cbb9dac418862a612e67c174b1204435d9462bb1"
-bytes = 199506
 
 [[artifacts]]
 path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/DIFF_COMPARATOR_flat.gds"
 kind = "layout"
 sha256 = "a31a3499b7fbc6ebe611973fa7b531a5c4f31ab54da5ac663e1f5f4e85628dd0"
-bytes = 275820
 
 [[artifacts]]
 path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/lvs_netlist/DIFF_COMPARATOR.spice"
 kind = "netlist"
 sha256 = "fb74cb22eebf4ee891956ef779718a9378ef3a5d538c62b527684873f9bec1f5"
-bytes = 1130
 
 [[artifacts]]
 path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/pex/pex_output/DIFF_COMPARATOR__DIFF_COMPARATOR/magic_RC/DIFF_COMPARATOR.res.ext"
 kind = "extraction"
 sha256 = "959fd381e7c58b4dcd8ebbe931cc48626f81b29f3cff26c319194d539d51e0d9"
-bytes = 97918
 
 [[artifacts]]
 path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/pex/pex_output/DIFF_COMPARATOR__DIFF_COMPARATOR/magic_RC/DIFF_COMPARATOR_MAGIC_report.rdb.gz"
 kind = "pex-report"
 sha256 = "f40a1cb1ba1b4c7366429c2413ff501922db2203d4b1f6b10a9c483e3ef80a85"
-bytes = 31200

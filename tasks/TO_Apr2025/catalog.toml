@@ -26,292 +26,243 @@ config_path = "cases/DC_to_130_GHz_TIA.design_1.toml"
 path = "160GHz_LNA/design_data/gds/FMD_QNC_04_160GHz_LNA.gds"
 kind = "layout"
 sha256 = "9362ccf2dce10e94a5dd736ac06217076763bcc002c18fc04e5fb341c3438bff"
-bytes = 6917230
 
 [[artifacts]]
 path = "160GHz_LNA/design_data/klayout/lvs/160GHz_LNA.cdl"
 kind = "netlist"
 sha256 = "b46ce5ad9f6a5fe4772bf81a1d84a42319aaf1f46df558ec8f6d3cd98d116c57"
-bytes = 977
 
 [[artifacts]]
 path = "160GHz_LNA/design_data/klayout/TOP_extracted.cir"
 kind = "extraction"
 sha256 = "37ef1585b702d4ffce3b103722b6da711c4c4ea25c1ef7b0cb304ee1726ac4c2"
-bytes = 1120
 
 [[artifacts]]
 path = "160GHz_LNA/design_data/klayout/drc/160GHz_LNA_minimal.lyrdb"
 kind = "drc-report"
 sha256 = "301e7232c3f98f065055a682e79bca0c5851fadec3d3cc44ac5d679587427cef"
-bytes = 15190
 
 [[artifacts]]
 path = "160GHz_LNA/design_data/klayout/drc/160GHz_LNA_maximal.lyrdb"
 kind = "drc-report"
 sha256 = "0a0cfa451a00e43e6b08076704b49ddfa4dfaf529f0389b38a304bf846f570e0"
-bytes = 73264
 
 [[artifacts]]
 path = "160GHz_LNA/design_data/klayout/lvs/160GHz_LNA.lvsdb"
 kind = "lvs-report"
 sha256 = "0edc7684a76907b2a6ee47457d33e06554c69e658f35e12237baf0562ca33006"
-bytes = 6864870
 
 [[artifacts]]
 path = "160GHz_LNA/design_data/openems/1st_TL.s2p"
 kind = "rf-model"
 sha256 = "2d60d7d8f21a1b90b7761fe52f816b625a18d1466fba6c7b9a3b98331bfb5582"
-bytes = 359718
 
 [[artifacts]]
 path = "160GHz_LNA/design_data/openems/2nd_TL.s2p"
 kind = "rf-model"
 sha256 = "aff785cab537caa681966ade882b78bf06e66b77882831d939c05ad09c6b94af"
-bytes = 361255
 
 [[artifacts]]
 path = "160GHz_LNA/design_data/openems/3rd_TL.s2p"
 kind = "rf-model"
 sha256 = "aff785cab537caa681966ade882b78bf06e66b77882831d939c05ad09c6b94af"
-bytes = 361255
 
 [[artifacts]]
 path = "160GHz_LNA/design_data/openems/4th_TL.s2p"
 kind = "rf-model"
 sha256 = "70311bdea806fbf33e060fa076dd901ec590abc715b2221fabb3b35f9e48fe5a"
-bytes = 358430
 
 [[artifacts]]
 path = "160GHz_LNA/design_data/openems/Choke.s2p"
 kind = "rf-model"
 sha256 = "3e37b5018beb7c2a012d544bd2fa8415a4dcccb3585fe250cede51879e1c7e9d"
-bytes = 543028
 
 [[artifacts]]
 path = "160GHz_LNA/design_data/openems/Dgen.s2p"
 kind = "rf-model"
 sha256 = "869efd58e4dba33f51c7122f28781639f5b34862cd394a1458b1216065de9839"
-bytes = 540606
 
 [[artifacts]]
 path = "160GHz_LNA/design_data/openems/Dgen_final_stage.s2p"
 kind = "rf-model"
 sha256 = "c38c38071e27297ad15a67cf2c682ecc8775e5e62050167f0a03bad5bbb46694"
-bytes = 541744
 
 [[artifacts]]
 path = "40_GHZ_LOW_NOISE_TIA/design_data/gds/FMD_QNC_00_40_GHz_Low_Noise_TIA.gds"
 kind = "layout"
 sha256 = "4a24070dc99bef9db2a33a4dc21c1df109ecaebef4c7d4adf2acef9b2b819c25"
-bytes = 6687048
 
 [[artifacts]]
 path = "40_GHZ_LOW_NOISE_TIA/design_data/klayout/lvs/40_GHz_Low_Noise_TIA.cdl"
 kind = "netlist"
 sha256 = "b732197f47816e9ea38fccd7cb4a3233675425643ca6f4760e75ed2543997a8c"
-bytes = 794
 
 [[artifacts]]
 path = "40_GHZ_LOW_NOISE_TIA/design_data/klayout/TOP_extracted.cir"
 kind = "extraction"
 sha256 = "b876f801ddffafc7ed97a064d38179704c89a85f4ee637c7872219cab2518ce3"
-bytes = 848
 
 [[artifacts]]
 path = "40_GHZ_LOW_NOISE_TIA/design_data/klayout/drc/40_GHz_Low_Noise_TIA_minimal.lyrdb"
 kind = "drc-report"
 sha256 = "9f881cbfd592decbc7c7ba4c1c3c948fbc360fd50a49df3275f80cb7a208f6b3"
-bytes = 15247
 
 [[artifacts]]
 path = "40_GHZ_LOW_NOISE_TIA/design_data/klayout/drc/40_GHz_Low_Noise_TIA_maximal.lyrdb"
 kind = "drc-report"
 sha256 = "4d0d943cd9df60802c24cb622b2bb9af8329c2096cc354b35b4ca89535d5acc3"
-bytes = 73321
 
 [[artifacts]]
 path = "40_GHZ_LOW_NOISE_TIA/design_data/klayout/lvs/40_GHz_Low_Noise_TIA.lvsdb"
 kind = "lvs-report"
 sha256 = "1dcf7c90447e71d78a26cca05b651c626addb768463682f04aa2cd744b591b08"
-bytes = 6475790
 
 [[artifacts]]
 path = "40_GHZ_LOW_NOISE_TIA/design_data/openEMS/choke_1_data/choke_1.s2p"
 kind = "rf-model"
 sha256 = "c027d0bc94ea38ab59c84fca93f616646efd3583317114d001d3def43a0ffb3b"
-bytes = 123766
 
 [[artifacts]]
 path = "40_GHZ_LOW_NOISE_TIA/design_data/openEMS/choke_2_data/choke_2.s2p"
 kind = "rf-model"
 sha256 = "d2c0d97ff8fb479200cae26e4d34f0770d6e67faca15e44b248c02b876ec1b30"
-bytes = 123624
 
 [[artifacts]]
 path = "40_GHZ_LOW_NOISE_TIA/design_data/openEMS/choke_3_data/choke_3.s2p"
 kind = "rf-model"
 sha256 = "2374fb00ab1cf097ef0562e6f9ff22341279872df93ff9a3d54b8131145a8fec"
-bytes = 123745
 
 [[artifacts]]
 path = "40_GHZ_LOW_NOISE_TIA/design_data/openEMS/degenration_TL_data/deg_TL.s2p"
 kind = "rf-model"
 sha256 = "ad39a2615c5b48b83eac7f7b1c245dae05fef015348fe81dc5bb5475a7036a70"
-bytes = 544815
 
 [[artifacts]]
 path = "40_GHZ_LOW_NOISE_TIA/design_data/openEMS/peaking_TL_data/peaking_TL.s2p"
 kind = "rf-model"
 sha256 = "b56fa223d168c385c9d8f6b3beafecca4284b75435820687d4077610007c0410"
-bytes = 122495
 
 [[artifacts]]
 path = "40_GHZ_LOW_NOISE_TIA/design_data/openEMS/peaking_TL_data/peaking_TL_0hz_changed.s2p"
 kind = "rf-model"
 sha256 = "5209c44119df97bd722584142a0b2feef2a5b0001c2e50661a461ccc6d34bb35"
-bytes = 122495
 
 [[artifacts]]
 path = "97_GHZ_LINEAR_TIA/design_data/gds/FMD_QNC_01_97_GHZ_LINEAR_TIA.gds"
 kind = "layout"
 sha256 = "4412a8cb23f44989b4c626e6095ef10a1b2b407b72128e607fae50a2c103e211"
-bytes = 10315366
 
 [[artifacts]]
 path = "97_GHZ_LINEAR_TIA/design_data/klayout/lvs/97_GHZ_LINEAR_TIA.cdl"
 kind = "netlist"
 sha256 = "544a8502228d40e1cd48610d40fd925bd69ad2bc8c6fbadfbcd51acb2ed824b6"
-bytes = 2358
 
 [[artifacts]]
 path = "97_GHZ_LINEAR_TIA/design_data/klayout/FMD_QNC_01_LIN_TIA_extracted.cir"
 kind = "extraction"
 sha256 = "3b6bb7be8cc8d247a3ff113006e07dbbff80219062dc40bd64f419e59915568c"
-bytes = 2704
 
 [[artifacts]]
 path = "97_GHZ_LINEAR_TIA/design_data/klayout/drc/97_GHZ_LINEAR_TIA_minimal.lyrdb"
 kind = "drc-report"
 sha256 = "8092d21cd61aa77a1c4f20fbf4a6f96bed462d0aa52789a6c104862ba612d3e1"
-bytes = 15243
 
 [[artifacts]]
 path = "97_GHZ_LINEAR_TIA/design_data/klayout/drc/97_GHZ_LINEAR_TIA_maximal.lyrdb"
 kind = "drc-report"
 sha256 = "09250425353fe8c7850d532b44ee427290a19de2a099ce7875d470bfeb517c86"
-bytes = 73317
 
 [[artifacts]]
 path = "97_GHZ_LINEAR_TIA/design_data/klayout/lvs/97_GHZ_LINEAR_TIA_lvs.lvsdb"
 kind = "lvs-report"
 sha256 = "988f900ee9adcbf28bb410f9b95abe58ae7ee91dd6f10e0c2c20f8951b3439d8"
-bytes = 9044129
 
 [[artifacts]]
 path = "97_GHZ_LINEAR_TIA/design_data/openEMS/choke_1_em_data/choke_1_em.s2p"
 kind = "rf-model"
 sha256 = "e1ec15b48495044e2cfc193b2c9b3b558ea6f79a0fbce0df2d6a8e12b58290a1"
-bytes = 120595
 
 [[artifacts]]
 path = "97_GHZ_LINEAR_TIA/design_data/openEMS/choke_2_em_data/choke_2_em.s2p"
 kind = "rf-model"
 sha256 = "7ca263ff6ff1b4a34e7e85df8e60dfc38f18c6754314c7bcf40815b1f6f56e5c"
-bytes = 120146
 
 [[artifacts]]
 path = "97_GHZ_LINEAR_TIA/design_data/openEMS/choke_3_em_data/choke_3_em.s2p"
 kind = "rf-model"
 sha256 = "79d6b12d45e42ffce73a7d5a3e21b39feb970cca259ded414d6721befcfd9c1b"
-bytes = 120146
 
 [[artifacts]]
 path = "97_GHZ_LINEAR_TIA/design_data/openEMS/choke_4_em_data/choke_4_em.s2p"
 kind = "rf-model"
 sha256 = "812c349aab8b38a2faa69c63639fb463d802273815935fe3a8c1cbe766d0a78f"
-bytes = 122906
 
 [[artifacts]]
 path = "97_GHZ_LINEAR_TIA/design_data/openEMS/deg_1_em_data/deg_1_em.s2p"
 kind = "rf-model"
 sha256 = "0cf172233045b91e145311915769b1afe4571a00d429c2dfb9d03fd883fd4705"
-bytes = 122111
 
 [[artifacts]]
 path = "97_GHZ_LINEAR_TIA/design_data/openEMS/deg_4_em_data/deg_4_em.s2p"
 kind = "rf-model"
 sha256 = "ad39a2615c5b48b83eac7f7b1c245dae05fef015348fe81dc5bb5475a7036a70"
-bytes = 544815
 
 [[artifacts]]
 path = "97_GHZ_LINEAR_TIA/design_data/openEMS/input_em_data/input_em.s2p"
 kind = "rf-model"
 sha256 = "28a4dd1e07b9463f59f0687ee5522215381ab24266b0acbb504f237731833153"
-bytes = 123684
 
 [[artifacts]]
 path = "97_GHZ_LINEAR_TIA/design_data/openEMS/output_em_data/output_em.s2p"
 kind = "rf-model"
 sha256 = "5d80418943c303511c6689949b3b96a97748c855befebc8f626a9ddb2c9daad9"
-bytes = 123682
 
 [[artifacts]]
 path = "DC_to_130_GHz_TIA/design_1/design_data/gds/FMD_QNC_03a_DC_to_130_GHz_TIA_Design.gds"
 kind = "layout"
 sha256 = "52f36b8c278855e72a7a2dee70c8e2632661d88de5c0d56369ba95af2465d1e0"
-bytes = 4400566
 
 [[artifacts]]
 path = "DC_to_130_GHz_TIA/design_1/design_data/lvs/TOP.cdl"
 kind = "netlist"
 sha256 = "2ebd5d6cd2b3dcc9f12019298f06234bc567c2072ac7d7190f327795d3841b17"
-bytes = 911
 
 [[artifacts]]
 path = "DC_to_130_GHz_TIA/design_1/design_data/lvs/TOP_extracted.cir"
 kind = "extraction"
 sha256 = "7cf143f20d2e7a5d5bf31c35b89fef8b31d3bf1c37dbaf06349add5b153310a2"
-bytes = 598
 
 [[artifacts]]
 path = "DC_to_130_GHz_TIA/design_1/design_data/drc/DC_to_130_GHz_TIA_minimal.lyrdb"
 kind = "drc-report"
 sha256 = "e8ee3fc56ed2687e4532b2a412154b82a80019ee3778c44042601827b1ab8c9a"
-bytes = 13534
 
 [[artifacts]]
 path = "DC_to_130_GHz_TIA/design_1/design_data/drc/DC_to_130_GHz_TIA_maximal.lyrdb"
 kind = "drc-report"
 sha256 = "b61a06ef5814824df60d7374757710ae4e760163c1599d2535fa0d5fea0d803e"
-bytes = 73910
 
 [[artifacts]]
 path = "DC_to_130_GHz_TIA/design_1/design_data/lvs/DC_to_130_GHz_TIA.lvsdb"
 kind = "lvs-report"
 sha256 = "be738f12d88bca367626689d8cde3ac0b3f2c20cc2cc7e76d370d52f1af82485"
-bytes = 6310166
 
 [[artifacts]]
 path = "DC_to_130_GHz_TIA/design_1/design_data/openEMS/s2p files/254em.s2p"
 kind = "rf-model"
 sha256 = "7189c0f3ff699ad7e40176b427d57663ec833bc219b9ac830463c904cb703da0"
-bytes = 183009
 
 [[artifacts]]
 path = "DC_to_130_GHz_TIA/design_1/design_data/openEMS/s2p files/272em.s2p"
 kind = "rf-model"
 sha256 = "e33d3c0a84c474a50e953658c068cb23d99bc5d682094ebfaf2a5808ab60f933"
-bytes = 183696
 
 [[artifacts]]
 path = "DC_to_130_GHz_TIA/design_1/design_data/openEMS/s2p files/INPUT.s2p"
 kind = "rf-model"
 sha256 = "8d737d40b1b7e911e823f877994a63793b9a5948dbce868657b0851866e8030b"
-bytes = 182809
 
 [[artifacts]]
 path = "DC_to_130_GHz_TIA/design_1/design_data/openEMS/s2p files/RF_OUT.s2p"
 kind = "rf-model"
 sha256 = "355d9bdca18f28dfdbaa062f4ba3643ce92b1e4b2eed58bdac8a34af77d81017"
-bytes = 182224

@@ -58,6 +58,9 @@ def test_catalog_has_one_unified_config_per_case():
                for data in configs.values())
     upstream_assets = [asset for data in configs.values() for asset in data.get("upstream_assets", [])]
     assert len({asset["id"] for asset in upstream_assets}) == len(upstream_assets)
+    assert all("bytes" not in source for source in sources)
+    assert all("bytes" not in asset for asset in upstream_assets)
+    assert all("bytes" not in artifact for artifact in catalog["artifacts"])
     assert not list(CATALOG.parent.glob("**/intake.toml"))
     assert not list(CATALOG.parent.glob("**/task.toml"))
     assert not list(CATALOG.parent.glob("**/source.toml"))
@@ -86,7 +89,6 @@ def test_catalog_digests_match_the_pinned_submodule():
         assert not any(source["path"].startswith(prefix.rstrip("/") + "/") for prefix in excluded)
         content = path.read_bytes()
         assert hashlib.sha256(content).hexdigest() == source["sha256"]
-        assert len(content) == source["bytes"]
     for item in catalog["artifacts"]:
         path = academy / item["path"]
         assert path.is_file(), item["path"]
@@ -99,4 +101,3 @@ def test_catalog_digests_match_the_pinned_submodule():
             assert path.is_file(), asset["path"]
             content = path.read_bytes()
             assert hashlib.sha256(content).hexdigest() == asset["sha256"]
-            assert len(content) == asset["bytes"]

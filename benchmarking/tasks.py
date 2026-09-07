@@ -124,7 +124,7 @@ def _validate_case(data: dict) -> None:
         raise ValueError("Case needs at least one source")
     seen = set()
     for source in sources:
-        _keys(source, {"id", "path", "role", "format", "sha256", "bytes"}, set(), "case.sources")
+        _keys(source, {"id", "path", "role", "format", "sha256"}, set(), "case.sources")
         source_id = _text(source["id"], "case.sources.id")
         if source_id in seen:
             raise ValueError(f"Duplicate case source: {source_id}")
@@ -134,13 +134,11 @@ def _validate_case(data: dict) -> None:
         _text(source["format"], "case.sources.format")
         if not isinstance(source["sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", source["sha256"]):
             raise ValueError("case.sources.sha256 must be a lowercase SHA-256")
-        if type(source["bytes"]) is not int or source["bytes"] <= 0:
-            raise ValueError("case.sources.bytes must be a positive integer")
     assets = data.get("assets", [])
     if not isinstance(assets, list):
         raise TypeError("case.assets must be an array")
     for asset in assets:
-        _keys(asset, {"path", "role", "visibility", "format", "sha256", "bytes"}, set(), "case.assets")
+        _keys(asset, {"path", "role", "visibility", "format", "sha256"}, set(), "case.assets")
         _relative(asset["path"], "case.assets.path")
         _text(asset["role"], "case.assets.role")
         if asset["visibility"] not in {"agent", "evaluator", "maintainer"}:
@@ -148,14 +146,12 @@ def _validate_case(data: dict) -> None:
         _text(asset["format"], "case.assets.format")
         if not isinstance(asset["sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", asset["sha256"]):
             raise ValueError("case.assets.sha256 must be a lowercase SHA-256")
-        if type(asset["bytes"]) is not int or asset["bytes"] <= 0:
-            raise ValueError("case.assets.bytes must be a positive integer")
     upstream_assets = data.get("upstream_assets", [])
     if not isinstance(upstream_assets, list):
         raise TypeError("case.upstream_assets must be an array")
     seen_upstream = set()
     for asset in upstream_assets:
-        _keys(asset, {"id", "path", "role", "format", "sha256", "bytes"}, set(),
+        _keys(asset, {"id", "path", "role", "format", "sha256"}, set(),
               "case.upstream_assets")
         asset_id = _text(asset["id"], "case.upstream_assets.id")
         if asset_id in seen_upstream:
@@ -166,8 +162,6 @@ def _validate_case(data: dict) -> None:
         _text(asset["format"], "case.upstream_assets.format")
         if not isinstance(asset["sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", asset["sha256"]):
             raise ValueError("case.upstream_assets.sha256 must be a lowercase SHA-256")
-        if type(asset["bytes"]) is not int or asset["bytes"] <= 0:
-            raise ValueError("case.upstream_assets.bytes must be a positive integer")
     qualification = data.get("qualification")
     if qualification is not None:
         _keys(qualification, {"evidence", "reference"}, set(), "case.qualification")

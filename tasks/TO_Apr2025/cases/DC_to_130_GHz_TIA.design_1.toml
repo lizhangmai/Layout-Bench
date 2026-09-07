@@ -16,7 +16,6 @@ path = "DC_to_130_GHz_TIA/design_1/design_data/qucs-s/DC_to_130_GHz_TIA.sch"
 role = "design"
 format = "qucs"
 sha256 = "9ff042ba555b280b5877f0357ef16e12a1e92663f38d0978c1507786839d9fbb"
-bytes = 8700
 
 [[upstream_assets]]
 id = "TO_Apr2025.DC_to_130_GHz_TIA.design_1.reference_gds"
@@ -24,7 +23,6 @@ path = "DC_to_130_GHz_TIA/design_1/design_data/gds/FMD_QNC_03a_DC_to_130_GHz_TIA
 role = "reference"
 format = "gds"
 sha256 = "52f36b8c278855e72a7a2dee70c8e2632661d88de5c0d56369ba95af2465d1e0"
-bytes = 4400566
 
 [[upstream_assets]]
 id = "TO_Apr2025.DC_to_130_GHz_TIA.design_1.lvs_netlist"
@@ -32,7 +30,6 @@ path = "DC_to_130_GHz_TIA/design_1/design_data/lvs/TOP.cdl"
 role = "lvs-netlist"
 format = "cdl"
 sha256 = "2ebd5d6cd2b3dcc9f12019298f06234bc567c2072ac7d7190f327795d3841b17"
-bytes = 911
 
 [[upstream_assets]]
 id = "TO_Apr2025.DC_to_130_GHz_TIA.design_1.extracted_netlist"
@@ -40,7 +37,6 @@ path = "DC_to_130_GHz_TIA/design_1/design_data/lvs/TOP_extracted.cir"
 role = "extracted-netlist"
 format = "spice"
 sha256 = "7cf143f20d2e7a5d5bf31c35b89fef8b31d3bf1c37dbaf06349add5b153310a2"
-bytes = 598
 
 [[upstream_assets]]
 id = "TO_Apr2025.DC_to_130_GHz_TIA.design_1.drc_minimal"
@@ -48,7 +44,6 @@ path = "DC_to_130_GHz_TIA/design_1/design_data/drc/DC_to_130_GHz_TIA_minimal.lyr
 role = "drc-evidence"
 format = "lyrdb"
 sha256 = "e8ee3fc56ed2687e4532b2a412154b82a80019ee3778c44042601827b1ab8c9a"
-bytes = 13534
 
 [[upstream_assets]]
 id = "TO_Apr2025.DC_to_130_GHz_TIA.design_1.drc_maximal"
@@ -56,7 +51,6 @@ path = "DC_to_130_GHz_TIA/design_1/design_data/drc/DC_to_130_GHz_TIA_maximal.lyr
 role = "drc-evidence"
 format = "lyrdb"
 sha256 = "b61a06ef5814824df60d7374757710ae4e760163c1599d2535fa0d5fea0d803e"
-bytes = 73910
 
 [[upstream_assets]]
 id = "TO_Apr2025.DC_to_130_GHz_TIA.design_1.lvs_report"
@@ -64,7 +58,6 @@ path = "DC_to_130_GHz_TIA/design_1/design_data/lvs/DC_to_130_GHz_TIA.lvsdb"
 role = "lvs-evidence"
 format = "lvsdb"
 sha256 = "be738f12d88bca367626689d8cde3ac0b3f2c20cc2cc7e76d370d52f1af82485"
-bytes = 6310166
 
 [[upstream_assets]]
 id = "TO_Apr2025.DC_to_130_GHz_TIA.design_1.em_254_s2p"
@@ -72,7 +65,6 @@ path = "DC_to_130_GHz_TIA/design_1/design_data/openEMS/s2p files/254em.s2p"
 role = "rf-evidence"
 format = "s2p"
 sha256 = "7189c0f3ff699ad7e40176b427d57663ec833bc219b9ac830463c904cb703da0"
-bytes = 183009
 
 [[upstream_assets]]
 id = "TO_Apr2025.DC_to_130_GHz_TIA.design_1.em_272_s2p"
@@ -80,7 +72,6 @@ path = "DC_to_130_GHz_TIA/design_1/design_data/openEMS/s2p files/272em.s2p"
 role = "rf-evidence"
 format = "s2p"
 sha256 = "e33d3c0a84c474a50e953658c068cb23d99bc5d682094ebfaf2a5808ab60f933"
-bytes = 183696
 
 [[upstream_assets]]
 id = "TO_Apr2025.DC_to_130_GHz_TIA.design_1.em_input_s2p"
@@ -88,7 +79,6 @@ path = "DC_to_130_GHz_TIA/design_1/design_data/openEMS/s2p files/INPUT.s2p"
 role = "rf-evidence"
 format = "s2p"
 sha256 = "8d737d40b1b7e911e823f877994a63793b9a5948dbce868657b0851866e8030b"
-bytes = 182809
 
 [[upstream_assets]]
 id = "TO_Apr2025.DC_to_130_GHz_TIA.design_1.em_rf_out_s2p"
@@ -96,7 +86,6 @@ path = "DC_to_130_GHz_TIA/design_1/design_data/openEMS/s2p files/RF_OUT.s2p"
 role = "rf-evidence"
 format = "s2p"
 sha256 = "355d9bdca18f28dfdbaa062f4ba3643ce92b1e4b2eed58bdac8a34af77d81017"
-bytes = 182224
 
 [screening]
 decision = "include"

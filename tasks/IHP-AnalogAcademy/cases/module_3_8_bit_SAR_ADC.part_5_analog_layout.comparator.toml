@@ -16,7 +16,6 @@ path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/mi
 role = "design"
 format = "xschem"
 sha256 = "d1d7332f1f09f1a02705176c47c1a155a1542aed517d523f89bcf4a0fa2b1598"
-bytes = 1062
 
 [[sources]]
 id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.layout.misc.load.schematic_mod.load"
@@ -24,7 +23,6 @@ path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/mi
 role = "design"
 format = "xschem"
 sha256 = "9410cb220454c0b0556eeea7e66499b729b860b6d2c53932f137039f30170640"
-bytes = 2477
 
 [[sources]]
 id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.layout.schematic.DIFF_COMPARATOR"
@@ -32,7 +30,6 @@ path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/sc
 role = "design"
 format = "xschem"
 sha256 = "ba403c374a2c4f017c6044083d096abb89f71ffe34c2abaa0f90c351648f213a"
-bytes = 5737
 
 [[sources]]
 id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.xschem_post_layout.testbench.comparator_tb"
@@ -40,7 +37,6 @@ path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/xschem_po
 role = "testbench"
 format = "xschem"
 sha256 = "b67a4ebc34e15e5853b3d58b07793c0dec18d27d74ec866db8a45b2ede174237"
-bytes = 33365
 
 [[sources]]
 id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.xschem_post_layout.testbench.offset_MC_analysis"
@@ -48,7 +44,6 @@ path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/xschem_po
 role = "testbench"
 format = "xschem"
 sha256 = "0b39ecd3eda4fe38a942281a2b3937b7c1aec253a23ea8a26c1e3ec9d1876d02"
-bytes = 3564
 
 [[upstream_assets]]
 id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.reference_gds"
@@ -56,7 +51,6 @@ path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/DI
 role = "reference"
 format = "gds"
 sha256 = "2716d3953e42766c1c6ce270cbb9dac418862a612e67c174b1204435d9462bb1"
-bytes = 199506
 
 [[upstream_assets]]
 id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.reference_flat_gds"
@@ -64,7 +58,6 @@ path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/DI
 role = "reference-variant"
 format = "gds"
 sha256 = "a31a3499b7fbc6ebe611973fa7b531a5c4f31ab54da5ac663e1f5f4e85628dd0"
-bytes = 275820
 
 [[upstream_assets]]
 id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.lvs_netlist"
@@ -72,7 +65,6 @@ path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/lv
 role = "source-netlist"
 format = "spice"
 sha256 = "fb74cb22eebf4ee891956ef779718a9378ef3a5d538c62b527684873f9bec1f5"
-bytes = 1130
 
 [[upstream_assets]]
 id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.pex_ext"
@@ -80,7 +72,6 @@ path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/pex/pex_o
 role = "pex-evidence"
 format = "magic-ext"
 sha256 = "959fd381e7c58b4dcd8ebbe931cc48626f81b29f3cff26c319194d539d51e0d9"
-bytes = 97918
 
 [[upstream_assets]]
 id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.pex_report"
@@ -88,7 +79,6 @@ path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/pex/pex_o
 role = "pex-evidence"
 format = "rdb-gzip"
 sha256 = "f40a1cb1ba1b4c7366429c2413ff501922db2203d4b1f6b10a9c483e3ef80a85"
-bytes = 31200
 
 [screening]
 decision = "include"
