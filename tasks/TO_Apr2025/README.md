@@ -6,11 +6,12 @@ incremental catalog: it currently contains the first intake slice only. Intake
 records are maintainer metadata; they are not mounted as Agent inputs and do
 not imply that a circuit is a runnable or qualified benchmark task.
 
-The first intake slice is `Mixer5GHz/`. It is deliberately recorded as a
-`candidate`: its source is an Xschem schematic and can be prepared with the
-current source-preparation entry point, but its exported top-level interface,
-physical constraints, evaluation plan, and independent qualification still
-need to be frozen.
+The first intake slice is `Mixer5GHz/`, recorded as a `candidate`: its source
+is an Xschem schematic and can be prepared with the current source-preparation
+entry point, but its exported top-level interface, physical constraints,
+evaluation plan, and independent qualification still need to be frozen. The
+second slice, `40_GHZ_LOW_NOISE_TIA/`, is recorded as `source-only` because
+the current preparation contract does not yet support its Qucs-S source.
 
 The upstream checkout is fixed at commit
 `63e203a0eccfb6028a1a0a8364553e4e979b55b3`. Keep the checkout, PDK, EDA tools,

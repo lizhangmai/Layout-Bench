@@ -1,0 +1,12 @@
+schema_version = 1
+id = "TO_Apr2025.40_GHZ_LOW_NOISE_TIA"
+title = "TO_Apr2025: 40 GHz low-noise single-ended transimpedance amplifier"
+source_checkout = "third_party/TO_Apr2025"
+source_commit = "63e203a0eccfb6028a1a0a8364553e4e979b55b3"
+source_path = "40_GHZ_LOW_NOISE_TIA/design_data/qucs-s/40_GHz_Low_Noise_TIA.sch"
+source_sha256 = "1be010c8f94f3b3103176ab60e2fef38df21ba73b47230724d876fbd2d177823"
+source_bytes = 12619
+source_format = "qucs"
+role = "design"
+status = "source-only"
+license = "Apache-2.0 upstream root; file-level notices, PDK, models, and tool licenses apply"
