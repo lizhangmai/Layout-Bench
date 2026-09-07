@@ -13,7 +13,7 @@ from benchmarking.provenance import (
     snapshot_framework,
     verify_framework,
 )
-from benchmarking.recorder import RunRecorder
+from benchmarking.recorder import BatchLease, BatchLeaseError, RunRecorder
 from benchmarking.recording import SessionResult
 from benchmarking.report import summarize_batch, wilson
 from benchmarking.swarm import execute_plan, load_plan, resume_plan
@@ -192,6 +192,9 @@ def test_resume_marks_interrupted_attempt_and_schedules_a_replacement(tmp_path):
 
     with pytest.raises(KeyboardInterrupt):
         execute(path, tmp_path / "run", runner=interrupted)
+    with BatchLease(tmp_path / "run"), pytest.raises(BatchLeaseError, match="already leased"):
+        resume_plan(load_plan(path), tmp_path / "run", session_factory=FakeSession,
+                    toolchain_loader=backends)
     resumed = resume_plan(load_plan(path), tmp_path / "run", session_factory=FakeSession,
                           toolchain_loader=backends)
     assert resumed["outcome"] == "complete"

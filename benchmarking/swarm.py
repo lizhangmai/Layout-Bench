@@ -17,7 +17,7 @@ from .files import Asset, keys, read_file, text
 from .inference import InferenceGateway, load_inference_config, validate_harness_wire
 from .model_config import load_run_config
 from .provenance import host_identity, json_asset, snapshot_framework, verify_framework
-from .recorder import RunRecorder, atomic_write
+from .recorder import BatchLease, RunRecorder, atomic_write
 from .report import summarize_batch, verify_run
 from .session import DockerSession
 from .tasks import load_task
@@ -336,7 +336,17 @@ def _validate_resolved_manifest(plan, tasks, agents, manifest, *, concurrency, g
 def resume_plan(plan, destination, *, runner=run_agent, session_factory=DockerSession,
                 gateway_factory=InferenceGateway, toolchain_loader=load_toolchain,
                 concurrency=None):
-    """Resume an interrupted batch in place, retaining every old attempt/evidence blob."""
+    """Resume an interrupted batch under one local recovery lease."""
+    root = Path(destination).absolute()
+    with BatchLease(root):
+        return _resume_plan(plan, root, runner=runner, session_factory=session_factory,
+                            gateway_factory=gateway_factory, toolchain_loader=toolchain_loader,
+                            concurrency=concurrency)
+
+
+def _resume_plan(plan, destination, *, runner, session_factory, gateway_factory,
+                 toolchain_loader, concurrency):
+    """Resume while the caller owns the batch lease."""
     root = Path(destination).absolute()
     batch = json.loads(read_file(root, "batch.json"))
     if (batch.get("schema_version") != 1 or batch.get("run_kind") != "local_batch_development"

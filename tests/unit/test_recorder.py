@@ -9,7 +9,13 @@ from concurrent.futures import ThreadPoolExecutor
 import pytest
 
 from benchmarking.files import Asset
-from benchmarking.recorder import RecordingError, RunRecorder, recover_submissions
+from benchmarking.recorder import (
+    BatchLease,
+    BatchLeaseError,
+    RecordingError,
+    RunRecorder,
+    recover_submissions,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.acceptance, pytest.mark.acceptance_fast]
 
@@ -94,3 +100,43 @@ def test_finished_report_binds_a_sealed_journal(tmp_path):
     with pytest.raises(RecordingError, match="closed"):
         recorder.event("late.worker")
     assert (recorder.root / "events.jsonl").read_bytes() == journal
+
+
+def test_batch_lease_allows_one_recovery_owner_at_a_time(tmp_path):
+    root = tmp_path / "run"
+    RunRecorder(root)
+    with BatchLease(root), pytest.raises(BatchLeaseError, match="already leased"), BatchLease(root):
+        pass
+    with BatchLease(root):
+        pass
+
+
+def test_batch_lease_is_exclusive_across_processes(tmp_path):
+    root = tmp_path / "run"
+    RunRecorder(root)
+    holder = subprocess.Popen(
+        [sys.executable, "-c", """
+from benchmarking.recorder import BatchLease
+import sys
+with BatchLease(sys.argv[1]):
+    print('ready', flush=True)
+    sys.stdin.read()
+""", str(root)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+    try:
+        assert holder.stdout.readline().strip() == "ready"
+        attempt = subprocess.run(
+            [sys.executable, "-c", """
+from benchmarking.recorder import BatchLease
+import sys
+try:
+    with BatchLease(sys.argv[1]):
+        print('acquired')
+except OSError as error:
+    print(error)
+    raise SystemExit(3)
+""", str(root)], capture_output=True, text=True, check=False)
+        assert attempt.returncode == 3
+        assert "already leased" in attempt.stdout
+    finally:
+        holder.stdin.close()
+        assert holder.wait(timeout=5) == 0
