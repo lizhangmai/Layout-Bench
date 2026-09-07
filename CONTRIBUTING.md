@@ -16,6 +16,37 @@ uv build --out-dir build/dist
 git diff --check
 ```
 
+The repeatable black-box acceptance suites are split by runtime cost.  The
+fast suite uses deterministic transports and fixtures only and is part of the
+pull-request checks:
+
+```bash
+uv run --locked python scripts/acceptance.py fast
+```
+
+With the prepared tools image, the container suite exercises isolated
+sessions, durable submissions, recovery, and batch CLI behavior without
+contacting a model or running EDA:
+
+```bash
+uv run --locked python scripts/acceptance.py container --image layout-bench-tools:local
+```
+
+The preview and EDA suites are manual/nightly checks.  They write evidence to
+a temporary directory unless `--output` is supplied, and never add
+`build/runs/` artifacts to the repository:
+
+```bash
+uv run --locked python scripts/acceptance.py preview --image layout-bench-tools:local
+uv run --locked python scripts/acceptance.py eda --image layout-bench-tools:local
+```
+
+`preview` runs the no-key quick start; add `--skip-build` to exercise image
+reuse.  The acceptance wrapper uses Docker's host build network by default so
+local build proxies are reachable; pass `--network default` to exercise the
+diagnostic path explicitly.  `all` runs every suite, including both preview
+modes.  None of these commands calls a real model service.
+
 Keep repository-local generated files under `build/`: use `build/runs/` for benchmark evidence, `build/support/` for manually prepared bundles, and `build/dist/` for Python distributions. `build/lib/` and `build/bdist.*` are setuptools staging directories. Do not commit generated output.
 
 <a id="verification"></a>

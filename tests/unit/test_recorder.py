@@ -11,7 +11,7 @@ import pytest
 from benchmarking.files import Asset
 from benchmarking.recorder import RecordingError, RunRecorder, recover_submissions
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.acceptance, pytest.mark.acceptance_fast]
 
 
 def test_process_exit_keeps_committed_submission_but_not_orphan(tmp_path):
@@ -39,6 +39,22 @@ os._exit(91)
     assert (root / "events.jsonl").read_bytes() == before + b'{"unfinished":'
     assert root.stat().st_mode & 0o777 == 0o700
     assert (root / "events.jsonl").stat().st_mode & 0o777 == 0o600
+
+
+def test_recovery_keeps_the_last_snapshot_after_duplicate_submissions(tmp_path):
+    recorder = RunRecorder(tmp_path / "run")
+    first = Asset(b"first", "gds")
+    last = Asset(b"last", "gds")
+    first_ref = recorder.archive(first)
+    last_ref = recorder.archive(last)
+    for sequence, reference, candidate in ((1, first_ref, first), (2, last_ref, last), (3, last_ref, last)):
+        recorder.event("submission", receipt={"accepted": True, "sequence": sequence, **candidate.identity()},
+                       candidate=reference)
+
+    recovered = recover_submissions(recorder.root)
+
+    assert [receipt["sequence"] for receipt in recovered["submissions"]] == [1, 2, 3]
+    assert recovered["candidate"] == last_ref
 
 
 def test_write_failure_poisoning_preserves_previous_report(tmp_path, monkeypatch):

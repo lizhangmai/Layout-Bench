@@ -14,7 +14,7 @@ _run_summary = _MODULE._run_summary
 _inference_preflight = _MODULE._inference_preflight
 
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.acceptance, pytest.mark.acceptance_fast]
 
 
 def test_run_summary_surfaces_failed_gates_and_inference_count(tmp_path):

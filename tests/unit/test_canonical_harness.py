@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.acceptance, pytest.mark.acceptance_fast]
 
 
 def _harness_module():
@@ -49,6 +49,16 @@ def test_adapter_process_uses_jsonl_without_shell_expansion(tmp_path, monkeypatc
     )
     with module.AdapterProcess([sys.executable, str(adapter)], timeout=2) as process:
         assert process.request({"schema_version": 1, "type": "request"})["content"] == "request"
+
+
+def test_adapter_process_rejects_malformed_json_response(tmp_path, monkeypatch):
+    module = _harness_module()
+    monkeypatch.setattr(module, "WORKSPACE", tmp_path)
+    adapter = tmp_path / "adapter.py"
+    adapter.write_text("import sys\nfor _ in sys.stdin:\n    print('{not-json}', flush=True)\n")
+    with module.AdapterProcess([sys.executable, str(adapter)], timeout=2) as process, pytest.raises(
+            ValueError, match="valid JSON"):
+        process.request({"schema_version": 1, "type": "request"})
 
 
 def test_workspace_tool_bounds_output_and_timeout(tmp_path, monkeypatch):

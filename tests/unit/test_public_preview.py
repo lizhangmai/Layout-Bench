@@ -10,7 +10,7 @@ import pytest
 from benchmarking import environment, prepare_support
 from benchmarking.model_config import load_run_config
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.acceptance, pytest.mark.acceptance_fast]
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -83,6 +83,23 @@ def test_existing_evidence_rejected_before_build_or_pdk_update(preview, tmp_path
     with pytest.raises(ValueError, match="Output already exists"):
         preview.quickstart(tmp_path, preview.IMAGE, "default", False)
     assert evidence.read_text() == "retained evidence"
+
+
+def test_quickstart_skip_build_is_no_key_and_reuses_the_image(preview, tmp_path, monkeypatch):
+    calls = []
+    monkeypatch.setattr(preview, "doctor", lambda: calls.append("doctor"))
+    monkeypatch.setattr(preview, "build", lambda *args: calls.append(("build", args)))
+    monkeypatch.setattr(preview, "ensure_pdk", lambda: calls.append("pdk"))
+    monkeypatch.setattr(preview, "prepare", lambda destination, image: calls.append(("prepare", destination, image)))
+    monkeypatch.setattr(preview, "run", lambda prepared, output, qualification: calls.append(
+        ("run", prepared, output, qualification)))
+
+    output = tmp_path / "skip-build"
+    preview.quickstart(output, "synthetic-tools:local", "host", True)
+
+    assert calls == ["doctor", "pdk", ("prepare", output / "prepared", "synthetic-tools:local"),
+                     ("run", output / "prepared", output / "run", False)]
+    assert not any(isinstance(call, tuple) and call[0] == "build" for call in calls)
 
 
 def _populate_required_pdk(root, preview, *, complete=True):

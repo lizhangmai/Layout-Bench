@@ -31,6 +31,7 @@ jobs:
       - run: uv run --locked ruff check .
       - run: uv run --locked python scripts/check_docs.py
       - run: uv run --locked pytest -m unit
+      - run: uv run --locked python scripts/acceptance.py fast
       - run: git diff --exit-code
 
   package:

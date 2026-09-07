@@ -13,7 +13,7 @@ from benchmarking.files import Asset
 from benchmarking.inference import InferenceConfig, ResponsesGateway
 from benchmarking.recorder import RunRecorder
 
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.acceptance, pytest.mark.acceptance_fast]
 
 
 def test_https_auth_redirects_and_secret_reflection(tmp_path, monkeypatch):

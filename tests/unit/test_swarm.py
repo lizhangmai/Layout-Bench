@@ -18,7 +18,7 @@ from benchmarking.recording import SessionResult
 from benchmarking.report import summarize_batch, wilson
 from benchmarking.swarm import execute_plan, load_plan
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.acceptance, pytest.mark.acceptance_fast]
 
 
 def make_plan(root, *, repetitions=2, retries=0, tasks=3, agents=2):

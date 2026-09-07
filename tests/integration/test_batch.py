@@ -13,7 +13,7 @@ from benchmarking.tasks import load_task
 
 IMAGE = os.environ.get("LAYOUT_BENCH_TEST_IMAGE", "layout-bench-tools:local")
 
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.acceptance, pytest.mark.acceptance_container]
 ROOT = Path(__file__).resolve().parents[2]
 
 

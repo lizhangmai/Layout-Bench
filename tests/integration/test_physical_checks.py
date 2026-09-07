@@ -16,7 +16,7 @@ from benchmarking.prepare_support import prepare_support
 from benchmarking.tasks import load_task
 from benchmarking.toolchains import load_toolchain
 
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.acceptance, pytest.mark.acceptance_eda]
 ROOT = Path(__file__).resolve().parents[2]
 EXAMPLES = ROOT / "examples/sg13g2"
 

@@ -50,6 +50,8 @@ def execute(code, seconds=10, task=None):
     return DockerSession(config.image).run(task, config, {}, task_message(task, config))
 
 
+@pytest.mark.acceptance
+@pytest.mark.acceptance_container
 def test_isolation_last_submission_and_unsubmitted_mutation(monkeypatch):
     monkeypatch.setenv("LB_HOST_SECRET", "must-not-enter-container")
     result = execute('''
@@ -83,6 +85,8 @@ output.write_bytes(b'not submitted')
     assert result.environment["network"] == "none"
 
 
+@pytest.mark.acceptance
+@pytest.mark.acceptance_container
 @pytest.mark.parametrize(("code", "termination", "content"), [
     ("output.write_bytes(b'unsubmitted')", "completed", None),
     ("output.write_bytes(b'accepted'); submit(); raise RuntimeError('agent failure')", "agent_error", b"accepted"),
@@ -102,6 +106,8 @@ def test_stop_and_submission_are_independent(code, termination, content):
     assert result.elapsed_seconds < 6
 
 
+@pytest.mark.acceptance
+@pytest.mark.acceptance_container
 def test_invalid_submissions_do_not_replace_last_accepted():
     task = load_task(TASK)
     task = replace(task, output=replace(task.output, max_bytes=16))
@@ -118,6 +124,20 @@ output.parent.symlink_to('/task'); assert not submit()['accepted']
     assert [r["accepted"] for r in result.submissions] == [True, False, False, False, False]
 
 
+@pytest.mark.acceptance
+@pytest.mark.acceptance_container
+def test_duplicate_submission_keeps_last_accepted_snapshot():
+    result = execute('''
+output.write_bytes(b'first'); assert submit()['accepted']; assert submit()['accepted']
+output.write_bytes(b'last'); assert submit()['accepted']; assert submit()['accepted']
+''')
+    assert result.termination == "completed", result.console.content
+    assert result.candidate.content == b"last"
+    assert [receipt["sequence"] for receipt in result.submissions] == [1, 2, 3, 4]
+
+
+@pytest.mark.acceptance
+@pytest.mark.acceptance_container
 def test_workspace_and_log_limits():
     result = execute('''
 try:
@@ -133,6 +153,8 @@ print('y'*100000)
     assert result.console_truncated and len(result.console.content) == 65536
 
 
+@pytest.mark.acceptance
+@pytest.mark.acceptance_eda
 def test_scripted_generation_submission_and_real_postlayout_evaluation(tmp_path):
     pdk = ROOT / "third_party/IHP-Open-PDK"
     for profile in ("magic", "mos-models", "klayout"):
@@ -165,6 +187,8 @@ output.write_bytes(b'post-submission corruption')
     assert report["usage"]["input_tokens"] is None
 
 
+@pytest.mark.acceptance
+@pytest.mark.acceptance_container
 def test_complete_console_and_failed_acceptance_persistence(tmp_path, monkeypatch):
     task = load_task(TASK)
     config = configuration("print('x'*100000); output.write_bytes(b'good'); submit()")
@@ -196,6 +220,8 @@ def test_complete_console_and_failed_acceptance_persistence(tmp_path, monkeypatc
     assert recover_submissions(failed.root)["candidate"] is None
 
 
+@pytest.mark.acceptance
+@pytest.mark.acceptance_container
 def test_killed_host_retains_acknowledged_candidate(tmp_path):
     # Run the actual host/session in a child, then kill it after the CLI observed its receipt.
     run = tmp_path / "run"
@@ -250,6 +276,8 @@ run_agent(task, config, {}, {job.operation: object() for job in task.evaluation.
         staging.cleanup()
 
 
+@pytest.mark.acceptance
+@pytest.mark.acceptance_container
 def test_console_storage_ceiling_stops_with_incomplete_evidence(tmp_path, monkeypatch):
     monkeypatch.setattr("benchmarking.session.MAX_CONSOLE_BYTES", 8192)
     task = load_task(TASK)
