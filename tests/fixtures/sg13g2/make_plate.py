@@ -12,6 +12,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("output")
 parser.add_argument("--width", type=float, default=20)
 parser.add_argument("--height", type=float, default=10)
+parser.add_argument("--alias-port", help="Add another named port on the plate conductor")
 args = parser.parse_args()
 if args.width <= 0 or args.height <= 0:
     parser.error("Plate dimensions must be positive")
@@ -20,6 +21,8 @@ layout.dbu = 0.001
 cell = layout.create_cell("PLATE")
 cell.shapes(layout.layer(8, 0)).insert(db.DBox(0, 0, args.width, args.height))
 cell.shapes(layout.layer(8, 2)).insert(db.DText("P", 1, 1))
+if args.alias_port:
+    cell.shapes(layout.layer(8, 2)).insert(db.DText(args.alias_port, args.width - 1, 1))
 # The contact labels the substrate GND; it is deliberately far from the plate.
 for layer, box in ((1, (-101, -101, -99, -99)), (14, (-101.4, -101.4, -98.6, -98.6)),
                    (8, (-101, -101, -99, -99)), (6, (-100.08, -100.08, -99.92, -99.92))):

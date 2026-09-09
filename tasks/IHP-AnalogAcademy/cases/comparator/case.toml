@@ -1,0 +1,470 @@
+schema_version = 2
+kind = "layout_case"
+id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator"
+title = "IHP AnalogAcademy comparator"
+role = "design"
+status = "qualified"
+
+# Solver inputs, answer contract, and scoring entry point.
+[task]
+kind = "netlist_to_gds"
+family = "ihp_sg13g2_analog_comparator"
+environment = "ihp-sg13g2-comparator-rc-tt"
+
+[task.inputs.description]
+path = "problem.md"
+sha256 = "a8114dac2f3067b7d2f812543dc2621e98a9f2a5630fdb2d003a749d1580b6c7"
+format = "text"
+
+[task.inputs.netlist]
+path = "materials/circuit.spice"
+sha256 = "fb74cb22eebf4ee891956ef779718a9378ef3a5d538c62b527684873f9bec1f5"
+format = "spice"
+subcircuit = "DIFF_COMPARATOR"
+
+[task.inputs.performance]
+path = "materials/testbench.spice"
+sha256 = "a34ea030b581f0c2825f7b95969149e19d07f231e6074e78a6656af559478857"
+format = "spice"
+
+[task.constraints]
+schema_version = 1
+
+[[task.constraints.hard]]
+id = "outline"
+type = "bbox_max"
+functional_layers = [
+  [1, 0], [5, 0], [6, 0], [8, 0], [10, 0],
+  [19, 0], [29, 0], [30, 0], [31, 0], [32, 0],
+  [40, 0], [50, 0], [63, 0], [126, 0], [134, 0],
+]
+max_width_um = 45
+max_height_um = 45
+
+[[task.constraints.quality]]
+id = "area"
+type = "functional_bbox_area"
+layers_from = "outline"
+
+[task.output]
+path = "output/final.gds"
+format = "gds"
+top_cell = "DIFF_COMPARATOR"
+max_bytes = 10485760
+
+# Public scoring procedure and requirements.
+[task.evaluation]
+schema_version = 1
+mode = "post_layout"
+
+[[task.evaluation.jobs]]
+id = "artifact"
+stage = "check"
+operation = "layout.artifact"
+gate = "artifact"
+inputs = { layout = "candidate", task = "task" }
+
+[[task.evaluation.jobs]]
+id = "drc"
+stage = "check"
+operation = "layout.drc"
+gate = "drc"
+inputs = { layout = "candidate", task = "task" }
+
+[[task.evaluation.jobs]]
+id = "lvs"
+stage = "check"
+operation = "layout.lvs"
+gate = "lvs"
+inputs = { layout = "candidate", task = "task", netlist = "input:netlist" }
+outputs = { database = "klayout-lvs", binding = "json" }
+
+[[task.evaluation.jobs]]
+id = "geometry"
+stage = "check"
+operation = "layout.geometry"
+gate = "constraint"
+requires = ["artifact", "drc", "lvs"]
+inputs = { layout = "candidate", task = "task", constraints = "input:constraints", database = "job:lvs:database", binding = "job:lvs:binding" }
+
+[[task.evaluation.jobs]]
+id = "parasitics"
+stage = "extract"
+operation = "layout.extract_rc"
+requires = ["artifact", "drc", "lvs", "geometry"]
+inputs = { layout = "candidate" }
+outputs = { netlist = "spice" }
+parameters = { top_cell = "DIFF_COMPARATOR", ports = ["vdd", "gnd", "V+", "V-", "clk", "out-", "out+", "vbias"] }
+
+[[task.evaluation.jobs]]
+id = "negative_5mv"
+stage = "simulate"
+operation = "circuit.simulate"
+inputs = { deck = "input:performance", dut = "job:parasitics:netlist" }
+outputs = { waveform = "ngspice-raw" }
+[task.evaluation.jobs.parameters]
+values = { input_difference = -0.005, polarity = -1 }
+exports = { waveform = "comparator.raw" }
+[task.evaluation.jobs.parameters.measurements]
+supply_power = "W"
+delay_c02 = "s"
+margin_c02 = "V"
+delay_c03 = "s"
+margin_c03 = "V"
+delay_c04 = "s"
+margin_c04 = "V"
+delay_c05 = "s"
+margin_c05 = "V"
+delay_c06 = "s"
+margin_c06 = "V"
+delay_c07 = "s"
+margin_c07 = "V"
+delay_c08 = "s"
+margin_c08 = "V"
+delay_c09 = "s"
+margin_c09 = "V"
+
+[[task.evaluation.jobs]]
+id = "negative_3mv"
+stage = "simulate"
+operation = "circuit.simulate"
+inputs = { deck = "input:performance", dut = "job:parasitics:netlist" }
+outputs = { waveform = "ngspice-raw" }
+[task.evaluation.jobs.parameters]
+values = { input_difference = -0.003, polarity = -1 }
+exports = { waveform = "comparator.raw" }
+[task.evaluation.jobs.parameters.measurements]
+supply_power = "W"
+delay_c02 = "s"
+margin_c02 = "V"
+delay_c03 = "s"
+margin_c03 = "V"
+delay_c04 = "s"
+margin_c04 = "V"
+delay_c05 = "s"
+margin_c05 = "V"
+delay_c06 = "s"
+margin_c06 = "V"
+delay_c07 = "s"
+margin_c07 = "V"
+delay_c08 = "s"
+margin_c08 = "V"
+delay_c09 = "s"
+margin_c09 = "V"
+
+[[task.evaluation.jobs]]
+id = "positive_3mv"
+stage = "simulate"
+operation = "circuit.simulate"
+inputs = { deck = "input:performance", dut = "job:parasitics:netlist" }
+outputs = { waveform = "ngspice-raw" }
+[task.evaluation.jobs.parameters]
+values = { input_difference = 0.003, polarity = 1 }
+exports = { waveform = "comparator.raw" }
+[task.evaluation.jobs.parameters.measurements]
+supply_power = "W"
+delay_c02 = "s"
+margin_c02 = "V"
+delay_c03 = "s"
+margin_c03 = "V"
+delay_c04 = "s"
+margin_c04 = "V"
+delay_c05 = "s"
+margin_c05 = "V"
+delay_c06 = "s"
+margin_c06 = "V"
+delay_c07 = "s"
+margin_c07 = "V"
+delay_c08 = "s"
+margin_c08 = "V"
+delay_c09 = "s"
+margin_c09 = "V"
+
+[[task.evaluation.jobs]]
+id = "positive_5mv"
+stage = "simulate"
+operation = "circuit.simulate"
+inputs = { deck = "input:performance", dut = "job:parasitics:netlist" }
+outputs = { waveform = "ngspice-raw" }
+[task.evaluation.jobs.parameters]
+values = { input_difference = 0.005, polarity = 1 }
+exports = { waveform = "comparator.raw" }
+[task.evaluation.jobs.parameters.measurements]
+supply_power = "W"
+delay_c02 = "s"
+margin_c02 = "V"
+delay_c03 = "s"
+margin_c03 = "V"
+delay_c04 = "s"
+margin_c04 = "V"
+delay_c05 = "s"
+margin_c05 = "V"
+delay_c06 = "s"
+margin_c06 = "V"
+delay_c07 = "s"
+margin_c07 = "V"
+delay_c08 = "s"
+margin_c08 = "V"
+delay_c09 = "s"
+margin_c09 = "V"
+
+[[task.evaluation.metrics]]
+id = "functional_area"
+category = "physical"
+observations = ["geometry:area"]
+unit = "um2"
+direction = "minimize"
+aggregation = "max"
+
+[[task.evaluation.metrics]]
+id = "worst_delay"
+category = "performance"
+observations = [
+  "negative_5mv:delay_c02",
+  "negative_5mv:delay_c03",
+  "negative_5mv:delay_c04",
+  "negative_5mv:delay_c05",
+  "negative_5mv:delay_c06",
+  "negative_5mv:delay_c07",
+  "negative_5mv:delay_c08",
+  "negative_5mv:delay_c09",
+  "negative_3mv:delay_c02",
+  "negative_3mv:delay_c03",
+  "negative_3mv:delay_c04",
+  "negative_3mv:delay_c05",
+  "negative_3mv:delay_c06",
+  "negative_3mv:delay_c07",
+  "negative_3mv:delay_c08",
+  "negative_3mv:delay_c09",
+  "positive_3mv:delay_c02",
+  "positive_3mv:delay_c03",
+  "positive_3mv:delay_c04",
+  "positive_3mv:delay_c05",
+  "positive_3mv:delay_c06",
+  "positive_3mv:delay_c07",
+  "positive_3mv:delay_c08",
+  "positive_3mv:delay_c09",
+  "positive_5mv:delay_c02",
+  "positive_5mv:delay_c03",
+  "positive_5mv:delay_c04",
+  "positive_5mv:delay_c05",
+  "positive_5mv:delay_c06",
+  "positive_5mv:delay_c07",
+  "positive_5mv:delay_c08",
+  "positive_5mv:delay_c09",
+]
+unit = "s"
+direction = "minimize"
+aggregation = "max"
+lower = 0
+upper = 3e-9
+
+[[task.evaluation.metrics]]
+id = "decision_margin"
+category = "performance"
+observations = [
+  "negative_5mv:margin_c02",
+  "negative_5mv:margin_c03",
+  "negative_5mv:margin_c04",
+  "negative_5mv:margin_c05",
+  "negative_5mv:margin_c06",
+  "negative_5mv:margin_c07",
+  "negative_5mv:margin_c08",
+  "negative_5mv:margin_c09",
+  "negative_3mv:margin_c02",
+  "negative_3mv:margin_c03",
+  "negative_3mv:margin_c04",
+  "negative_3mv:margin_c05",
+  "negative_3mv:margin_c06",
+  "negative_3mv:margin_c07",
+  "negative_3mv:margin_c08",
+  "negative_3mv:margin_c09",
+  "positive_3mv:margin_c02",
+  "positive_3mv:margin_c03",
+  "positive_3mv:margin_c04",
+  "positive_3mv:margin_c05",
+  "positive_3mv:margin_c06",
+  "positive_3mv:margin_c07",
+  "positive_3mv:margin_c08",
+  "positive_3mv:margin_c09",
+  "positive_5mv:margin_c02",
+  "positive_5mv:margin_c03",
+  "positive_5mv:margin_c04",
+  "positive_5mv:margin_c05",
+  "positive_5mv:margin_c06",
+  "positive_5mv:margin_c07",
+  "positive_5mv:margin_c08",
+  "positive_5mv:margin_c09",
+]
+unit = "V"
+direction = "maximize"
+aggregation = "min"
+lower = 1.0
+
+[[task.evaluation.metrics]]
+id = "supply_power"
+category = "performance"
+observations = [
+  "negative_5mv:supply_power",
+  "negative_3mv:supply_power",
+  "positive_3mv:supply_power",
+  "positive_5mv:supply_power",
+]
+unit = "W"
+direction = "minimize"
+aggregation = "max"
+lower = 0
+upper = 80e-6
+
+# Trusted evaluator bindings; not materialized for the solver.
+[toolchain]
+schema_version = 1
+
+[toolchain.backends.artifact]
+type = "klayout-docker"
+[toolchain.backends.artifact.settings]
+image = "layout-bench-tools:local"
+check = "artifact"
+
+[toolchain.backends.drc]
+type = "klayout-docker"
+[toolchain.backends.drc.settings]
+image = "layout-bench-tools:local"
+check = "drc"
+support = "build/support/comparator-klayout"
+profile = "drc-upstream.json"
+timeout_seconds = 600
+
+[toolchain.backends.lvs]
+type = "klayout-docker"
+[toolchain.backends.lvs.settings]
+image = "layout-bench-tools:local"
+check = "lvs"
+support = "build/support/comparator-klayout"
+profile = "lvs-analogacademy.json"
+timeout_seconds = 600
+
+[toolchain.backends.geometry]
+type = "klayout-geometry-docker"
+[toolchain.backends.geometry.settings]
+image = "layout-bench-tools:local"
+timeout_seconds = 120
+
+[toolchain.backends.rc]
+type = "magic-rc-docker"
+[toolchain.backends.rc.settings]
+image = "layout-bench-tools:local"
+support = "build/support/comparator-magic"
+technology = "magic/ihp-sg13g2.tech"
+tech_name = "ihp-sg13g2"
+style = "ngspice()"
+capacitance_threshold_ff = 0
+timeout_seconds = 600
+
+[toolchain.backends.simulation]
+type = "ngspice-docker"
+[toolchain.backends.simulation.settings]
+image = "layout-bench-tools:local"
+support = "build/support/comparator-models"
+timeout_seconds = 600
+
+[toolchain.bindings]
+"layout.artifact" = "artifact"
+"layout.drc" = "drc"
+"layout.lvs" = "lvs"
+"layout.geometry" = "geometry"
+"layout.extract_rc" = "rc"
+"circuit.simulate" = "simulation"
+
+# Maintainer-only source, repair, and qualification metadata.
+[origin]
+checkout = "third_party/IHP-AnalogAcademy"
+commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+license = "Apache-2.0 upstream root; file-level notices apply"
+
+[[sources]]
+id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.layout.misc.input_pair.schematic_mod.input_pair_cm"
+path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/misc/input_pair/schematic_mod/input_pair_cm.sch"
+role = "design"
+format = "xschem"
+sha256 = "d1d7332f1f09f1a02705176c47c1a155a1542aed517d523f89bcf4a0fa2b1598"
+
+[[sources]]
+id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.layout.misc.load.schematic_mod.load"
+path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/misc/load/schematic_mod/load.sch"
+role = "design"
+format = "xschem"
+sha256 = "9410cb220454c0b0556eeea7e66499b729b860b6d2c53932f137039f30170640"
+
+[[sources]]
+id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.layout.schematic.DIFF_COMPARATOR"
+path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/schematic/DIFF_COMPARATOR.sch"
+role = "design"
+format = "xschem"
+sha256 = "ba403c374a2c4f017c6044083d096abb89f71ffe34c2abaa0f90c351648f213a"
+
+[[sources]]
+id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.xschem_post_layout.testbench.comparator_tb"
+path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/xschem_post_layout/testbench/comparator_tb.sch"
+role = "testbench"
+format = "xschem"
+sha256 = "b67a4ebc34e15e5853b3d58b07793c0dec18d27d74ec866db8a45b2ede174237"
+
+[[sources]]
+id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.xschem_post_layout.testbench.offset_MC_analysis"
+path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/xschem_post_layout/testbench/offset_MC_analysis.sch"
+role = "testbench"
+format = "xschem"
+sha256 = "0b39ecd3eda4fe38a942281a2b3937b7c1aec253a23ea8a26c1e3ec9d1876d02"
+
+[[upstream_assets]]
+id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.reference_gds"
+path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/DIFF_COMPARATOR.gds"
+role = "reference"
+format = "gds"
+sha256 = "2716d3953e42766c1c6ce270cbb9dac418862a612e67c174b1204435d9462bb1"
+
+[[upstream_assets]]
+id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.reference_flat_gds"
+path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/DIFF_COMPARATOR_flat.gds"
+role = "reference-variant"
+format = "gds"
+sha256 = "a31a3499b7fbc6ebe611973fa7b531a5c4f31ab54da5ac663e1f5f4e85628dd0"
+
+[[upstream_assets]]
+id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.lvs_netlist"
+path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/layout/lvs_netlist/DIFF_COMPARATOR.spice"
+role = "source-netlist"
+format = "spice"
+sha256 = "fb74cb22eebf4ee891956ef779718a9378ef3a5d538c62b527684873f9bec1f5"
+
+[[upstream_assets]]
+id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.pex_ext"
+path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/pex/pex_output/DIFF_COMPARATOR__DIFF_COMPARATOR/magic_RC/DIFF_COMPARATOR.res.ext"
+role = "pex-evidence"
+format = "magic-ext"
+sha256 = "959fd381e7c58b4dcd8ebbe931cc48626f81b29f3cff26c319194d539d51e0d9"
+
+[[upstream_assets]]
+id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.pex_report"
+path = "modules/module_3_8_bit_SAR_ADC/part_5_analog_layout/comparator/pex/pex_output/DIFF_COMPARATOR__DIFF_COMPARATOR/magic_RC/DIFF_COMPARATOR_MAGIC_report.rdb.gz"
+role = "pex-evidence"
+format = "rdb-gzip"
+sha256 = "f40a1cb1ba1b4c7366429c2413ff501922db2203d4b1f6b10a9c483e3ef80a85"
+
+[screening]
+decision = "include"
+reason = "Upstream provides DIFF_COMPARATOR GDS/flat GDS, LVS netlist, PEX outputs, layout schematic, and post-layout comparator/offset testbenches."
+
+[qualification]
+evidence = "README.md"
+reference = "reference/DIFF_COMPARATOR.gds"
+
+[upstream_evaluation]
+layout = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.reference_gds"
+netlist = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.lvs_netlist"
+top_cell = "DIFF_COMPARATOR"
+subcircuit = "DIFF_COMPARATOR"
+drc_profile = "drc-upstream.json"
+lvs_profile = "lvs-analogacademy.json"
+basis = "Use original layout and source LVS netlist. Map current PDK GUI DRC scope and documented course-era LVS compare-only semantics; exact author switches were not archived. See docs/tools.md for option provenance."

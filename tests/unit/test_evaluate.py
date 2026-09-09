@@ -1,5 +1,6 @@
 import hashlib
 import json
+import tomllib
 from typing import ClassVar
 
 import pytest
@@ -125,8 +126,15 @@ def evaluate(tmp_path, inputs, bindings, raw=PLAN):
     return run_evaluation(parse_evaluation(raw), inputs, bindings, tmp_path / "report")
 
 
-def test_dependencies_follow_extracted_candidate_and_archive_evidence(tmp_path, inputs, bindings):
-    report = evaluate(tmp_path, inputs, bindings)
+@pytest.mark.parametrize("file_format", ["toml", "json"])
+def test_dependencies_follow_extracted_candidate_and_archive_evidence(tmp_path, inputs, bindings, file_format):
+    raw = PLAN if file_format == "toml" else json.dumps(tomllib.loads(PLAN.decode())).encode()
+    plan = parse_evaluation(raw, file_format=file_format)
+    report = run_evaluation(plan, inputs, bindings, tmp_path / "report")
+    archived = report["plan"]
+    restored = parse_evaluation((tmp_path / "report" / archived["path"]).read_bytes(),
+                                file_format=archived["format"])
+    assert restored.description() == tomllib.loads(PLAN.decode())
     assert report["physical_valid"] is True
     assert report["task_success"] is True
     assert report["quality_eligible"] is True

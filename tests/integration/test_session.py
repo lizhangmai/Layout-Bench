@@ -10,23 +10,20 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
+from protocol_helpers import write_protocol_task
 
-from benchmarking.agent import run_agent
-from benchmarking.environment import prepare_pdk_bundle
 from benchmarking.files import Asset
 from benchmarking.harnesses import PROCESS_FEEDBACK_CAPABILITY, HarnessSpec
 from benchmarking.model_config import RunConfig
-from benchmarking.prepare_support import prepare_support
 from benchmarking.recorder import RecordingError, RunRecorder, recover_submissions
 from benchmarking.session import DockerSession, task_message
 from benchmarking.tasks import load_task
-from benchmarking.toolchains import load_toolchain
 
 IMAGE = os.environ.get("LAYOUT_BENCH_TEST_IMAGE", "layout-bench-tools:local")
 
 pytestmark = pytest.mark.integration
 ROOT = Path(__file__).resolve().parents[2]
-TASK = ROOT / "tests/fixtures/sg13g2/checked-switch/task.toml"
+
 PREAMBLE = '''import json, os, subprocess, time
 from pathlib import Path
 task = json.loads(Path('/protocol/task.json').read_text())
@@ -39,6 +36,11 @@ def submit():
 '''
 
 
+def session_task():
+    with tempfile.TemporaryDirectory(prefix="protocol-task-") as directory:
+        return load_task(write_protocol_task(Path(directory)))
+
+
 def configuration(code, seconds=10):
     return RunConfig("protocol-test", IMAGE, ("python", "/agent/cli.py"),
                      seconds, 256, 1, 32, 16, {"cli.py": Asset((PREAMBLE+code).encode(), "python")},
@@ -46,7 +48,7 @@ def configuration(code, seconds=10):
 
 
 def execute(code, seconds=10, task=None):
-    task = task or load_task(TASK)
+    task = task or session_task()
     config = configuration(code, seconds)
     return DockerSession(config.image).run(task, config, {}, task_message(task, config))
 
@@ -111,12 +113,12 @@ def test_stop_and_submission_are_independent(code, termination, content):
 @pytest.mark.acceptance
 @pytest.mark.acceptance_container
 def test_invalid_submissions_do_not_replace_last_accepted():
-    task = load_task(TASK)
+    task = session_task()
     task = replace(task, output=replace(task.output, max_bytes=16))
     result = execute('''
 output.write_bytes(b'good'); assert submit()['accepted']
 output.write_bytes(b'x'*17); assert not submit()['accepted']
-output.unlink(); output.symlink_to('/task/inputs/circuit.spice'); assert not submit()['accepted']
+output.unlink(); output.symlink_to('/task/input.spice'); assert not submit()['accepted']
 output.unlink(); os.mkfifo(output); assert not submit()['accepted']
 output.unlink(); output.parent.rmdir()
 output.parent.symlink_to('/task'); assert not submit()['accepted']
@@ -141,7 +143,7 @@ output.write_bytes(b'last'); assert submit()['accepted']; assert submit()['accep
 @pytest.mark.acceptance
 @pytest.mark.acceptance_container
 def test_process_feedback_is_opt_in_and_uses_a_frozen_snapshot(tmp_path):
-    task = load_task(TASK)
+    task = session_task()
     config = replace(configuration('''
 output.write_bytes(b'feedback-candidate')
 feedback = subprocess.run(['python', '-I', '/protocol/process_check.py'],
@@ -194,43 +196,9 @@ print('y'*100000)
 
 
 @pytest.mark.acceptance
-@pytest.mark.acceptance_eda
-def test_scripted_generation_submission_and_real_postlayout_evaluation(tmp_path):
-    pdk = ROOT / "third_party/IHP-Open-PDK"
-    for profile in ("magic", "mos-models", "klayout"):
-        prepare_support(pdk, ROOT/f"technology/sg13g2/{profile}.json", tmp_path/profile,
-                        compiler_image=os.environ.get("LAYOUT_BENCH_TEST_IMAGE", "layout-bench-tools:local"))
-    resources = dict(prepare_pdk_bundle(pdk, tmp_path/"resources").files)
-    task = load_task(ROOT/"tests/fixtures/sg13g2/checked-switch/task.toml")
-    toolchain_text = (ROOT/"tests/fixtures/sg13g2/checked-switch/toolchain.toml").read_text()
-    for name in ("magic", "mos-models", "klayout"):
-        toolchain_text = toolchain_text.replace(f"build/support/sg13g2-{name}", str(tmp_path/name))
-    toolchain = tmp_path/"toolchain.toml"
-    if "LAYOUT_BENCH_TEST_IMAGE" in os.environ:
-        toolchain_text = toolchain_text.replace('"layout-bench-tools:local"', json.dumps(IMAGE))
-    toolchain.write_text(toolchain_text)
-    config = configuration('''
-subprocess.run(['python', '/agent/generate.py', str(output)], check=True)
-assert submit()['accepted']
-output.write_bytes(b'post-submission corruption')
-''', seconds=30)
-    config = replace(config, memory_mb=1024,
-                     files={**config.files, "generate.py": Asset((ROOT/"tests/fixtures/sg13g2/make_checked_switch.py").read_bytes(), "python")})
-    report = run_agent(task, config, resources, load_toolchain(toolchain), tmp_path/"run")
-    assert report["termination"] == "completed", report
-    assert report["task_success"] is True, report
-    assert report["environment"]["resource_environment"]["KLAYOUT"] == "1"
-    frozen = (tmp_path/"run"/report["candidate"]["path"]).read_bytes()
-    assert frozen != b'post-submission corruption'
-    evaluation = json.loads((tmp_path/"run/evaluation/report.json").read_text())
-    assert evaluation["inputs"]["candidate"]["sha256"] == report["candidate"]["sha256"]
-    assert report["usage"]["input_tokens"] is None
-
-
-@pytest.mark.acceptance
 @pytest.mark.acceptance_container
 def test_complete_console_and_failed_acceptance_persistence(tmp_path, monkeypatch):
-    task = load_task(TASK)
+    task = session_task()
     config = configuration("print('x'*100000); output.write_bytes(b'good'); submit()")
     recorder = RunRecorder(tmp_path / "run")
     result = DockerSession(config.image).run(task, config, {}, task_message(task, config), recorder=recorder)
@@ -270,9 +238,10 @@ import sys
 from pathlib import Path
 from benchmarking.agent import run_agent
 from benchmarking.tasks import load_task
-from tests.integration.test_session import TASK, configuration
+sys.path.insert(0, str(Path.cwd() / "tests"))
+from integration.test_session import session_task, configuration
 config = configuration("output.write_bytes(b'durable'); assert submit()['accepted']; print('ACK_OBSERVED', flush=True); time.sleep(60)", seconds=60)
-task = load_task(TASK)
+task = session_task()
 run_agent(task, config, {}, {job.operation: object() for job in task.evaluation.jobs}, Path(sys.argv[1]))
 """
     staging = tempfile.TemporaryDirectory(prefix="lb-crash-")
@@ -320,7 +289,7 @@ run_agent(task, config, {}, {job.operation: object() for job in task.evaluation.
 @pytest.mark.acceptance_container
 def test_console_storage_ceiling_stops_with_incomplete_evidence(tmp_path, monkeypatch):
     monkeypatch.setattr("benchmarking.session.MAX_CONSOLE_BYTES", 8192)
-    task = load_task(TASK)
+    task = session_task()
     config = configuration("print('x'*100000, flush=True); time.sleep(30)")
     recorder = RunRecorder(tmp_path / "run")
     result = DockerSession(config.image).run(task, config, {}, task_message(task, config), recorder=recorder)

@@ -33,26 +33,11 @@ def _pytest(marker, image=None):
 def _preview_evidence_is_complete(output):
     output = Path(output)
     summary = json.loads((output / "run/preview.json").read_text())
-    expected = {
-        "run_kind": "public_preview_smoke",
-        "task": "sg13g2-checked-switch-fixture",
-        "reference": "passed",
-        "protocol_probe": "expected_failure",
-        "canonical_probe": "expected_failure",
-        "batch": "complete",
-        "model_called": False,
-    }
-    if summary != expected:
-        raise ValueError(f"Unexpected public preview summary: {summary}")
-    required = (
-        "run/reference/report.json",
-        "run/probe/run.json",
-        "run/canonical-probe/run.json",
-        "run/batch/summary.json",
-    )
-    missing = [path for path in required if not (output / path).is_file()]
-    if missing:
-        raise ValueError(f"Public preview is missing evidence: {', '.join(missing)}")
+    report = json.loads((output / "run/reference/report.json").read_text())
+    if (summary["run_kind"] != "public_case_reference" or summary["reference"] != "passed"
+            or summary["model_called"] is not False or report["task_success"] is not True
+            or report["outcome"] != "passed"):
+        raise ValueError(f"Public case reference evaluation failed: {summary}")
 
 
 def _preview(output, image, network, *, skip_build):

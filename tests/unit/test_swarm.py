@@ -1,6 +1,7 @@
 """Plans, independent repeats, frozen execution and recomputable statistics."""
 
 import json
+import re
 from dataclasses import replace
 
 import pytest
@@ -21,12 +22,14 @@ from benchmarking.swarm import execute_plan, load_plan, resume_plan
 pytestmark = [pytest.mark.unit, pytest.mark.acceptance, pytest.mark.acceptance_fast]
 
 
-def make_plan(root, *, repetitions=2, retries=0, tasks=3, agents=2):
+def make_plan(root, *, repetitions=2, retries=0, tasks=3, agents=2, inline=False):
     root.mkdir(exist_ok=True)
     for index in range(tasks):
         directory = root / f"task-{index}"
         directory.mkdir()
         files = {"netlist": (b"netlist", "spice"), "constraints": (b"{}", "json"), "evaluation": (PLAN, "toml")}
+        if inline:
+            del files["constraints"], files["evaluation"]
         source = f'''schema_version = 1
 id = "t{index}"
 title = "Synthetic batch fixture"
@@ -45,6 +48,9 @@ max_bytes = 1024
             source += f'\n[inputs.{name}]\npath = "{name}"\nsha256 = "{Asset(content, file_format).sha256}"\nformat = "{file_format}"\n'
             if name == "netlist":
                 source += 'subcircuit = "SYNTHETIC"\n'
+        if inline:
+            source += '\n[constraints]\nschema_version = 1\nhard = []\n'
+            source += '\n[evaluation]\n' + re.sub(r'^(\[+)(?=[A-Za-z])', r'\1evaluation.', PLAN.decode(), flags=re.MULTILINE)
         (directory / "task.toml").write_text(source)
     for index in range(agents):
         (root / f"agent-{index}.toml").write_text(f'''schema_version = 1
@@ -98,8 +104,9 @@ def execute(path, destination, **kwargs):
     return execute_plan(load_plan(path), destination, session_factory=FakeSession, toolchain_loader=backends, **kwargs)
 
 
-def test_cross_product_family_weights_and_recomputed_evidence(tmp_path):
-    path = make_plan(tmp_path / "input")
+@pytest.mark.parametrize("inline", [False, True], ids=["file", "inline"])
+def test_cross_product_family_weights_and_recomputed_evidence(tmp_path, inline):
+    path = make_plan(tmp_path / "input", inline=inline)
     batch = execute(path, tmp_path / "run")
     assert batch["phase"] == "finished" and batch["outcome"] == "complete"
     assert len(batch["attempts"]) == 12
@@ -179,8 +186,9 @@ def test_scheduling_is_frozen_and_failures_are_not_extra_samples(tmp_path):
     assert [c["attempt"] for c in calls] == [1, 2, 1, 2]
 
 
-def test_resume_marks_interrupted_attempt_and_schedules_a_replacement(tmp_path):
-    path = make_plan(tmp_path / "input", repetitions=1, tasks=1, agents=1, retries=1)
+@pytest.mark.parametrize("inline", [False, True], ids=["file", "inline"])
+def test_resume_marks_interrupted_attempt_and_schedules_a_replacement(tmp_path, inline):
+    path = make_plan(tmp_path / "input", repetitions=1, tasks=1, agents=1, retries=1, inline=inline)
     calls = 0
 
     def interrupted(*args, **kwargs):
@@ -319,12 +327,14 @@ def _replace_evaluation_report(run_root, batch, mutate):
     (run_root / "batch.json").write_text(json.dumps(batch, indent=2) + "\n")
 
 
-def test_replaced_evaluation_plan_is_not_silently_counted(tmp_path):
-    path = make_plan(tmp_path / "input", tasks=1, agents=1)
+@pytest.mark.parametrize("inline", [False, True], ids=["file", "inline"])
+def test_replaced_evaluation_plan_is_not_silently_counted(tmp_path, inline):
+    path = make_plan(tmp_path / "input", tasks=1, agents=1, inline=inline)
     batch = execute(path, tmp_path / "run")
 
     def replace_plan(evaluation, evaluation_root):
-        alternate = Asset(PLAN + b"\n", "toml")
+        current = evaluation["plan"]
+        alternate = Asset((evaluation_root / current["path"]).read_bytes() + b"\n", current["format"])
         artifact = evaluation_root / "artifacts" / alternate.sha256
         artifact.write_bytes(alternate.content)
         artifact.chmod(0o400)

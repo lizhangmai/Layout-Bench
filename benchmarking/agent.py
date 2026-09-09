@@ -34,7 +34,7 @@ def run_agent(task, config, resources, backends, destination: Path, *, inference
               "command": list(config.command), "public_environment": config.environment,
               "prompt": archive(Asset(message.encode(), "text")),
               "task": archive(task.evaluation_inputs()["task"]),
-              "inputs": {item.role: archive(Asset(item.content, item.format)) for item in task.inputs},
+              "inputs": {role: archive(asset) for role, asset in task.input_assets().items()},
               "agent_files": {name: archive(a) for name, a in config.files.items()},
               "resources": {name: archive(a) for name, a in resources.items()},
               "implementation": {name: archive(Asset(Path(__file__).with_name(name).read_bytes(), "python"))

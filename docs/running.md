@@ -12,6 +12,11 @@ Tools, materials, input modalities, and budgets are measurement conditions. Reco
 
 `main.py run <task.toml> --agent <agent.toml> --toolchain <toolchain.toml> --output <new-directory>` starts one offline development run. The command accepts any executable harness that follows the session protocol; the schema and isolation rules are described below. `--resources <bundle>` may provide a reviewed, frozen resource bundle; the CLI does not read an arbitrary resource directory or a complete upstream checkout. Image and resource preparation and final evaluation are outside solve time. Timing starts before launching the prepared container and making the task message readable, so it includes a small amount of startup overhead.
 
+For a unified `case.toml` with a `[toolchain]` table, omit `--toolchain` to use
+those bindings. An explicit `--toolchain` takes precedence and may name either
+a standalone toolchain or another case TOML. The merged case is host configuration;
+only declared task inputs reach the solver.
+
 The current Agent configuration is schema 1:
 
 | Field | Semantics |
@@ -28,7 +33,7 @@ For each session, the Runner prepares separate read-only `/task`, `/agent`, `/re
 
 ### Submission and Durable Records
 
-The CLI reads the common first message from `/protocol/prompt.txt` and obtains paths and output requirements, sourced from the task configuration, from `/protocol/task.json`. The submission action is `python -I /protocol/submit.py`: the client sends only a `submit` request to the Unix socket for this run and supplies no candidate bytes, file path, or success assertion. The host runs a read-only helper against the container, clears the CLI's custom environment, isolates Python imports, and opens each directory and ordinary file along the configured output path with `O_NOFOLLOW`. It rejects links, FIFOs, oversized files, and changes made during copying. The host recomputes the digest, accepts only after the copy completes before the deadline, and returns the sequence number, receipt time, format, size, and digest to the client.
+The CLI reads the common first message from `/protocol/prompt.txt` and obtains paths and output requirements, sourced from the task configuration, from `/protocol/task.json`. When constraints are embedded in the task configuration, this JSON also contains their structured definition in `constraints`; no separate constraints file is materialized. The submission action is `python -I /protocol/submit.py`: the client sends only a `submit` request to the Unix socket for this run and supplies no candidate bytes, file path, or success assertion. The host runs a read-only helper against the container, clears the CLI's custom environment, isolates Python imports, and opens each directory and ordinary file along the configured output path with `O_NOFOLLOW`. It rejects links, FIFOs, oversized files, and changes made during copying. The host recomputes the digest, accepts only after the copy completes before the deadline, and returns the sequence number, receipt time, format, size, and digest to the client.
 
 The host first writes the candidate by content address and `fsync`s the file and directories, then checks the deadline and decides whether to accept it. It appends a `submission` event containing the receipt and artifact reference and `fsync`s successfully before returning `accepted=true`. The receipt time is the decision time after the candidate is durable; event commit and receipt delivery may be slightly later. Reject a request whose candidate reaches durable storage only after the deadline. Writes to the workspace after acceptance do not modify the archived immutable candidate. No explicit submission is `no_submission`, and a submission after the deadline is rejected. Normal exit, non-zero exit, and timeout all use the last successfully received snapshot. A submission receipt confirms delivery; it cannot self-report DRC/LVS or performance success. After the session stops, remove the entire container and pass the frozen candidate and independent trusted task materials to the existing evaluator.
 
@@ -141,14 +146,14 @@ Classify an evaluation anomaly as an artifact failure only after confirming a vi
 
 ## 3. Freeze a Batch Run Plan
 
-The quick start generates `build/runs/preview/run/plan.toml`, which can be rerun and its report recomputed in a new output directory:
+Create a run-plan TOML for your selected case and harness. After quick start, both `tasks[].config` and `tasks[].toolchain` can point to the generated `prepared/case/case.toml`; `agents[].resources` can point to `prepared/agent-resources`. Resolve these paths relative to the plan file. Run and recompute its report with:
 
 ```bash
-uv run --locked python main.py batch build/runs/preview/run/plan.toml --output build/runs/probe-batch
-uv run --locked python main.py summarize build/runs/probe-batch
+uv run --locked python main.py batch path/to/plan.toml --output build/runs/model-batch
+uv run --locked python main.py summarize build/runs/model-batch
 ```
 
-This plan repeats an offline rectangle probe and is expected to have a task success rate of 0. To customize it, start from the generated file or [protocol-probe.toml](../tests/fixtures/plans/protocol-probe.toml); use the single prepared toolchain image described in the [tools guide](tools.md#manual-tools). Batch-plan schema 1 is shown below; unknown fields and versions are rejected:
+Batch-plan schema 1 is described below; unknown fields and versions are rejected:
 
 | Field | Semantics |
 |---|---|
@@ -156,7 +161,7 @@ This plan repeats an offline rectangle probe and is expected to have a task succ
 | `repetitions` | Positive repetition count for every task/configuration combination; it cannot change based on intermediate results |
 | `order`, `seed` | `interleaved` orders repetition → task → configuration, or `shuffled` uses the given non-negative integer seed; archive the expanded order before running. The seed controls scheduling only and is not a provider random seed |
 | `max_infrastructure_retries` | Infrastructure replacement attempts allowed for each measurement slot; may be 0, with an independent record for every original attempt |
-| `tasks[]` | Each item references `config` (`task.toml`) and `toolchain`; task IDs must be unique |
+| `tasks[]` | Each item references `config` (`task.toml` or `case.toml`) and `toolchain`; with embedded bindings, both may point to the same case file. Task IDs must be unique |
 | `agents[]` | Each item has a unique configuration alias `id` and `config` (an existing CLI configuration), plus optional `resources` (frozen bundle) and `inference` (fixed inference configuration); use one CLI with different endpoints/models as separate configurations |
 
 Resolve the file and directory references above relative to the plan file and reject symlinks. CLI file references remain relative to the CLI configuration. Preserve existing adapter semantics inside toolchain `settings`: for current built-in backends, a relative `support` path is relative to the launch working directory, and the run record saves that directory and the actual support-bundle digest. Approved environments may be assembled with absolute paths. Take budgets directly from the referenced CLI and inference configurations, put the expanded values in the frozen manifest, and keep budgets, models, and repetition arrangements out of `task.toml`.
@@ -164,6 +169,8 @@ Resolve the file and directory references above relative to the plan file and re
 Before execution, load and validate every task, resource bundle, CLI file, endpoint configuration, and evaluation backend, and resolve the actual image IDs for the Agent and EDA. Then archive the original plan, per-task inputs and configurations, actual commands/environment/limits, endpoint and model, backend/support-bundle identities, host description, and the complete expanded order. `provenance.py` records the current `benchmarking` Python/JSON/YAML implementation files, available root entry points/image/dependency declarations, Git commit, and a status containing both uncommitted and untracked items. Source-content digests include new modules not yet committed. When an installed package has no Git checkout, still record source digests; root entry points or build files may be absent. An externally injected backend declares its installation/source identity through `identity`; the framework does not inspect arbitrary plugin directories.
 
 Inspect the frozen manifest in `execution.json`; authoritative content digests and artifact references are stored in `batch.json.execution`. Each slot has its own `slot_id`. Write each original or replacement attempt under `runs/<slot_id>/attempt-<n>/`. Before the first task message, write the manifest digest, slot, task, configuration, repetition, and attempt number into that run's `run.json.execution`. Use `main.py batch ... --concurrency N` to run independent slots concurrently; the chosen value and host worker count are frozen in the manifest. Reuse frozen inputs and tool identities, but create a new container, empty workspace, and inference gateway for every solve; do not read memories from earlier solves. Check source and backend identities before and after every attempt; stop if the implementation changes, retain incomplete records, and keep different conditions out of one manifest.
+
+The task `inputs` archives in `execution.json` and `run.json` include both declared files and frozen inline constraints/evaluation snapshots. Solver files still come only from the task's file declarations; inline requirements reach the solver through `/protocol/task.json`. Report verification checks evaluation-plan format, digest and bytes against the frozen archive, for both existing TOML file plans and JSON snapshots of inline plans.
 
 Freeze only the provider parameters that are declared and observable: archive the model, fixed endpoint, harness identity/image/command, configuration, and request contents. Do not claim to have frozen unavailable model snapshots, server defaults, or nondeterminism. The event artifacts contain the sampling and inference fields for each request; the scheduling seed does not control provider-side behavior.
 

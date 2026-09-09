@@ -1,0 +1,331 @@
+schema_version = 2
+kind = "layout_case"
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA"
+title = "IHP AnalogAcademy full_OTA"
+role = "design"
+status = "qualified"
+
+# Solver inputs, answer contract, and nominal post-layout requirements.
+[task]
+kind = "netlist_to_gds"
+family = "ihp_sg13g2_two_stage_ota"
+environment = "ihp-sg13g2-full-ota-rc-tt"
+
+[task.inputs.description]
+path = "problem.md"
+sha256 = "5ab57fbea08f48bc1458253ec62956b7d376d7ed0096cd9ee0f0c9f4997634fc"
+format = "text"
+
+[task.inputs.netlist]
+path = "materials/circuit.spice"
+sha256 = "066763e29f58e6054f5db2c67d8331eaaa1b669728a54a27318f787ac4e57641"
+format = "spice"
+subcircuit = "two_stage_OTA_layout"
+
+[task.inputs.performance]
+path = "materials/testbench.spice"
+sha256 = "62851f9d9bf6754a4d9b70ca2d9d63a0fd6241ae5e65b289fc5e2e8882469bea"
+format = "spice"
+
+[task.inputs.license]
+path = "materials/LICENSE"
+sha256 = "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+format = "text"
+
+[task.constraints]
+schema_version = 1
+
+[[task.constraints.hard]]
+id = "outline"
+type = "bbox_max"
+functional_layers = [
+  [1, 0], [5, 0], [6, 0], [7, 0], [14, 0], [28, 0], [46, 0],
+  [31, 0], [32, 0], [40, 0],
+  [8, 0], [10, 0], [19, 0], [29, 0], [30, 0], [49, 0], [50, 0],
+  [67, 0], [125, 0], [126, 0], [133, 0], [134, 0], [36, 0], [129, 0],
+]
+max_width_um = 80
+max_height_um = 50
+
+[[task.constraints.quality]]
+id = "area"
+type = "functional_bbox_area"
+layers_from = "outline"
+
+[task.output]
+path = "output/final.gds"
+format = "gds"
+top_cell = "two_stage_OTA_layout"
+max_bytes = 10485760
+
+[task.evaluation]
+schema_version = 1
+mode = "post_layout"
+
+[[task.evaluation.jobs]]
+id = "artifact"
+stage = "check"
+operation = "layout.artifact"
+gate = "artifact"
+inputs = { layout = "candidate", task = "task" }
+
+[[task.evaluation.jobs]]
+id = "drc"
+stage = "check"
+operation = "layout.drc"
+gate = "drc"
+inputs = { layout = "candidate", task = "task" }
+
+[[task.evaluation.jobs]]
+id = "lvs"
+stage = "check"
+operation = "layout.lvs"
+gate = "lvs"
+inputs = { layout = "candidate", task = "task", netlist = "input:netlist" }
+outputs = { database = "klayout-lvs", binding = "json" }
+
+[[task.evaluation.jobs]]
+id = "geometry"
+stage = "check"
+operation = "layout.geometry"
+gate = "constraint"
+requires = ["artifact", "drc", "lvs"]
+inputs = { layout = "candidate", task = "task", constraints = "input:constraints", database = "job:lvs:database", binding = "job:lvs:binding" }
+
+[[task.evaluation.jobs]]
+id = "parasitics"
+stage = "extract"
+operation = "layout.extract_rc"
+requires = ["artifact", "drc", "lvs", "geometry"]
+inputs = { layout = "candidate" }
+outputs = { netlist = "spice" }
+parameters = { top_cell = "two_stage_OTA_layout", ports = ["v-", "v+", "vss", "vdd", "iout", "vout"] }
+
+[[task.evaluation.jobs]]
+id = "nominal"
+stage = "simulate"
+operation = "circuit.simulate"
+inputs = { deck = "input:performance", dut = "job:parasitics:netlist" }
+outputs = { ac = "ngspice-raw", op = "ngspice-raw" }
+[task.evaluation.jobs.parameters]
+exports = { ac = "ota-ac.raw", op = "ota-op.raw" }
+[task.evaluation.jobs.parameters.measurements]
+low_frequency_gain = "dB"
+unity_gain_bandwidth = "Hz"
+phase_margin = "deg"
+supply_power = "W"
+output_bias = "V"
+
+[[task.evaluation.metrics]]
+id = "functional_area"
+category = "physical"
+observations = ["geometry:area"]
+unit = "um2"
+direction = "minimize"
+aggregation = "max"
+
+[[task.evaluation.metrics]]
+id = "low_frequency_gain"
+category = "performance"
+observations = ["nominal:low_frequency_gain"]
+unit = "dB"
+direction = "maximize"
+aggregation = "min"
+lower = 60
+
+[[task.evaluation.metrics]]
+id = "unity_gain_bandwidth"
+category = "performance"
+observations = ["nominal:unity_gain_bandwidth"]
+unit = "Hz"
+direction = "maximize"
+aggregation = "min"
+lower = 3e6
+
+[[task.evaluation.metrics]]
+id = "phase_margin"
+category = "performance"
+observations = ["nominal:phase_margin"]
+unit = "deg"
+direction = "maximize"
+aggregation = "min"
+lower = 55
+
+[[task.evaluation.metrics]]
+id = "supply_power"
+category = "performance"
+observations = ["nominal:supply_power"]
+unit = "W"
+direction = "minimize"
+aggregation = "max"
+lower = 0
+upper = 220e-6
+
+[[task.evaluation.metrics]]
+id = "output_bias"
+category = "performance"
+observations = ["nominal:output_bias"]
+unit = "V"
+direction = "target"
+aggregation = "min"
+lower = 0.55
+upper = 0.65
+
+[toolchain]
+schema_version = 1
+
+[toolchain.backends.artifact]
+type = "klayout-docker"
+[toolchain.backends.artifact.settings]
+image = "layout-bench-tools:local"
+check = "artifact"
+
+[toolchain.backends.drc]
+type = "klayout-docker"
+[toolchain.backends.drc.settings]
+image = "layout-bench-tools:local"
+check = "drc"
+support = "build/support/full-ota-klayout-spice"
+profile = "drc-upstream.json"
+timeout_seconds = 600
+
+[toolchain.backends.lvs]
+type = "klayout-docker"
+[toolchain.backends.lvs.settings]
+image = "layout-bench-tools:local"
+check = "lvs"
+support = "build/support/full-ota-klayout-spice"
+profile = "lvs-analogacademy.json"
+timeout_seconds = 600
+
+[toolchain.backends.rc]
+type = "magic-rc-docker"
+[toolchain.backends.rc.settings]
+image = "layout-bench-tools:local"
+support = "build/support/full-ota-magic"
+technology = "magic/ihp-sg13g2.tech"
+tech_name = "ihp-sg13g2"
+style = "ngspice()"
+capacitance_threshold_ff = 0
+timeout_seconds = 600
+
+[toolchain.backends.geometry]
+type = "klayout-geometry-docker"
+[toolchain.backends.geometry.settings]
+image = "layout-bench-tools:local"
+timeout_seconds = 120
+
+[toolchain.backends.simulation]
+type = "ngspice-docker"
+[toolchain.backends.simulation.settings]
+image = "layout-bench-tools:local"
+support = "build/support/full-ota-models"
+timeout_seconds = 600
+
+[toolchain.bindings]
+"layout.artifact" = "artifact"
+"layout.drc" = "drc"
+"layout.lvs" = "lvs"
+"layout.geometry" = "geometry"
+"layout.extract_rc" = "rc"
+"circuit.simulate" = "simulation"
+
+# Maintainer-only reference assets, excluded from standard solver inputs.
+[[assets]]
+path = "reference/two_stage_OTA_layout.gds"
+role = "physical-witness"
+visibility = "maintainer"
+format = "gds"
+sha256 = "50fa39a6984b6f9d1bc0dda38b379861b981c10b85842cc64d9c0e020f7f15bc"
+
+[origin]
+checkout = "third_party/IHP-AnalogAcademy"
+commit = "133ecf657572e021b5921b5a1b7693abfb209623"
+license = "Apache-2.0 upstream root; file-level notices apply"
+
+[[sources]]
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA.schematic_mod.two_stage_OTA_layout"
+path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/schematic_mod/two_stage_OTA_layout.sch"
+role = "design"
+format = "xschem"
+sha256 = "565fff885a4400cf1e83657cfa6e4d87b6d8d5529c8ce025419b8192e9524233"
+
+[[sources]]
+id = "module_1_bandgap_reference.part_1_OTA.testbenches.ota_testbench"
+path = "modules/module_1_bandgap_reference/part_1_OTA/testbenches/ota_testbench.sch"
+role = "testbench"
+format = "xschem"
+sha256 = "861a27e4fcfec15e267ed18816db791460aae1f94f1a7c83ca0c114d4379d4bc"
+
+[[sources]]
+id = "module_1_bandgap_reference.part_1_OTA.schematic.two_stage_OTA"
+path = "modules/module_1_bandgap_reference/part_1_OTA/schematic/two_stage_OTA.sch"
+role = "supporting-source"
+format = "xschem"
+sha256 = "4385e81ad81c229b81095fe2060153b2817376cfcfbb6d9adfc908d58d7e34a7"
+
+[[sources]]
+id = "module_1_bandgap_reference.part_1_OTA.schematic.two_stage_OTA_symbol"
+path = "modules/module_1_bandgap_reference/part_1_OTA/schematic/two_stage_OTA.sym"
+role = "supporting-source"
+format = "xschem-symbol"
+sha256 = "d6cbae50c9f6a425bab127f0644c5959c98c13893442420b6b25531af0d64126"
+
+[[upstream_assets]]
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA.reference_gds"
+path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/two_stage_OTA_layout.gds"
+role = "reference"
+format = "gds"
+sha256 = "d017eb50df5e546b7632f517104576eca9d044483f8972e538aab56ce60d7980"
+
+[[upstream_assets]]
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA.source_cdl"
+path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/schematic_mod/simulations/two_stage_OTA_layout.cdl"
+role = "source-netlist"
+format = "cdl"
+sha256 = "a02b6a358b04f7c6fd9523cfd3896e4ab45b4ca638e3281245a58665d33efc0b"
+
+[[upstream_assets]]
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA.extracted_netlist"
+path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/two_stage_OTA_layout_extracted.cir"
+role = "extracted-netlist"
+format = "spice"
+sha256 = "d5971719d6fc3bc1eed29ea6f48ad56707c25d63add6bc49b59a670a46f10165"
+
+[[upstream_assets]]
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA.drc_minimal"
+path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/sg13g2_minimal.lyrdb"
+role = "drc-evidence"
+format = "lyrdb"
+sha256 = "c8b070a76948518966a5e7307a72c38feff74352b464e40f34f8f5ff6b50186a"
+
+[[upstream_assets]]
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA.drc_maximal"
+path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/sg13g2_maximal.lyrdb"
+role = "drc-evidence"
+format = "lyrdb"
+sha256 = "a17ed83c167b7bffbe9f3b7bffda04cba7bd0a820f6769c2b9030a9c390d6e5e"
+
+[[upstream_assets]]
+id = "module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA.drc_full"
+path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/drc_run_two_stage_OTA_layout/two_stage_OTA_layout_two_stage_OTA_layout_full.lyrdb"
+role = "drc-evidence"
+format = "lyrdb"
+sha256 = "452c0cf729754e36fee81f22531667507af0296888a72b938efc52de03a982da"
+
+[screening]
+decision = "include"
+reason = "Upstream provides the layout schematic, CDL, GDS, extracted netlist, and minimal/maximal DRC reports for the same two-stage OTA."
+
+[qualification]
+evidence = "README.md"
+reference = "reference/two_stage_OTA_layout.gds"
+
+[upstream_evaluation]
+layout = "module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA.reference_gds"
+netlist = "module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA.source_cdl"
+top_cell = "two_stage_OTA_layout"
+subcircuit = "two_stage_OTA_layout"
+drc_profile = "drc-upstream.json"
+lvs_profile = "lvs-analogacademy.json"
+basis = "Use original layout and source LVS netlist. Map current PDK GUI DRC scope and documented course-era LVS compare-only semantics; exact author switches were not archived. See docs/tools.md for option provenance."

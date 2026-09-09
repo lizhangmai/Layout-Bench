@@ -1,0 +1,39 @@
+* Full OTA nominal AC/DC measurements. SPDX-License-Identifier: Apache-2.0
+* Adapted from the IHP AnalogAcademy OTA testbench; explicit measurements added.
+* DUT port order: v- v+ vss vdd iout vout.
+.lib /workspace/support/models/cornerMOSlv.lib mos_tt
+.lib /workspace/support/models/cornerCAP.lib cap_typ
+.lib /workspace/support/models/cornerRES.lib res_typ
+.include dut.spice
+.temp 27
+* Approved numerical conditioning for floating capacitive extraction nodes.
+.option rshunt=1e12
+VDD vdd 0 DC 1.2
+VIN vp 0 DC 0.6 AC 1
+IBIAS iout 0 DC 80u
+LFEEDBACK vout vm 4G
+CFEEDBACK vm 0 4G
+CLOAD vout 0 500f
+XDUT vm vp 0 vdd iout vout two_stage_OTA_layout
+.control
+set noaskquit
+set numdgt=12
+op
+let supply_power = -v(vdd)*i(VDD)
+let output_bias = v(vout)
+print supply_power output_bias
+write ota-op.raw all
+ac dec 100 1 10meg
+let differential = v(vp)-v(vm)
+let transfer = v(vout)/differential
+let gain_db = db(transfer)
+let phase_deg = 180*cph(transfer)/pi
+meas ac low_frequency_gain find gain_db at=1
+meas ac unity_gain_bandwidth when gain_db=0 fall=1
+meas ac phase_at_unity find phase_deg when gain_db=0 fall=1
+let phase_margin = 180+phase_at_unity
+print phase_margin
+write ota-ac.raw frequency v(vp) v(vm) v(vout) differential transfer gain_db phase_deg
+quit
+.endc
+.end

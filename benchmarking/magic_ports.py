@@ -1,4 +1,4 @@
-"""Lossless GDS label aliases for characters Magic trims during SPICE export."""
+"""Prepare an isolated GDS for Magic: label aliases and optional flat geometry."""
 
 import json
 from pathlib import Path
@@ -20,4 +20,18 @@ for original, alias in config["aliases"].items():
                     label = shape.text
                     label.string = alias
                     shape.text = label
-layout.write("extraction.gds")
+report = {"aliases": config["aliases"], "flattened": False}
+if "flatten_top" in config:
+    top = layout.cell(config["flatten_top"])
+    if top is None:
+        raise ValueError("Missing extraction top cell")
+    regions = {i: db.Region(top.begin_shapes_rec(i)).merged() for i in layout.layer_indexes()}
+    top.flatten(True)
+    for index, region in regions.items():
+        if not (region ^ db.Region(top.begin_shapes_rec(index)).merged()).is_empty():
+            raise ValueError("Flattening changed extraction geometry")
+    top.write("extraction.gds")
+    report.update(flattened=True, geometry_unchanged=True, top_cell=top.name)
+else:
+    layout.write("extraction.gds")
+Path("preparation-check.json").write_text(json.dumps(report))

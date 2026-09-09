@@ -110,7 +110,7 @@ def _verify_evaluation_inputs(root, run_root, evaluation, report, task):
     if frozen_plan_ref is None:
         raise ValueError("Task has no frozen evaluation plan")
     frozen_plan = _read_archived_asset(root, frozen_plan_ref, "frozen evaluation plan")
-    if frozen_plan_ref.get("format") != "toml":
+    if frozen_plan_ref.get("format") not in {"toml", "json"}:
         raise ValueError("Frozen evaluation plan has the wrong format")
 
     plan_ref = evaluation.get("plan")
@@ -125,7 +125,7 @@ def _verify_evaluation_inputs(root, run_root, evaluation, report, task):
     if evaluated_plan != frozen_plan:
         raise ValueError("Evaluation plan differs from the frozen task plan")
     try:
-        external_inputs = parse_evaluation(frozen_plan).external_inputs()
+        external_inputs = parse_evaluation(frozen_plan, file_format=frozen_plan_ref["format"]).external_inputs()
     except (TypeError, ValueError) as error:
         raise ValueError("Frozen evaluation plan is invalid") from error
 

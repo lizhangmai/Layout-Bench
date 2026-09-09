@@ -1,4 +1,4 @@
-"""Composition of logical operations and installed adapters, outside task data."""
+"""Bind trusted evaluator tools from a standalone config or a circuit case."""
 
 import tomllib
 from collections.abc import Callable
@@ -8,7 +8,7 @@ from .evaluate import Backend
 from .files import keys, read_file
 from .geometry import KLayoutGeometryDocker
 from .klayout import KLayoutDocker
-from .magic import MagicCapacitanceDocker
+from .magic import MagicCapacitanceDocker, MagicRCDocker
 from .ngspice import NgspiceDocker
 
 
@@ -16,11 +16,18 @@ def load_toolchain(config: Path, *, factories: dict[str, Callable[..., Backend]]
     """Bind operations using trusted factories; never import code named by a task.
 
     Python callers can supply additional factories without changing evaluation.
-    CLI includes KLayout checks, ngspice and Magic capacitance extraction; task-level DRC/LVS
-    qualification remains separate from selecting an installed tool.
+    Read either a schema-1 toolchain or the [toolchain] table of a schema-2
+    layout_case. Backend settings retain their existing path semantics.
+    Toolchain configuration is never a solver input.
     """
     config = config.absolute()
     data = tomllib.loads(read_file(config.parent, config.name).decode("utf-8"))
+    if "kind" in data:
+        if data["kind"] != "layout_case" or type(data.get("schema_version")) is not int or data["schema_version"] != 2:
+            raise ValueError("Embedded toolchains require a schema-2 layout_case; supply --toolchain")
+        if "toolchain" not in data:
+            raise ValueError("Case does not declare a toolchain; supply --toolchain")
+        data = data["toolchain"]
     keys(data, {"schema_version", "backends", "bindings"}, set(), "toolchain")
     if type(data["schema_version"]) is not int or data["schema_version"] != 1:
         raise ValueError("Unsupported toolchain schema_version")
@@ -28,6 +35,7 @@ def load_toolchain(config: Path, *, factories: dict[str, Callable[..., Backend]]
         raise TypeError("Toolchain backends and bindings must be tables")
     factories = {"ngspice-docker": NgspiceDocker,
                  "magic-capacitance-docker": MagicCapacitanceDocker,
+                 "magic-rc-docker": MagicRCDocker,
                  "klayout-docker": KLayoutDocker,
                  "klayout-geometry-docker": KLayoutGeometryDocker} if factories is None else factories
     for name, config_data in data["backends"].items():

@@ -1,0 +1,35 @@
+* Full OTA authoritative circuit. SPDX-License-Identifier: Apache-2.0
+* Derived from the IHP AnalogAcademy layout CDL; approved bulk/tap corrections.
+* Shared LVS/simulation model calls; tap A/P are SI geometry parameters.
+* Tap R uses the pinned PDK ntap1/ptap1 symbol formula.
+.subckt two_stage_OTA_layout v- v+ vss vdd iout vout
+*.PININFO v-:B v+:B vss:B vdd:B iout:B vout:B
+XM1 dn3 v- dn2 bulk sg13_lv_pmos l=3.7u w=3.64u ng=1 m=2
+XM2 dn4 v+ dn2 bulk sg13_lv_pmos l=3.7u w=3.64u ng=1 m=2
+XM8 dn4 vdd vdd bulk sg13_lv_pmos l=3.7u w=3.64u ng=1 m=2
+XM10 dn3 vdd vdd bulk sg13_lv_pmos l=3.7u w=3.64u ng=1 m=2
+XM15 dn2 vdd vdd bulk sg13_lv_pmos l=3.7u w=3.64u ng=1 m=2
+XM16 dn2 vdd vdd bulk sg13_lv_pmos l=3.7u w=3.64u ng=1 m=2
+.param tap1_a=28.1356e-12 tap1_p=181.52e-6
+XR1 vdd bulk ntap1 a={tap1_a} p={tap1_p}
++ r={1/(tap1_a/9.8e-10+tap1_p/9.8e-4)}
+XM7 dn2 iout vdd bulk1 sg13_lv_pmos l=1.95u w=5.3u ng=1 m=1
+.param tap2_a=8.559e-12 tap2_p=57.06e-6
+XR2 vss bulk2 ptap1 a={tap2_a} p={tap2_p}
++ r={1/(tap2_a/9.8e-10+tap2_p/9.8e-4)}
+.param tap3_a=6.9626e-12 tap3_p=44.92e-6
+XR3 vdd bulk1 ntap1 a={tap3_a} p={tap3_p}
++ r={1/(tap3_a/9.8e-10+tap3_p/9.8e-4)}
+XM3 dn3 dn3 vss bulk2 sg13_lv_nmos l=9.75u w=720n ng=1 m=1
+XM4 dn4 dn3 vss bulk2 sg13_lv_nmos l=9.75u w=720n ng=1 m=1
+XM5 vout iout vdd bulk4 sg13_lv_pmos l=2.08u w=75u ng=8 m=1
+XM6 vout dn4 vss bulk2 sg13_lv_nmos l=9.75u w=28.8u ng=4 m=1
+XM9 iout iout vdd bulk4 sg13_lv_pmos l=2.08u w=75u ng=8 m=1
+XC2 dn4 vout cap_cmim w=22.295e-6 l=22.295e-6 m=1
+.param tap4_a=30.288e-12 tap4_p=201.92e-6
+XR4 vss bulk2 ptap1 a={tap4_a} p={tap4_p}
++ r={1/(tap4_a/9.8e-10+tap4_p/9.8e-4)}
+.param tap5_a=26.815e-12 tap5_p=173e-6
+XR5 vdd bulk4 ntap1 a={tap5_a} p={tap5_p}
++ r={1/(tap5_a/9.8e-10+tap5_p/9.8e-4)}
+.ends

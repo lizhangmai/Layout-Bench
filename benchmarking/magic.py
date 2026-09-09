@@ -1,4 +1,4 @@
-"""Magic capacitance extraction with caller-selected technology and pin order."""
+"""Magic parasitic extraction with caller-selected technology and pin order."""
 
 import json
 import re
@@ -26,6 +26,8 @@ class MagicCapacitanceDocker:
     independent validity gates before extraction can count toward task success.
     """
 
+    wire_resistance = False
+
     def __init__(self, *, image: str, support: str, technology: str, tech_name: str,
                  style: str, capacitance_threshold_ff: float = 0, timeout_seconds: float = 60):
         self.support = load_bundle(Path(support))
@@ -40,14 +42,19 @@ class MagicCapacitanceDocker:
 
     @property
     def identity(self) -> dict:
-        return {"adapter": "magic-capacitance-docker", **self.tool.identity,
+        return {"adapter": "magic-rc-docker" if self.wire_resistance else "magic-capacitance-docker", **self.tool.identity,
                 "adapter_sha256": Asset(Path(__file__).read_bytes(), "python").sha256,
                 "port_alias_sha256": Asset(Path(__file__).with_name("magic_ports.py").read_bytes(), "python").sha256,
                 "interface_check_sha256": Asset(Path(__file__).with_name("magic_netlist.py").read_bytes(), "python").sha256,
                 "support_sha256": self.support.manifest.sha256, "technology": self.technology,
                 "tech_name": self.tech_name, "extract_style": self.style,
-                "parasitics": "coupled_capacitance", "wire_resistance": False,
-                "capacitance_threshold_ff": self.threshold}
+                "parasitics": "distributed_rc" if self.wire_resistance else "coupled_capacitance",
+                "wire_resistance": self.wire_resistance,
+                "capacitance_threshold_ff": self.threshold,
+                **({"flatten": True, "resistance_threshold_mohm": 0, "minimum_resistance_mohm": 0,
+                    "minimum_delay_ps": 0, "simplify_resistance": False, "merge_devices": "none",
+                    "same_conductor_ports": "rejected"}
+                   if self.wire_resistance else {})}
 
     def run(self, job: Job, inputs: dict[str, Asset]) -> JobResult:
         if job.stage != "extract" or set(inputs) - {"layout", "task"} or "layout" not in inputs:
@@ -77,17 +84,29 @@ class MagicCapacitanceDocker:
             arg = _tcl_word(aliases.get(port, port))
             port_commands.extend([f'if {{[port {arg} index] eq ""}} {{port {arg} make {index}}} else {{port {arg} index {index}}}',
                                   f'if {{[port {arg} index] ne "{index}"}} {{error "Missing or ambiguous port"}}'])
+        prepare_layout = bool(aliases) or self.wire_resistance
         script = "\n".join([
             "if {[catch {", "drc off", f"tech load {_tcl_word('/workspace/support/' + self.technology)}",
             f'if {{[tech name] ne {_tcl_word(self.tech_name)}}} {{error "Wrong technology"}}',
-            "gds readonly true", "gds read extraction.gds" if aliases else "gds read candidate.gds",
+            "gds readonly true", "gds read extraction.gds" if prepare_layout else "gds read candidate.gds",
             f'if {{[cellname list exists {_tcl_word(top)}] eq "0"}} {{error "Missing top cell"}}',
             f"load {_tcl_word(top)}", "select top cell", "expand",
-            *port_commands, f"extract style {_tcl_word(self.style)}", "extract all",
+            *port_commands, f"extract style {_tcl_word(self.style)}", "extract warn all", "extract all",
+            *(["ext2spice default", "ext2spice format ngspice", "ext2spice scale off",
+               "ext2spice hierarchy off", "ext2spice subcircuit top on", "ext2spice global off",
+               "ext2spice short resistor", "ext2spice extresist off", "ext2spice cthresh infinite",
+               "ext2spice -o topology.spice"] if self.wire_resistance else []),
+            *(["extresist threshold 0", "extresist minres 0", "extresist mindelay 0",
+               "extresist simplify off", "extresist all"] if self.wire_resistance else []),
             "ext2spice default", "ext2spice format ngspice", "ext2spice scale off",
             "ext2spice hierarchy off", "ext2spice subcircuit top on", "ext2spice global off",
-            "ext2spice extresist off", "ext2spice rthresh infinite",
+            *(["ext2spice merge none", "ext2spice short none", "ext2spice extresist on"]
+              if self.wire_resistance else ["ext2spice extresist off"]),
+            "ext2spice rthresh infinite",
             f"ext2spice cthresh {self.threshold:.17g}", "ext2spice -o extracted.spice",
+            *([f"file copy -- {_tcl_word(top + '.ext')} extraction.ext",
+               f"file copy -- {_tcl_word(top + '.res.ext')} resistance.ext",
+               "feedback save feedback.tcl"] if self.wire_resistance else []),
             'set done [open complete.txt w]', 'puts $done "extraction complete"', "close $done",
             '} detail]} {puts stderr "EXTRACTION_ERROR: $detail"; exit 1}', "quit -noprompt", "",
         ])
@@ -95,30 +114,54 @@ class MagicCapacitanceDocker:
                  "empty.magicrc": Asset(b"# No user startup or device generators.\n", "tcl"),
                  **self.support.mounted_files()}
         preprocessing = {}
-        if aliases:
+        if prepare_layout:
             helper = Asset(Path(__file__).with_name("magic_ports.py").read_bytes(), "python")
-            mapping = Asset(json.dumps({"aliases": aliases, "ports": [aliases.get(p, p) for p in ports]}).encode(), "json")
+            mapping = Asset(json.dumps({"aliases": aliases, "ports": [aliases.get(p, p) for p in ports],
+                                        **({"flatten_top": top} if self.wire_resistance else {})}).encode(), "json")
             prepared = self.tool.run(["python", "magic_ports.py"], {
                 "candidate.gds": inputs["layout"], "magic_ports.py": helper, "ports.json": mapping},
-                {"extraction.gds": "gds"})
+                {"extraction.gds": "gds", "preparation-check.json": "json"})
             preprocessing = {"port_aliases": mapping, "alias_helper": helper,
                              **{f"alias_{k}": a for k, a in prepared.evidence.items()}, **prepared.files}
             if prepared.reason or prepared.returncode:
                 return JobResult("error", prepared.reason, evidence=preprocessing)
             files["extraction.gds"] = prepared.files["extraction.gds"]
         files["magic_netlist.py"] = Asset(Path(__file__).with_name("magic_netlist.py").read_bytes(), "python")
-        files["interface.json"] = Asset(json.dumps({"top_cell": top, "ports": [aliases.get(p, p) for p in ports]}).encode(), "json")
+        files["interface.json"] = Asset(json.dumps({"top_cell": top, "ports": [aliases.get(p, p) for p in ports],
+                                                   "reject_aliased_ports": self.wire_resistance}).encode(), "json")
         result = self.tool.run(["python", "magic_netlist.py"], files,
-                               {"extracted.spice": "spice", "complete.txt": "text", "interface-check.json": "json"})
+                               {"extracted.spice": "spice", "complete.txt": "text", "interface-check.json": "json",
+                                **({"extraction.ext": "magic-ext", "resistance.ext": "magic-ext",
+                                    "feedback.tcl": "tcl", "topology.spice": "spice"}
+                                   if self.wire_resistance else {})})
         evidence = {**self.support.evidence(), **preprocessing, **result.evidence, "script": files["extract.tcl"],
                     "interface": files["interface.json"], "interface_checker": files["magic_netlist.py"]}
         if "interface-check.json" in result.files:
             evidence["interface_check"] = result.files["interface-check.json"]
         if "extracted.spice" in result.files:
             evidence["extracted_netlist"] = result.files["extracted.spice"]
+        for name in ("extraction.ext", "resistance.ext", "feedback.tcl", "topology.spice"):
+            if name in result.files:
+                evidence[name] = result.files[name]
         log = result.evidence.get("console", Asset(b"", "text")).content.decode(errors="replace")
         if result.reason or result.returncode != 0:
             return JobResult("error", result.reason or "Magic did not complete", evidence=evidence)
         if re.search(r"error|unrecognized|unknown layer|unmapped|not found|couldn't|cannot", log, re.IGNORECASE):
             return JobResult("error", "Magic reported an extraction or input error", evidence=evidence)
         return JobResult("passed", outputs={"netlist": result.files["extracted.spice"]}, evidence=evidence)
+
+
+class MagicRCDocker(MagicCapacitanceDocker):
+    """Extract distributed resistance and capacitance without resistor pruning.
+
+    The isolated extraction copy is flattened with a geometry equivalence check.
+    Requires the explicit threshold controls introduced in Magic 8.3.653.
+    """
+
+    wire_resistance = True
+
+    def __init__(self, **settings):
+        super().__init__(**settings)
+        version = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", self.tool.identity["tool_version"].strip())
+        if version is None or tuple(map(int, version.groups())) < (8, 3, 653):
+            raise ValueError("Magic RC extraction requires Magic 8.3.653 or newer")

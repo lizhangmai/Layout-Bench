@@ -1,6 +1,6 @@
 # Adding Tasks and Validating the Judge
 
-See the framework fixture in [`tests/fixtures/sg13g2/checked-switch`](../tests/fixtures/sg13g2/checked-switch/task.toml) for the task schema. The selected public IHP and TO_Apr2025 cases are listed in [`tasks/IHP-AnalogAcademy/catalog.toml`](../tasks/IHP-AnalogAcademy/catalog.toml) and [`tasks/TO_Apr2025/catalog.toml`](../tasks/TO_Apr2025/catalog.toml); a case may be promoted only when the pinned upstream checkout already contains the reusable layout and corresponding physical evidence. Source review then freezes inputs, constraints, evaluation, tool bindings, and independent qualification. Models, budgets, repetitions, and access policy belong to the outer [run plan](running.md).
+See the [comparator case](../tasks/IHP-AnalogAcademy/cases/comparator/case.toml) for an executable task and its embedded toolchain, constraints, and evaluation plan. The selected public IHP and TO_Apr2025 cases are listed in [`tasks/IHP-AnalogAcademy/catalog.toml`](../tasks/IHP-AnalogAcademy/catalog.toml) and [`tasks/TO_Apr2025/catalog.toml`](../tasks/TO_Apr2025/catalog.toml); a case may be promoted only when the pinned upstream checkout already contains the reusable layout and corresponding physical evidence. Source review then freezes inputs, constraints, evaluation, tool bindings, and independent qualification. Models, budgets, repetitions, and access policy belong to the outer [run plan](running.md).
 
 The catalog is an inventory index, not a shortcut around task qualification. A
 `candidate` record becomes a benchmark task only after its authoritative
@@ -9,6 +9,39 @@ evidence are frozen. Qucs/RF schematics and testbenches remain explicitly
 typed as `source-only` or `supporting-source`; they are not silently treated as
 `netlist_to_gds` tasks. Each record is bound to the upstream submodule commit
 and source digest, so updating the submodule requires a new source review.
+
+IHP AnalogAcademy and TO_Apr2025 cases use one directory per circuit under
+`tasks/<collection>/cases/<circuit>/`, with a single `case.toml` entry point.
+The catalog's `config_path` locates the entry point; the full case ID and upstream
+source paths remain in the manifest. File roles are declared by the manifest;
+the loader does not require particular directory names.
+
+### Problem, materials, tools, answer, and scoring
+
+The [comparator case](../tasks/IHP-AnalogAcademy/cases/comparator/README.md)
+provides a concrete entry point for this workflow:
+
+| Role | Comparator location | Runtime responsibility |
+|---|---|---|
+| Problem | `problem.md` | Solver-facing objective, interface and acceptance requirements; declared as `inputs.description` |
+| Materials | `materials/` | Authoritative netlist and public simulation testbench; declared inputs |
+| Tools | Tool instructions in `problem.md`; `[toolchain]` in `case.toml` | The problem explains the shared EDA/PDK environment; the case binds evaluator backends on the host. Solver image, reviewed resources and harness come from the outer run configuration |
+| Answer | `/workspace/output/final.gds`; maintainer witness in `reference/` | The solver explicitly submits a GDS snapshot; the reference demonstrates feasibility and is excluded from solver inputs |
+| Scoring | Rules in `problem.md`; `[task.evaluation]` and `[task.constraints]` in `case.toml` | Public requirements, physical gates, candidate-derived RC and bounded simulation measurements; the evaluator produces `report.json` |
+
+The comparator README records its circuit source, original issues, modification
+rationale and validation summary. Its case directory contains only the current
+problem, materials, tool instructions, case configuration and reference GDS;
+development records remain in Git history and local `build/runs/` outputs.
+`case.toml` defines one current scoring plan. These directory
+names organize the case; `[task.inputs]` declares the files a solver
+receives. The comparator materializes the problem, netlist and testbench; its problem
+includes tool instructions and the complete scoring rules. Inline constraints and
+evaluation are published in `/protocol/task.json` and supplied to the evaluator
+from the same frozen definitions. The case configuration, reference GDS and source/modification README stay
+outside solver inputs. Scoring reports task success
+and declared metrics; introducing a scalar score is a separate benchmark design
+decision. Other cases may retain their existing manifest-declared paths.
 
 <a id="task-design"></a>
 
@@ -27,7 +60,7 @@ Record the source, license, and permitted use and distribution scope separately 
 | Material | Storage and runtime visibility |
 |---|---|
 | Netlist, constraints, evaluation requirements, required testbench/model/description | Inputs declared by the case TOML's `[task]` section; readable by a standard Agent |
-| Reference GDS, generators, qualification matrix, calibration, and counterexamples | Put public tasks in `reference/` and `qualification/`; downloadable for debugging but excluded from standard solve inputs |
+| Reference GDS, generators, qualification matrix, calibration, and counterexamples | Case-local maintainer materials; comparator keeps its reference GDS in `reference/` and its source, modifications and validation summary in `README.md`; downloadable for debugging but excluded from standard solve inputs |
 | Preparation source records | May be referenced by `provenance`; not materialized for the Agent automatically |
 | Process and tool materials | Separately reviewed resource bundles; do not mount a complete upstream checkout or repository |
 
@@ -45,9 +78,9 @@ Hidden tasks use only independently authored or authorized unpublished designs. 
 | `id`, `title`, `family`, `status` | Task identity, display name, statistics family, and `candidate` / `qualified` status |
 | `environment` | Required process and tool configuration identity; the actual run also records image and PDK-view digests |
 | `inputs.netlist` | `path`, `sha256`, and target `subcircuit` |
-| `inputs.constraints` | `path` and `sha256` for the physical-constraints file |
+| `constraints` or `inputs.constraints` | Exactly one: inline structured constraints, or `path` and `sha256` for a separate constraints file |
 | `inputs.description`, `inputs.license` | Optional task description and license files, each declaring `path` and `sha256` |
-| `inputs.evaluation` | Optional evaluation-plan file declaring `path` and `sha256`; loading validates the schema for the [per-task evaluation plan and backend selection](#evaluation-plan) |
+| `evaluation` or `inputs.evaluation` | Optional evaluation plan: an inline table, or a TOML file declaring `path` and `sha256`; declaring both is rejected. Loading validates the [evaluation plan schema](#evaluation-plan) |
 | `inputs.<role>` | Other named inputs such as testbenches, models, and stimulus files; declare `path` and `sha256`, with optional `format` (default `text`; simulation files may use `spice`) |
 | `output` | Workspace-relative `path`, `format = "gds"`, `top_cell`, and positive-integer `max_bytes` |
 | `provenance` | Optional preparation-source record with `path` and `sha256`; readable by maintainers but not materialized for the Agent |
@@ -76,6 +109,10 @@ Materialize file snapshots validated at load time. Copy only declared inputs; do
 
 ## 3. Define Executable Constraints
 
+Constraints can live directly in `[task.constraints]` of a circuit case (`[constraints]` in a standalone task). The table contains the existing geometry schema: `schema_version = 1`, `hard` and `quality` arrays. The loader freezes this data as a JSON asset, publishes it under `constraints` in `/protocol/task.json`, and supplies it as `input:constraints` to the evaluator. It does not create an extra solver file or expose the full case configuration. The case digest binds the inline definition. Task loading checks that inline data is a JSON-compatible table; the geometry backend validates its supported rules when evaluating.
+
+Existing `inputs.constraints` files remain supported. Declare exactly one source; missing or duplicate definitions are rejected. The comparator uses inline constraints and keeps the human-readable requirements in `problem.md`.
+
 For every constraint, specify object selection, relationships, units, tolerances, hard/soft status, and measurement method. Every requirement that affects success must come from frozen inputs, with the description and machine checks kept consistent. Identify objects from extracted electrical correspondence and trusted geometry analysis; do not rely only on cell names, labels, or sidecars written by the Agent.
 
 Define the allowed device swaps, fingering, merging, and geometric equivalences for each task; leave out constraints that cannot be mapped reliably. State which functional layers and boundaries participate in area measurement. Metal area cannot stand in for wire length, and geometric symmetry does not establish electrical matching. Declare noise and mismatch requirements only when the models, extraction flow, and measurements actually support them. See the [geometry backend](tools.md#geometry) for the current implementation.
@@ -84,7 +121,9 @@ Define the allowed device swaps, fingering, merging, and geometric equivalences 
 
 ## 4. Declare an Evaluation Plan
 
-`inputs.evaluation` references a digest-bound TOML file; testbenches, stimulus, and required models are also task inputs. The plan describes what to measure. An independent tool configuration binds each operation to a backend, while the core does not interpret simulator commands.
+Declare the plan inline under `[task.evaluation]` in a circuit case (`[evaluation]` in a standalone task), or reference a digest-bound TOML file through `inputs.evaluation`. An executable evaluation uses one source; declaring both is rejected. Inline plans use the same schema and validation as file plans. The loader freezes the inline table as a JSON snapshot and exposes its complete definition through `/protocol/task.json` under `evaluation`; it does not create an extra solver file. The case digest binds the original definition, while the evaluation report archives the plan snapshot with its format and digest. Existing TOML plan files retain their original bytes and digests.
+
+Explain the complete scoring rules in the problem: check prerequisites, operating points, measurement definitions, thresholds, aggregation and failure semantics. Testbenches, stimulus, and required models remain declared task inputs. The plan describes what to measure. Trusted toolchain configuration binds each operation to a backend, while the core does not interpret simulator commands. A schema-2 case may contain an optional `[toolchain]` table with the existing toolchain schema: `schema_version = 1`, `[toolchain.backends.<id>]` (`type` and `settings`), and `[toolchain.bindings]`. This host configuration is separate from `[task.inputs]` and never materialized for the solver. Loading a task validates its inputs without starting tools; `load_toolchain` validates the backend configuration before instantiating registered adapters.
 
 The current evaluation schema is `1` and contains `mode`, `jobs`, and `metrics`:
 
@@ -106,7 +145,7 @@ Use separate named jobs for different conditions, and archive their parameters, 
 
 A `post_layout` plan must declare at least one limited performance metric. Its performance observations must come from simulation or a post-simulation measurement step, and the simulation must actually consume artifacts extracted from the candidate GDS. Reject plans that sort results after PEX but continue simulating the schematic netlist. `extract` denotes the post-layout extraction stage and must depend on the three physical-validity gates. Dependency-graph checks ensure that materials flow correctly; backend qualification remains responsible for whether the extracted content is correct.
 
-Backends read conventions such as `output.top_cell` and `netlist_subcircuit` from the `task` input, so the plan need not hard-code them again. This description contains neither preparation sources nor reference solutions. Input references must come from the task manifest or from the trusted generated materials above. The executor gives a backend only the file snapshots declared by its current job; it does not provide the entire task directory automatically.
+Backends read conventions such as `output.top_cell` and `netlist_subcircuit` from the `task` input, so the plan need not hard-code them again. This description contains neither preparation sources nor reference solutions. Input references must come from the task manifest or from trusted generated materials, including the frozen `input:constraints` and `input:evaluation` assets for inline definitions. The executor gives a backend only the snapshots declared by its current job; it does not provide the entire task directory automatically.
 
 <a id="evaluation"></a>
 
@@ -130,15 +169,43 @@ DRC/LVS establishes physical validity under the selected rules and extraction co
 
 Reports store `physical_valid`, `specs_pass`, and `task_success` separately; unknown or not applicable is `null`. Even when a `physical` or `characterization` run passes overall, `task_success` remains `null`. An out-of-limit performance result is a failure; a simulation crash is an evaluation error. Raw metrics may be saved for a physically valid candidate, while the primary quality report summarizes only successful candidates and discloses coverage. See [statistics](running.md#scoring) for the policy.
 
-Independent re-evaluation does not run the Agent. Run it from the repository root with a new output directory:
+Independent re-evaluation does not run the Agent. `evaluate` and `run` use the case's `[toolchain]` by default. An explicit `--toolchain` selects an independent configuration instead, which remains required for cases without an embedded toolchain. `load_toolchain` also accepts a case TOML directly. Existing backend path semantics remain unchanged: relative `support` paths resolve from the launch working directory. Run from the repository root with a new output directory:
 
 ```text
-uv run --locked python main.py evaluate <case.toml> <candidate.gds> --toolchain <toolchain.toml> --output <new-output-directory>
+uv run --locked python main.py evaluate <case.toml> <candidate.gds> --output <new-output-directory>
 ```
 
 <a id="qualification"></a>
 
 ## 5. Validate the Task and Judge Qualification
+
+The current comparator development intake uses a reviewed, narrower scope:
+DRC disposition, a passing reference, candidate-derived parasitics and bounded
+performance measurements, schematic/post-layout calibration, and minimal
+rejection and candidate-sensitivity checks. A complete per-case counterexample
+suite and dedicated repeatability runs are deferred. The comparator supplies
+its repaired reference as a frozen GDS with documented changes and direct
+evaluation instructions; no generator is required for this case. Its
+[case README](../tasks/IHP-AnalogAcademy/cases/comparator/README.md)
+records sources, modifications and the validation summary; it is not a claim
+that the full qualification checklist below has passed.
+
+The comparator's approved nominal scope tests −5, −3, +3 and +5 mV differential
+inputs at TT, 27 °C, 1.2 V, 100 MHz and 50 fF per output. Its complete
+`post_layout` plan gates RC extraction on physical checks and bounds every
+operating point's decision delay, signed output and supply power. Its
+`qualified` designation applies to that recorded development scope, with the
+deferrals above; it does not imply PVT, mismatch or full ADC qualification.
+
+The [full OTA](../tasks/IHP-AnalogAcademy/cases/full_OTA/README.md) uses the same
+development intake scope, with its own nominal AC/DC requirements: TT model
+corners, 27 °C, 1.2 V supply, 0.6 V input DC level, 80 µA bias sink and 500 fF
+load. Its `post_layout` plan bounds gain, unity-gain bandwidth, phase margin,
+supply power, output bias and the functional outline. Its reference passes;
+original-asset and geometry rejections, performance decision boundaries, and
+matched-condition source/post-layout calibration are covered. A full physical
+performance counterexample suite and dedicated repeatability remain deferred;
+`qualified` applies to that recorded development scope.
 
 Before formal use, the evaluator and every task must pass the checks below. Repeat the affected checks whenever tools, rules, extraction parameters, constraint implementation, or quality metrics change:
 

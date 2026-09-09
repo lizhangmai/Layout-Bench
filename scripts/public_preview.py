@@ -1,4 +1,4 @@
-"""Build and reproduce the public SG13G2 integration preview without a model account."""
+"""Prepare and evaluate published SG13G2 case witnesses without a model account."""
 
 import argparse
 import ipaddress
@@ -8,18 +8,17 @@ import platform
 import shlex
 import subprocess
 import sys
+import tomllib
 from datetime import UTC, datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
-CASE_ID = "sg13g2-checked-switch-fixture"
-FIXTURES = ROOT / "tests/fixtures"
-TASK = FIXTURES / "sg13g2/checked-switch"
-CONFIG = TASK / "task.toml"
+# These public cases have ready-to-use witnesses and nominal RC evaluation.
+# The case owns all rule bindings; this table selects its simulation resources.
+CASE_MODELS = {"comparator": "mos-models", "full_OTA": "analog-models"}
 IMAGE = "layout-bench-tools:local"
 RUNS = "build/runs"
-SUPPORT = "build/support"
 PDK_PATH = Path("third_party/IHP-Open-PDK")
 
 # The public PDK contains several optional nested submodules.  The reviewed
@@ -122,13 +121,12 @@ def ensure_pdk():
     A populated directory without Git metadata is common in source archives
     and cached workspaces.  Git cannot clone a submodule over such a directory,
     so reuse it when the reviewed files are present and let ``prepare`` verify
-    every byte.  An incomplete directory is rejected before Git is invoked so
-    the user gets a recovery path instead of Git's opaque clone error.
+    every byte.  An empty directory is a normal uninitialized submodule and
+    can be cloned into.  A non-empty incomplete directory is rejected before
+    Git is invoked so the user gets a recovery path instead of Git's clone error.
     """
     pdk = ROOT / PDK_PATH
-    if not pdk.is_dir():
-        call("git", "submodule", "update", "--init", "--depth", "1", str(PDK_PATH))
-    elif _git_metadata(pdk):
+    if not pdk.is_dir() or _git_metadata(pdk) or not any(pdk.iterdir()):
         # This is intentionally not recursive: optional nested PDK projects
         # are not part of the reviewed public view.
         call("git", "submodule", "update", "--init", "--depth", "1", str(PDK_PATH))
@@ -163,90 +161,80 @@ def ensure_pdk():
         raise ValueError(f"Required PDK files are still missing: {', '.join(incomplete)}. Run: {command}")
 
 
-def prepare(destination, image=IMAGE):
-    from benchmarking.environment import prepare_pdk, prepare_pdk_bundle
+def prepare(destination, image=IMAGE, case="comparator"):
+    from benchmarking.environment import prepare_pdk_bundle
+    from benchmarking.files import Asset, read_file
     from benchmarking.prepare_support import prepare_support
+    from benchmarking.tasks import load_task
 
+    source = ROOT / "tasks/IHP-AnalogAcademy/cases" / case
+    config = read_file(source, "case.toml").decode()
+    data = tomllib.loads(config)
+    task = load_task(source / "case.toml")
+    if data["status"] != "qualified" or task.evaluation.mode != "post_layout":
+        raise ValueError("The preview requires a qualified case with post-layout evaluation")
+    reference = data["qualification"]["reference"]
+    witness = Asset(read_file(source, reference), "gds")
+    for asset in data.get("assets", []):
+        if asset["path"] == reference and witness.sha256 != asset["sha256"]:
+            raise ValueError("Reference witness checksum mismatch")
     pdk = ROOT / PDK_PATH
     if not (pdk / "ihp-sg13g2").is_dir():
         raise ValueError("PDK missing. Run quickstart, or initialize it with: "
                          "git submodule update --init --depth 1 third_party/IHP-Open-PDK")
-    # Resolve once: compilation, agents and all judge backends use the same image.
     image_id = subprocess.check_output(["docker", "image", "inspect", "--format", "{{.Id}}", image], text=True).strip()
     destination = new_directory(destination)
-    prepare_pdk(pdk, destination / "pdk-view")
     prepare_pdk_bundle(pdk, destination / "agent-resources")
-    for name in ("magic", "mos-models", "klayout"):
-        print(f"Preparing {name} from the reviewed PDK files", flush=True)
-        prepare_support(pdk, ROOT / f"technology/sg13g2/{name}.json", destination / name, compiler_image=image_id)
-    # This preview composes the repository's generic checked-switch fixture;
-    # the framework still accepts arbitrary task/toolchain files and has no
-    # task-specific branches.
-    config = (TASK / "toolchain.toml").read_text()
-    for old, name in (("magic", "magic"), ("mos-models", "mos-models"), ("klayout", "klayout")):
-        # Accept the historical .cache paths while new task templates use the
-        # repository-wide build/support output namespace.
-        for prefix in (SUPPORT, ".cache"):
-            config = config.replace(f'"{prefix}/sg13g2-{old}"', json.dumps(str(destination / name)))
-    config = config.replace('"layout-bench-tools:local"', json.dumps(image_id))
-    (destination / "toolchain.toml").write_text(config)
-    probes = {
-        "protocol-probe": ("protocol_probe.py",),
-        "canonical-probe": ("canonical_harness.py", "canonical_probe_adapter.py"),
-    }
-    for name, files in probes.items():
-        config = (FIXTURES / f"agents/{name}.toml").read_text()
-        config = config.replace('"layout-bench-tools:local"', json.dumps(image_id))
-        (destination / f"{name}.toml").write_text(config)
-        for filename in files:
-            (destination / filename).write_bytes((FIXTURES / "agents" / filename).read_bytes())
-    print(f"Prepared public task tools: {destination / 'toolchain.toml'}", flush=True)
+    profiles = {"klayout-docker": "klayout", "magic-rc-docker": "magic",
+                "ngspice-docker": CASE_MODELS[case]}
+    prepared = set()
+    for backend in data["toolchain"]["backends"].values():
+        settings = backend["settings"]
+        config = config.replace(json.dumps(settings["image"]), json.dumps(image_id))
+        if "support" not in settings:
+            continue
+        profile = profiles[backend["type"]]
+        if profile not in prepared:
+            print(f"Preparing {profile} from the reviewed PDK files", flush=True)
+            prepare_support(pdk, ROOT / f"technology/sg13g2/{profile}.json", destination / profile,
+                            compiler_image=image_id)
+            prepared.add(profile)
+        config = config.replace(json.dumps(settings["support"]), json.dumps(str(destination / profile)))
+    # Host-side assembly: the solver loader still delivers only task.inputs.
+    task.materialize(destination / "case")
+    bound_case = destination / "case/case.toml"
+    bound_case.write_text(config)
+    target = bound_case.parent / reference
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(witness.content)
+    evidence = data["qualification"]["evidence"]
+    target = bound_case.parent / evidence
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(read_file(source, evidence))
+    print(f"Prepared case: {bound_case}", flush=True)
 
 
+def run(prepared, output):
+    from benchmarking.tasks import load_task
 
-def run(prepared, output, qualification):
-    toolchain = prepared.absolute() / "toolchain.toml"
-    if not toolchain.is_file():
-        raise ValueError(f"Prepared tools missing: {toolchain}. Run 'prepare' first, or set --prepared.")
+    config = prepared.absolute() / "case/case.toml"
+    task = load_task(config)
+    data = tomllib.loads(config.read_text())
+    reference = config.parent / data["qualification"]["reference"]
     output = new_directory(output)
-    if qualification:
-        print("Running the same deterministic fixture checks under the 'qualify' alias.", flush=True)
-    python(FIXTURES / "sg13g2/generate.py", prepared / "pdk-view", output / "fixtures", "--suite", "checks")
-    python(ROOT / "main.py", "evaluate", CONFIG, output / "fixtures/valid.gds",
-           "--toolchain", toolchain, "--output", output / "reference", log=output / "reference.log")
-    agent = prepared.absolute() / "protocol-probe.toml"
-    python(ROOT / "main.py", "run", CONFIG, "--agent", agent,
-           "--toolchain", toolchain, "--output", output / "probe", expected=1, log=output / "probe.log")
-    probe = json.loads((output / "probe/run.json").read_text())
-    if probe["termination"] != "completed" or probe["outcome"] != "failed" or not probe["candidate"]:
-        raise ValueError("Expected a completed protocol probe with a rejected rectangular layout.")
-    canonical_agent = prepared.absolute() / "canonical-probe.toml"
-    python(ROOT / "main.py", "run", CONFIG, "--agent", canonical_agent,
-           "--toolchain", toolchain, "--output", output / "canonical-probe", expected=1,
-           log=output / "canonical-probe.log")
-    canonical = json.loads((output / "canonical-probe/run.json").read_text())
-    if (canonical["termination"] != "completed" or canonical["outcome"] != "failed"
-            or not canonical["candidate"]):
-        raise ValueError("Expected a completed canonical probe with a rejected rectangular layout.")
-    plan = (FIXTURES / "plans/protocol-probe.toml").read_text()
-    for old, path in (("../sg13g2/checked-switch/task.toml", CONFIG),
-                      ("../sg13g2/checked-switch/toolchain.toml", toolchain),
-                      ("../agents/protocol-probe.toml", agent)):
-        plan = plan.replace(json.dumps(old), json.dumps(str(path)))
-    (output / "plan.toml").write_text(plan)
-    python(ROOT / "main.py", "batch", output / "plan.toml", "--output", output / "batch", log=output / "batch.log")
-    python(ROOT / "main.py", "summarize", output / "batch", log=output / "recomputed-summary.json")
-    batch = json.loads((output / "batch/batch.json").read_text())
-    if not batch["summary"]["complete"] or any(g["success_rate"] != 0 for g in batch["summary"]["groups"]):
-        raise ValueError("Expected complete batch coverage and zero protocol-probe task successes.")
-    summary = {"run_kind": "public_preview_smoke", "task": CASE_ID, "reference": "passed",
-               "protocol_probe": "expected_failure", "canonical_probe": "expected_failure",
-               "batch": "complete", "model_called": False}
+    python(ROOT / "main.py", "evaluate", config, reference,
+           "--output", output / "reference", log=output / "reference.log")
+    report = json.loads((output / "reference/report.json").read_text())
+    if report["outcome"] != "passed" or report["task_success"] is not True:
+        raise ValueError("The case witness did not pass its complete evaluation")
+    summary = {"run_kind": "public_case_reference", "task": task.id,
+               "reference": "passed", "model_called": False}
     (output / "preview.json").write_text(json.dumps(summary, indent=2) + "\n")
-    print(f"PASS: reference, explicit submission and batch statistics. No model was called. Summary: {output / 'preview.json'}")
+    print(f"PASS: {task.id} reference passed its declared evaluation. No model was called. "
+          f"Report: {output / 'reference/report.json'}")
 
 
-def quickstart(output, image, network, skip_build):
+def quickstart(output, image, network, skip_build, case="comparator"):
     doctor()
     if not skip_build:
         _check_build_network(network)
@@ -255,12 +243,10 @@ def quickstart(output, image, network, skip_build):
     if not skip_build:
         build(image, network)
     ensure_pdk()
-    prepare(output / "prepared", image)
-    run(output / "prepared", output / "run", False)
-    print(f"Ready with the bundled harness probes: {output / 'prepared/protocol-probe.toml'} and "
-          f"{output / 'prepared/canonical-probe.toml'}\n"
-          f"Reviewed resources: {output / 'prepared/agent-resources'}\n"
-          f"Judge configuration: {output / 'prepared/toolchain.toml'}", flush=True)
+    prepare(output / "prepared", image, case)
+    run(output / "prepared", output / "run")
+    print(f"Reviewed solver resources: {output / 'prepared/agent-resources'}\n"
+          f"Prepared case: {output / 'prepared/case/case.toml'}", flush=True)
 
 
 def main():
@@ -274,14 +260,15 @@ def main():
         command.add_argument("--network", choices=("default", "host"), default="default", help="Build network; host can reach local proxy services")
         if name == "quickstart":
             command.add_argument("--output", type=Path, help=f"New directory; default is a timestamped directory under {RUNS}")
+            command.add_argument("--case", choices=CASE_MODELS, default="comparator")
             command.add_argument("--skip-build", action="store_true", help="Use an already available --image; still prepare and verify fresh resources")
     preparation = commands.add_parser("prepare", help="Create reviewed PDK/tool bundles in a new directory")
-    preparation.add_argument("--output", type=Path, default=ROOT / RUNS / "preview")
+    preparation.add_argument("--output", type=Path, default=ROOT / RUNS / "preview/prepared")
     preparation.add_argument("--image", default=IMAGE)
-    for name in ("run", "qualify"):
-        command = commands.add_parser(name, help="Run public reference/probe/batch checks" if name == "run" else "Repeat the public fixture checks as a qualification smoke test")
-        command.add_argument("--prepared", type=Path, default=ROOT / RUNS / "preview")
-        command.add_argument("--output", type=Path, required=True, help="New directory for reports; existing evidence is never overwritten")
+    preparation.add_argument("--case", choices=CASE_MODELS, default="comparator")
+    command = commands.add_parser("run", help="Evaluate the prepared case witness with its complete declared plan")
+    command.add_argument("--prepared", type=Path, default=ROOT / RUNS / "preview/prepared")
+    command.add_argument("--output", type=Path, required=True, help="New directory for reports; existing evidence is never overwritten")
     args = parser.parse_args()
     try:
         if args.command == "doctor":
@@ -290,11 +277,11 @@ def main():
             doctor()
             build(args.image, args.network)
         elif args.command == "quickstart":
-            quickstart(args.output, args.image, args.network, args.skip_build)
+            quickstart(args.output, args.image, args.network, args.skip_build, args.case)
         elif args.command == "prepare":
-            prepare(args.output, args.image)
+            prepare(args.output, args.image, args.case)
         else:
-            run(args.prepared.absolute(), args.output, args.command == "qualify")
+            run(args.prepared.absolute(), args.output)
     except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
         parser.exit(2, f"Public preview stopped: {error}\n")
 

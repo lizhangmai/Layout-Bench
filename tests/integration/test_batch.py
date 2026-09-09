@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from protocol_helpers import write_protocol_task
 
 from benchmarking.files import Asset
 from benchmarking.tasks import load_task
@@ -18,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_cli_batch_fresh_sessions_and_recomputed_summary(tmp_path):
-    task_path = ROOT / "tests/fixtures/sg13g2/checked-switch/task.toml"
+    task_path = write_protocol_task(tmp_path / "task")
     task = load_task(task_path)
     # Nothing is submitted, so these fixture bindings are never invoked as a judge.
     tools = 'schema_version = 1\n[backends.fixture]\ntype = "klayout-docker"\nsettings = {image = "layout-bench-tools:local", check = "artifact"}\n[bindings]\n'

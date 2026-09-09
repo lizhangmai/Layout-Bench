@@ -1,0 +1,225 @@
+{
+  "schema_version": 1,
+  "source": {
+    "repository": "https://github.com/IHP-GmbH/IHP-Open-PDK",
+    "commit": "5e6d592e4002946a4616f798c357f0f3c06cf3b6"
+  },
+  "files": {
+    "LICENSE": {
+      "path": "LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "format": "text"
+    },
+    "models/cornerMOSlv.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/cornerMOSlv.lib",
+      "sha256": "03d505847c880d233b341be115a1e5460edf4d8e9b3e8a7df791a52fa4455d67",
+      "format": "spice"
+    },
+    "models/sg13g2_moslv_mod.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/sg13g2_moslv_mod.lib",
+      "sha256": "84ec57080b9dd4666417f05db6f7b34c8dd3f12118929f9b308018613bece16e",
+      "format": "spice"
+    },
+    "models/sg13g2_moslv_parm.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/sg13g2_moslv_parm.lib",
+      "sha256": "cbf10b8453a18bb70b8ad0d6e40faa0937338e699b5460947a94900db6c92a6e",
+      "format": "spice"
+    },
+    "models/sg13g2_moslv_mismatch.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/sg13g2_moslv_mismatch.lib",
+      "sha256": "2d3251e2d42eadb0f8af152a4915fdc60a68bceb95a2d17a52f90cfb34b7e63e",
+      "format": "spice"
+    },
+    "models/sg13g2_moslv_mod_mismatch.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/sg13g2_moslv_mod_mismatch.lib",
+      "sha256": "fac66b4344da4e31dece9a95c32d7af5aac7b40a60b4e029201e1904fb4e8acd",
+      "format": "spice"
+    },
+    "models/sg13g2_moslv_stat.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/sg13g2_moslv_stat.lib",
+      "sha256": "8d807e0ae41be381e655bf51f0eecf72269c8eaa022a2da59a1c90b0772e229a",
+      "format": "spice"
+    },
+    "verilog-a/psp103/Changelog": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/psp103/Changelog",
+      "sha256": "a060a06ce5eca1b6c88a62168e5d108181715ab903ebafa1e462d8288ec5c4aa",
+      "format": "text"
+    },
+    "verilog-a/psp103/Common103_macrodefs.include": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/psp103/Common103_macrodefs.include",
+      "sha256": "14fb6781da0b440a7627aa605c3c59fbf9f755c8eca2b641765bb8d6248029e7",
+      "format": "verilog-a"
+    },
+    "verilog-a/psp103/JUNCAP200_InitModel.include": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/psp103/JUNCAP200_InitModel.include",
+      "sha256": "335c2b2e8d1ffc9a9c7d820cbe82308e4a91894455f6bbae0e62cdfa9049c690",
+      "format": "verilog-a"
+    },
+    "verilog-a/psp103/JUNCAP200_macrodefs.include": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/psp103/JUNCAP200_macrodefs.include",
+      "sha256": "00d5153fe0a5f1da6523e67354e05c1ae08db2196bf711534fe44b65fb907b65",
+      "format": "verilog-a"
+    },
+    "verilog-a/psp103/JUNCAP200_parlist.include": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/psp103/JUNCAP200_parlist.include",
+      "sha256": "d4350de852c966098f74adbd24f70b3e2ed8fec87c7f7d3569ee18168ece5901",
+      "format": "verilog-a"
+    },
+    "verilog-a/psp103/JUNCAP200_varlist.include": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/psp103/JUNCAP200_varlist.include",
+      "sha256": "ee30317a2f4a03bfb6bdca471d72feacfa02d5f7cce664fe6ede99482fed37e7",
+      "format": "verilog-a"
+    },
+    "verilog-a/psp103/PSP103_macrodefs.include": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/psp103/PSP103_macrodefs.include",
+      "sha256": "fcb3d0830353c28710645cd28c9caf7610ebc0a05ed1ef89e0ef3e0799581d2b",
+      "format": "verilog-a"
+    },
+    "verilog-a/psp103/PSP103_module.include": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/psp103/PSP103_module.include",
+      "sha256": "cc9f02e72fda8c907f9e6befe0dcdc2ff1dc13e45fb2f48263935c06317d3197",
+      "format": "verilog-a"
+    },
+    "verilog-a/psp103/PSP103_nqs_macrodefs.include": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/psp103/PSP103_nqs_macrodefs.include",
+      "sha256": "d4e44d3c8634ce08502f9b25b4f6a56fbe75ce5b8a7d7be987af535b83f16746",
+      "format": "verilog-a"
+    },
+    "verilog-a/psp103/PSP103_parlist.include": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/psp103/PSP103_parlist.include",
+      "sha256": "7adbc8e7010fdc6b9c906dace441f2a443c4079693733387dad0d3e3a737ec6f",
+      "format": "verilog-a"
+    },
+    "verilog-a/psp103/PSP103_scaling.include": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/psp103/PSP103_scaling.include",
+      "sha256": "1a560ceffd722940f3aa67d64bcfc8f7925d4aa55a0c2caf0c933cf7a47dd54b",
+      "format": "verilog-a"
+    },
+    "verilog-a/psp103/README.md": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/psp103/README.md",
+      "sha256": "b5301fb60c1f92250c4f1a08c637e25b5ecf6c08ba9647aea3d773cb24c7cf39",
+      "format": "text"
+    },
+    "verilog-a/psp103/juncap200.va": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/psp103/juncap200.va",
+      "sha256": "4833ba0c95cd9922d2277fe41ba7aa81028866b1850357273c4f62cd635d96e0",
+      "format": "verilog-a"
+    },
+    "verilog-a/psp103/psp103.va": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/psp103/psp103.va",
+      "sha256": "9bab5086f8e203a820043538ede898d0812d07371b1aa6f081d806aaad95cd50",
+      "format": "verilog-a"
+    },
+    "verilog-a/psp103/psp103_nqs.va": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/psp103/psp103_nqs.va",
+      "sha256": "084ca6b4932a7db2717e7143345c9a9ff1bd62a1fb0db9af3100f7428aba91dd",
+      "format": "verilog-a"
+    },
+    "verilog-a/psp103/psp103t.va": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/psp103/psp103t.va",
+      "sha256": "856166de39aaa247204763e8e347c912fde8f27312f6a34e4cac975389810fd2",
+      "format": "verilog-a"
+    },
+    "verilog-a/psp103/releasenotesPSP103.8.2.txt": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/psp103/releasenotesPSP103.8.2.txt",
+      "sha256": "64cd7bc8090e4a2aaa495918f8f9ae44424205934edfd96dde96683135a872be",
+      "format": "text"
+    },
+    "models/cornerRES.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/cornerRES.lib",
+      "sha256": "c6d749e72cfa2e06e4a14fac3f5662541bf6197b89265ecbedd632fd3503c425",
+      "format": "spice"
+    },
+    "models/resistors_mod_mismatch.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/resistors_mod_mismatch.lib",
+      "sha256": "ce5ea8559df174fbdad8192e45e5d65772ae3af90af61ba295419b2cb5154b29",
+      "format": "spice"
+    },
+    "models/resistors_stat.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/resistors_stat.lib",
+      "sha256": "9e34411ed09a569323adec8181e4bdd6832af279c9e05b181f00cb2e5d696db6",
+      "format": "spice"
+    },
+    "models/resistors_mod.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/resistors_mod.lib",
+      "sha256": "7c77da0c0419c8a332550da3f934f530262bd452734090db827b68ff88d09c43",
+      "format": "spice"
+    },
+    "models/cornerCAP.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/cornerCAP.lib",
+      "sha256": "4fc4a0f17ca2aef66ca38c2d2e7cead3307b69508d304ed073129565ec1c3e56",
+      "format": "spice"
+    },
+    "models/capacitors_mod_mismatch.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/capacitors_mod_mismatch.lib",
+      "sha256": "6c550362c762362e276f0ed0a4f875616ab6a9de853f1a8f6851b52676ea6f77",
+      "format": "spice"
+    },
+    "models/cap_cmomf.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/cap_cmomf.lib",
+      "sha256": "410001def252a236f221442efcea6353874d1614db593db4142ea3b8a499a207",
+      "format": "spice"
+    },
+    "models/cap_cmomi.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/cap_cmomi.lib",
+      "sha256": "ae6270ea4abf6ad409065d6d24df2a9aa5b121cba3d6facbc14d6a3ceb7b424f",
+      "format": "spice"
+    },
+    "models/capacitors_mod.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/capacitors_mod.lib",
+      "sha256": "ff9eb4cc9fdccc0645d9db0bd37e25e9fee2a633765910a7f55ac2084c49695f",
+      "format": "spice"
+    },
+    "models/capacitors_stat.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/capacitors_stat.lib",
+      "sha256": "68d2ef41174bcfae5997b355c4fd3dbe4f2b8ec4be30ff79d474052b3be1715a",
+      "format": "spice"
+    },
+    "verilog-a/cap_cmomi/cap_cmomi.va": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/cap_cmomi/cap_cmomi.va",
+      "sha256": "f8618465b9aa74d596983ded0e10780a9bccba3103b3a2daf58a44243ab5c210",
+      "format": "verilog-a"
+    },
+    "verilog-a/cap_cmomf/cap_cmomf.va": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/cap_cmomf/cap_cmomf.va",
+      "sha256": "f0f8c3c3c31a6b553c365f36ec04e6f1a5870d3ff06b6eba90ddefbc2f48cc6e",
+      "format": "verilog-a"
+    }
+  },
+  "generated": {
+    ".spiceinit": {
+      "format": "text",
+      "content": "* Frozen startup for the reviewed MOS, capacitor and resistor model bundle.\nsetcs sourcepath = ( $sourcepath /workspace/support/models )\nosdi /workspace/support/osdi/psp103.osdi\nosdi /workspace/support/osdi/psp103_nqs.osdi\nosdi /workspace/support/osdi/cap_cmomi.osdi\nosdi /workspace/support/osdi/cap_cmomf.osdi\n"
+    }
+  },
+  "compile": [
+    {
+      "source": "verilog-a/psp103/psp103.va",
+      "output": "osdi/psp103.osdi",
+      "defines": [
+        "__NGSPICE__"
+      ]
+    },
+    {
+      "source": "verilog-a/psp103/psp103_nqs.va",
+      "output": "osdi/psp103_nqs.osdi",
+      "defines": [
+        "__NGSPICE__"
+      ]
+    },
+    {
+      "source": "verilog-a/cap_cmomi/cap_cmomi.va",
+      "output": "osdi/cap_cmomi.osdi",
+      "defines": [
+        "__NGSPICE__"
+      ]
+    },
+    {
+      "source": "verilog-a/cap_cmomf/cap_cmomf.va",
+      "output": "osdi/cap_cmomf.osdi",
+      "defines": [
+        "__NGSPICE__"
+      ]
+    }
+  ]
+}

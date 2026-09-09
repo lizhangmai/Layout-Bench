@@ -1,5 +1,6 @@
 import hashlib
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -7,7 +8,6 @@ import pytest
 from benchmarking.tasks import load_task
 
 pytestmark = pytest.mark.unit
-ROOT = Path(__file__).resolve().parents[2]
 
 
 @pytest.fixture
@@ -65,6 +65,28 @@ def replace(config: Path, before: str, after: str):
     config.write_text(config.read_text().replace(before, after))
 
 
+@pytest.fixture
+def inline_package(package):
+    content = package.read_text()
+    start = content.index("[inputs.constraints]")
+    end = content.index("[provenance]", start)
+    package.write_text(content[:start] + content[end:] + '''
+[constraints]
+schema_version = 1
+[[constraints.hard]]
+id = "outline"
+type = "bbox_max"
+functional_layers = [[1, 0]]
+max_width_um = 7
+max_height_um = 9
+[[constraints.quality]]
+id = "area"
+type = "functional_bbox_area"
+layers_from = "outline"
+''')
+    return package
+
+
 def test_materialization_uses_validated_snapshot_and_configured_io(package, tmp_path):
     task = load_task(package)
     original = (tmp_path / "input/spec.spice").read_bytes()
@@ -84,13 +106,51 @@ def test_materialization_uses_validated_snapshot_and_configured_io(package, tmp_
     assert (destination / "input/spec.spice").stat().st_mode & 0o222 == 0
 
 
-def test_candidate_circuit_case_without_task_is_not_an_executable_task():
-    config = ROOT / (
-        "tasks/IHP-AnalogAcademy/cases/"
-        "module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA.toml"
-    )
+def test_inline_constraints_are_frozen_and_shared_with_solver_and_evaluator(inline_package, tmp_path):
+    add_evaluation(inline_package, reference="input:constraints")
+    task = load_task(inline_package)
+    frozen = task.evaluation_inputs()["input:constraints"]
+    assert frozen.format == "json"
+    expected = json.loads(frozen.content)
+    assert expected["hard"][0]["max_width_um"] == 7
+    assert task.description()["constraints"] == expected
+    assert json.loads(task.evaluation_inputs()["task"].content)["constraints"] == expected
+    assert "constraints" not in task.description()["inputs"]
+
+    replace(inline_package, "max_width_um = 7", "max_width_um = 700")
+    task.description()["constraints"]["hard"][0]["max_width_um"] = 900
+    (tmp_path / "input/constraints.json").write_text("unused former file")
+    assert task.evaluation_inputs()["input:constraints"] == frozen
+    assert task.description()["constraints"] == expected
+    assert load_task(inline_package).digest != task.digest
+    destination = tmp_path / "solver-inputs"
+    task.materialize(destination)
+    assert {p.relative_to(destination).as_posix() for p in destination.rglob("*") if p.is_file()} == {
+        "input/spec.spice", "evaluation/plan.toml", "evaluation/testbench.spice",
+    }
+
+
+def test_constraints_must_have_one_authoritative_source(inline_package):
+    content = inline_package.read_text()
+    inline_package.write_text(content[:content.index("[constraints]")])
+    with pytest.raises(ValueError, match="exactly one"):
+        load_task(inline_package)
+    inline_package.write_text(content + '\n[inputs.constraints]\npath = "unused.json"\n')
+    with pytest.raises(ValueError, match="exactly one"):
+        load_task(inline_package)
+
+
+@pytest.mark.parametrize("value", ['"not a table"', '[]', '{ limit = nan }', '{ timestamp = 2026-09-09 }'])
+def test_inline_constraints_require_a_json_compatible_table(inline_package, value):
+    content = inline_package.read_text().split("[constraints]")[0]
+    inline_package.write_text(f"constraints = {value}\n" + content)
+    with pytest.raises((TypeError, ValueError)):
+        load_task(inline_package)
+
+
+def test_candidate_circuit_case_without_task_is_not_an_executable_task(circuit_case):
     with pytest.raises(ValueError, match="does not declare an executable task"):
-        load_task(config)
+        load_task(circuit_case)
 
 
 def test_changed_input_is_rejected(package, tmp_path):
@@ -156,7 +216,7 @@ def test_preparation_provenance_cannot_become_input(package):
         load_task(package)
 
 
-def add_evaluation(package, *, reference="input:netlist"):
+def add_evaluation(package, *, reference="input:netlist", inline=False):
     root = package.parent
     plan = f'''schema_version = 1
 mode = "characterization"
@@ -176,6 +236,8 @@ lower = 1.0
 '''
     files = {"evaluation": ("evaluation/plan.toml", plan, "toml"),
              "testbench": ("evaluation/testbench.spice", "* generic testbench", "spice")}
+    if inline:
+        del files["evaluation"]
     additions = ""
     for role, (relative, contents, file_format) in files.items():
         path = root / relative
@@ -183,6 +245,8 @@ lower = 1.0
         path.write_text(contents)
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
         additions += f'\n[inputs.{role}]\npath = "{relative}"\nsha256 = "{digest}"\nformat = "{file_format}"\n'
+    if inline:
+        additions += '\n[evaluation]\n' + re.sub(r'^(\[+)(?=[A-Za-z])', r'\1evaluation.', plan, flags=re.MULTILINE)
     package.write_text(package.read_text() + additions)
 
 
@@ -200,8 +264,9 @@ def test_evaluation_and_arbitrary_named_testbenches_are_frozen_inputs(package, t
     assert not (destination / "provenance.json").exists()
 
 
-def test_evaluation_cannot_reference_an_undeclared_input(package):
-    add_evaluation(package, reference="input:private_reference")
+@pytest.mark.parametrize("inline", [False, True], ids=["file", "inline"])
+def test_evaluation_cannot_reference_an_undeclared_input(package, inline):
+    add_evaluation(package, reference="input:private_reference", inline=inline)
     with pytest.raises(ValueError, match="undeclared task input"):
         load_task(package)
 
@@ -223,4 +288,41 @@ def test_evaluation_definition_is_hash_checked(package, tmp_path):
     plan = tmp_path / "evaluation/plan.toml"
     plan.write_text(plan.read_text().replace("lower = 1.0", "lower = 0.0"))
     with pytest.raises(ValueError, match="checksum mismatch"):
+        load_task(package)
+
+
+def test_inline_evaluation_freezes_public_rules_without_an_extra_solver_file(package, tmp_path):
+    add_evaluation(package, inline=True)
+    task = load_task(package)
+    frozen = task.input_assets()["evaluation"]
+    assert frozen.format == "json"
+    assert task.evaluation.metrics[0].lower == 1.0
+    assert json.loads(frozen.content) == task.description()["evaluation"]
+    assert task.evaluation_inputs()["input:evaluation"] == frozen
+    assert "evaluation" not in task.description()["inputs"]
+
+    replace(package, "lower = 1.0", "lower = 700.0")
+    task.description()["evaluation"]["metrics"][0]["lower"] = 900.0
+    assert task.description()["evaluation"]["metrics"][0]["lower"] == 1.0
+    assert task.input_assets()["evaluation"] == frozen
+    assert load_task(package).digest != task.digest
+    destination = tmp_path / "solver-inputs"
+    task.materialize(destination)
+    assert {p.relative_to(destination).as_posix() for p in destination.rglob("*") if p.is_file()} == {
+        "input/spec.spice", "input/constraints.json", "evaluation/testbench.spice",
+    }
+    assert "maintainer only" not in json.dumps(task.description())
+
+
+def test_evaluation_cannot_have_two_authoritative_sources(package):
+    add_evaluation(package, inline=True)
+    package.write_text(package.read_text() + '\n[inputs.evaluation]\npath = "unused.toml"\n')
+    with pytest.raises(ValueError, match="at most one"):
+        load_task(package)
+
+
+def test_inline_evaluation_validates_metric_requirements(package):
+    add_evaluation(package, inline=True)
+    replace(package, "lower = 1.0", "lower = 4.0\nupper = 2.0")
+    with pytest.raises(ValueError, match="Inverted bounds"):
         load_task(package)

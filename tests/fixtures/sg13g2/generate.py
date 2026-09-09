@@ -11,9 +11,7 @@ from benchmarking.files import Asset
 EXAMPLES = Path(__file__).resolve().parent
 
 
-def generate_fixtures(view: Path, destination: Path, *, suite: str = "extraction") -> dict[str, Asset]:
-    if suite not in {"extraction", "checks"}:
-        raise ValueError("Unknown fixture suite")
+def generate_fixtures(view: Path, destination: Path) -> dict[str, Asset]:
     view_digest = verify_pdk(view)
     if destination.exists() or destination.is_symlink():
         raise FileExistsError(destination)
@@ -30,11 +28,6 @@ def generate_fixtures(view: Path, destination: Path, *, suite: str = "extraction
         ("plate40", "make_plate.py", ["--width", "40", "--height", "10"]),
         ("switch10", "make_switch.py", ["--plate", "10"]),
         ("switch100", "make_switch.py", ["--plate", "100"]),
-    ) if suite == "extraction" else (
-        ("valid", "make_checked_switch.py", []),
-        ("slow", "make_checked_switch.py", ["--length", "2000"]),
-        *[(fault, "make_checked_switch.py", ["--fault", fault])
-          for fault in ("short", "open", "parameter", "pin", "drc", "empty")],
     )
     for name, script, args in cases:
         source = Asset((EXAMPLES / script).read_bytes(), "python")
@@ -57,6 +50,5 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("view", type=Path)
     parser.add_argument("destination", type=Path)
-    parser.add_argument("--suite", choices=["extraction", "checks"], default="extraction")
     args = parser.parse_args()
-    generate_fixtures(args.view, args.destination, suite=args.suite)
+    generate_fixtures(args.view, args.destination)

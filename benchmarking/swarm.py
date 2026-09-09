@@ -234,7 +234,7 @@ def execute_plan(plan, destination, *, runner=run_agent, session_factory=DockerS
             "task_sha256": task.digest, "family": task.family, "environment": task.environment,
             "environment_group": json_asset({"environment": task.environment, "backends": entry["identities"]}).sha256,
             "source": archive(entry["source"]), "description": archive(task.evaluation_inputs()["task"]),
-            "inputs": {item.role: archive(Asset(item.content, item.format)) for item in task.inputs},
+            "inputs": {role: archive(asset) for role, asset in task.input_assets().items()},
             "toolchain": archive(entry["toolchain"]), "backends": entry["identities"],
             "operations": sorted({job.operation for job in task.evaluation.jobs})}
     for entry in agents:
@@ -304,7 +304,7 @@ def _validate_resolved_manifest(plan, tasks, agents, manifest, *, concurrency, g
                 or frozen["toolchain"]["sha256"] != entry["toolchain"].sha256
                 or frozen["backends"] != entry["identities"]
                 or {key: value["sha256"] for key, value in frozen["inputs"].items()}
-                != {item.role: item.sha256 for item in task.inputs}):
+                != {role: asset.sha256 for role, asset in task.input_assets().items()}):
             raise ValueError("Recovery task inputs differ from frozen execution conditions")
     for entry in agents:
         config, profile = entry["config"], entry["profile"]

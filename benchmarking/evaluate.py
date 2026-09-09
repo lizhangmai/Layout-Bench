@@ -112,7 +112,7 @@ def run_evaluation(plan: EvaluationPlan, inputs: dict[str, Asset],
         "schema_version": 1, "mode": plan.mode, "task_sha256": task_sha256,
         "engine_sha256": {name: Asset(Path(__file__).with_name(name).read_bytes(), "python").sha256
                           for name in ("evaluate.py", "evaluation.py", "files.py")},
-        "plan": archive(Asset(plan.raw, "toml")), "backends": identities,
+        "plan": archive(Asset(plan.raw, plan.format)), "backends": identities,
         "inputs": {ref: archive(asset) for ref, asset in sorted(assets.items())},
         "jobs": {}, "metrics": {},
     }

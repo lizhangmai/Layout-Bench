@@ -48,16 +48,30 @@ class Task:
     output: LayoutOutput
     digest: str
     evaluation: EvaluationPlan | None = None
+    inline_constraints: Asset | None = None
+
+    def input_assets(self) -> dict[str, Asset]:
+        """Frozen file and inline inputs for evaluation and evidence archival.
+
+        Only self.inputs are materialized as solver files; inline requirements
+        are published through the task description.
+        """
+        inputs = {item.role: Asset(item.content, item.format) for item in self.inputs}
+        if self.inline_constraints is not None:
+            inputs["constraints"] = self.inline_constraints
+        if self.evaluation is not None:
+            inputs.setdefault("evaluation", Asset(self.evaluation.raw, self.evaluation.format))
+        return inputs
 
     def evaluation_inputs(self) -> dict[str, Asset]:
         return {
             "task": Asset(json.dumps(self.description(), sort_keys=True).encode(), "json"),
-            **{f"input:{item.role}": Asset(item.content, item.format) for item in self.inputs},
+            **{f"input:{role}": asset for role, asset in self.input_assets().items()},
         }
 
     def description(self) -> dict:
-        """Return execution paths without exposing preparation/source metadata."""
-        return {
+        """Publish paths and inline requirements without preparation/source metadata."""
+        description = {
             "id": self.id,
             "title": self.title,
             "family": self.family,
@@ -75,6 +89,9 @@ class Task:
                 "max_bytes": self.output.max_bytes,
             },
         }
+        if self.inline_constraints is not None:
+            description["constraints"] = json.loads(self.inline_constraints.content)
+        return description
 
     def materialize(self, destination: Path) -> None:
         """Publish a fresh input directory from the bytes already validated.
@@ -100,11 +117,13 @@ class Task:
 def _validate_case(data: dict) -> None:
     """Validate the inventory half of a unified circuit case."""
     _keys(data, {"schema_version", "kind", "id", "title", "status", "origin", "sources"},
-          {"role", "task", "source_export", "assets", "upstream_assets", "upstream_evaluation", "qualification", "screening"}, "case")
+          {"role", "task", "toolchain", "source_export", "assets", "upstream_assets", "upstream_evaluation", "qualification", "screening"}, "case")
     if type(data["schema_version"]) is not int or data["schema_version"] != 2:
         raise ValueError("Unsupported case schema_version")
     if data["kind"] != "layout_case":
         raise ValueError("Only layout_case cases are supported")
+    if "toolchain" in data and not isinstance(data["toolchain"], dict):
+        raise TypeError("case.toolchain must be a table")
     for field in ("id", "title", "status"):
         _text(data[field], f"case.{field}")
     if data["status"] not in {"candidate", "qualified", "source-only", "supporting-source"}:
@@ -187,7 +206,7 @@ def _load_task_data(data: dict, config: Path, raw: bytes, *, label: str) -> Task
     """Load the executable task section from either schema."""
     config = config.absolute()
     _keys(data, {"schema_version", "id", "title", "kind", "family", "status",
-                 "environment", "inputs", "output"}, {"provenance"}, "task")
+                 "environment", "inputs", "output"}, {"provenance", "constraints", "evaluation"}, "task")
     if type(data["schema_version"]) is not int or data["schema_version"] != 1:
         raise ValueError("Unsupported task schema_version")
     if data["kind"] != "netlist_to_gds":
@@ -198,7 +217,16 @@ def _load_task_data(data: dict, config: Path, raw: bytes, *, label: str) -> Task
         _text(data[field], field)
     if not isinstance(data["inputs"], dict):
         raise TypeError("inputs must be a table")
-    _keys(data["inputs"], {"netlist", "constraints"}, set(data["inputs"]), "inputs")
+    _keys(data["inputs"], {"netlist"}, set(data["inputs"]), "inputs")
+    if "evaluation" in data and "evaluation" in data["inputs"]:
+        raise ValueError("Declare at most one of evaluation or inputs.evaluation")
+    if ("constraints" in data) == ("constraints" in data["inputs"]):
+        raise ValueError("Declare exactly one of constraints or inputs.constraints")
+    inline_constraints = None
+    if "constraints" in data:
+        if not isinstance(data["constraints"], dict):
+            raise TypeError("Task constraints must be a table")
+        inline_constraints = Asset(json.dumps(data["constraints"], sort_keys=True, allow_nan=False).encode(), "json")
     inputs = []
     seen_paths: set[str] = set()
     for role, entry in data["inputs"].items():
@@ -220,8 +248,15 @@ def _load_task_data(data: dict, config: Path, raw: bytes, *, label: str) -> Task
         inputs.append(InputFile(role, relative, digest, content,
                                 _text(entry.get("format", "text"), "input format")))
     evaluation = next((parse_evaluation(item.content) for item in inputs if item.role == "evaluation"), None)
+    if "evaluation" in data:
+        if not isinstance(data["evaluation"], dict):
+            raise TypeError("Task evaluation must be a table")
+        evaluation = parse_evaluation(
+            json.dumps(data["evaluation"], sort_keys=True, allow_nan=False).encode(), file_format="json")
     if evaluation:
-        available = {"candidate", "task"} | {f"input:{item.role}" for item in inputs}
+        available = {"candidate", "task", "input:evaluation"} | {f"input:{item.role}" for item in inputs}
+        if inline_constraints is not None:
+            available.add("input:constraints")
         if not evaluation.external_inputs() <= available:
             raise ValueError("Evaluation references an undeclared task input")
     output = data["output"]
@@ -245,7 +280,7 @@ def _load_task_data(data: dict, config: Path, raw: bytes, *, label: str) -> Task
     return Task(
         data["id"], data["title"], data["family"], data["status"], data["environment"], subcircuit,
         tuple(inputs), LayoutOutput(output_path, top_cell, output["max_bytes"]),
-        hashlib.sha256(raw).hexdigest(), evaluation,
+        hashlib.sha256(raw).hexdigest(), evaluation, inline_constraints,
     )
 
 

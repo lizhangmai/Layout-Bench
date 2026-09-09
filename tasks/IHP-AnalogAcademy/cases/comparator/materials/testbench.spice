@@ -1,0 +1,38 @@
+* Comparator accepted nominal performance test; see problem.md for scoring rules.
+.include dut.spice
+.include parameters.spice
+.lib cornerMOSlv.lib mos_tt
+.temp 27
+VDD VDD 0 DC 1.2
+VBIAS VBIAS 0 DC 0.6
+VCLK CLK 0 PULSE(0 1.2 0 500p 500p 5n 10n)
+VINP VINP 0 DC {0.6+input_difference}
+CINP VINP 0 6.4p
+CBIAS VBIAS 0 6.4p
+COUTP OUTP 0 50f
+COUTM OUTM 0 50f
+XDUT VDD 0 VINP VBIAS CLK OUTM OUTP VBIAS DIFF_COMPARATOR
+.tran 500p 100n 0 10p
+.measure tran supply_power AVG par('-v(VDD)*i(VDD)') FROM=20n TO=100n
+.measure tran delay_c02 TRIG v(CLK) VAL=0.6 FALL=1 TD=20n TARG par('{polarity}*(v(OUTP)-v(OUTM))') VAL=1 RISE=1 TD=25.75n
+.measure tran margin_c02 MIN par('{polarity}*(v(OUTP)-v(OUTM))') FROM=28.75n TO=29.75n
+.measure tran delay_c03 TRIG v(CLK) VAL=0.6 FALL=1 TD=30n TARG par('{polarity}*(v(OUTP)-v(OUTM))') VAL=1 RISE=1 TD=35.75n
+.measure tran margin_c03 MIN par('{polarity}*(v(OUTP)-v(OUTM))') FROM=38.75n TO=39.75n
+.measure tran delay_c04 TRIG v(CLK) VAL=0.6 FALL=1 TD=40n TARG par('{polarity}*(v(OUTP)-v(OUTM))') VAL=1 RISE=1 TD=45.75n
+.measure tran margin_c04 MIN par('{polarity}*(v(OUTP)-v(OUTM))') FROM=48.75n TO=49.75n
+.measure tran delay_c05 TRIG v(CLK) VAL=0.6 FALL=1 TD=50n TARG par('{polarity}*(v(OUTP)-v(OUTM))') VAL=1 RISE=1 TD=55.75n
+.measure tran margin_c05 MIN par('{polarity}*(v(OUTP)-v(OUTM))') FROM=58.75n TO=59.75n
+.measure tran delay_c06 TRIG v(CLK) VAL=0.6 FALL=1 TD=60n TARG par('{polarity}*(v(OUTP)-v(OUTM))') VAL=1 RISE=1 TD=65.75n
+.measure tran margin_c06 MIN par('{polarity}*(v(OUTP)-v(OUTM))') FROM=68.75n TO=69.75n
+.measure tran delay_c07 TRIG v(CLK) VAL=0.6 FALL=1 TD=70n TARG par('{polarity}*(v(OUTP)-v(OUTM))') VAL=1 RISE=1 TD=75.75n
+.measure tran margin_c07 MIN par('{polarity}*(v(OUTP)-v(OUTM))') FROM=78.75n TO=79.75n
+.measure tran delay_c08 TRIG v(CLK) VAL=0.6 FALL=1 TD=80n TARG par('{polarity}*(v(OUTP)-v(OUTM))') VAL=1 RISE=1 TD=85.75n
+.measure tran margin_c08 MIN par('{polarity}*(v(OUTP)-v(OUTM))') FROM=88.75n TO=89.75n
+.measure tran delay_c09 TRIG v(CLK) VAL=0.6 FALL=1 TD=90n TARG par('{polarity}*(v(OUTP)-v(OUTM))') VAL=1 RISE=1 TD=95.75n
+.measure tran margin_c09 MIN par('{polarity}*(v(OUTP)-v(OUTM))') FROM=98.75n TO=99.75n
+.control
+run
+write comparator.raw time v(VINP) v(VBIAS) v(CLK) v(OUTP) v(OUTM) i(VDD)
+quit
+.endc
+.end

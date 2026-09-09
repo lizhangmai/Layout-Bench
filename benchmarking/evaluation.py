@@ -65,27 +65,37 @@ class EvaluationPlan:
     jobs: tuple[Job, ...]
     metrics: tuple[Metric, ...]
     raw: bytes
+    format: str = "toml"
 
     @property
     def sha256(self) -> str:
         return hashlib.sha256(self.raw).hexdigest()
 
     def description(self) -> dict:
-        return tomllib.loads(self.raw.decode("utf-8"))
+        return _decode_evaluation(self.raw, self.format)
 
     def external_inputs(self) -> frozenset[str]:
         return frozenset(ref for job in self.jobs for _, ref in job.inputs
                          if ref in {"candidate", "task"} or ref.startswith("input:"))
 
 
-def parse_evaluation(raw: bytes) -> EvaluationPlan:
+def _decode_evaluation(raw: bytes, file_format: str) -> dict:
+    if file_format == "toml":
+        return tomllib.loads(raw.decode("utf-8"))
+    if file_format == "json":
+        return json.loads(raw)
+    raise ValueError("Evaluation plan format must be toml or json")
+
+
+def parse_evaluation(raw: bytes, *, file_format: str = "toml") -> EvaluationPlan:
     """Validate a declarative plan; return jobs in dependency order.
 
     Inputs use candidate, task, input:<role>, or job:<id>:<output>. Metric observations
     use <job>:<measurement>. Separate jobs express corners, loads and seeds;
     metrics retain all observations and check bounds on every one of them.
+    TOML files and JSON snapshots of inline plans share the same validation.
     """
-    data = tomllib.loads(raw.decode("utf-8"))
+    data = _decode_evaluation(raw, file_format)
     keys(data, {"schema_version", "mode", "jobs", "metrics"}, set(), "evaluation")
     if type(data["schema_version"]) is not int or data["schema_version"] != 1:
         raise ValueError("Unsupported evaluation schema_version")
@@ -226,4 +236,4 @@ def parse_evaluation(raw: bytes) -> EvaluationPlan:
                                   and j.stage == "extract"]
                     if not any("candidate" in dict(j.inputs).values() for j in extractors):
                         raise ValueError(f"Simulation must consume candidate extraction: {simulation.id}")
-    return EvaluationPlan(data["mode"], tuple(ordered), tuple(metrics), raw)
+    return EvaluationPlan(data["mode"], tuple(ordered), tuple(metrics), raw, file_format)

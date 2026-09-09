@@ -2,9 +2,9 @@ schema_version = 3
 source_checkout = "third_party/IHP-AnalogAcademy"
 source_commit = "133ecf657572e021b5921b5a1b7693abfb209623"
 source_license = "Apache-2.0 upstream root; file-level notices apply"
-source_count = 8
+source_count = 11
 case_count = 4
-artifact_count = 16
+artifact_count = 17
 
 [[excluded]]
 path = "modules/module_0_foundations/PEX_Demo"
@@ -16,19 +16,19 @@ reason = "Historical PEX fixture excluded by docs/tasks.md#input-isolation"
 
 [[cases]]
 id = "module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA"
-config_path = "cases/module_1_bandgap_reference.part_3_layout.OTA_layout.full_OTA.toml"
+config_path = "cases/full_OTA/case.toml"
 
 [[cases]]
 id = "module_1_bandgap_reference.part_3_layout.OTA_layout.input_pair"
-config_path = "cases/module_1_bandgap_reference.part_3_layout.OTA_layout.input_pair.toml"
+config_path = "cases/input_pair/case.toml"
 
 [[cases]]
 id = "module_1_bandgap_reference.part_3_layout.OTA_layout.output_stage"
-config_path = "cases/module_1_bandgap_reference.part_3_layout.OTA_layout.output_stage.toml"
+config_path = "cases/output_stage/case.toml"
 
 [[cases]]
 id = "module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator"
-config_path = "cases/module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.toml"
+config_path = "cases/comparator/case.toml"
 
 [[artifacts]]
 path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/two_stage_OTA_layout.gds"
@@ -54,6 +54,11 @@ sha256 = "c8b070a76948518966a5e7307a72c38feff74352b464e40f34f8f5ff6b50186a"
 path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/sg13g2_maximal.lyrdb"
 kind = "drc-report"
 sha256 = "a17ed83c167b7bffbe9f3b7bffda04cba7bd0a820f6769c2b9030a9c390d6e5e"
+
+[[artifacts]]
+path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/full_OTA/drc_run_two_stage_OTA_layout/two_stage_OTA_layout_two_stage_OTA_layout_full.lyrdb"
+kind = "drc-report"
+sha256 = "452c0cf729754e36fee81f22531667507af0296888a72b938efc52de03a982da"
 
 [[artifacts]]
 path = "modules/module_1_bandgap_reference/part_3_layout/OTA_layout/input_pair/input_common_centroid.gds"

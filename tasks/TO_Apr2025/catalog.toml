@@ -8,19 +8,19 @@ artifact_count = 53
 
 [[cases]]
 id = "TO_Apr2025.160GHz_LNA"
-config_path = "cases/160GHz_LNA.toml"
+config_path = "cases/160GHz_LNA/case.toml"
 
 [[cases]]
 id = "TO_Apr2025.40_GHZ_LOW_NOISE_TIA"
-config_path = "cases/40_GHZ_LOW_NOISE_TIA.toml"
+config_path = "cases/40_GHZ_LOW_NOISE_TIA/case.toml"
 
 [[cases]]
 id = "TO_Apr2025.97_GHZ_LINEAR_TIA"
-config_path = "cases/97_GHZ_LINEAR_TIA.toml"
+config_path = "cases/97_GHZ_LINEAR_TIA/case.toml"
 
 [[cases]]
 id = "TO_Apr2025.DC_to_130_GHz_TIA.design_1"
-config_path = "cases/DC_to_130_GHz_TIA.design_1.toml"
+config_path = "cases/DC_to_130_GHz_TIA.design_1/case.toml"
 
 [[artifacts]]
 path = "160GHz_LNA/design_data/gds/FMD_QNC_04_160GHz_LNA.gds"

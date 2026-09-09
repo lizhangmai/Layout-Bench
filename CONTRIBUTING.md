@@ -65,8 +65,7 @@ After the README quick start with `--output build/runs/preview`, choose the appl
 ```bash
 bash tests/integration/test_build_context.sh
 bash tests/integration/test_toolchain.sh tools
-uv run --locked python scripts/public_preview.py qualify \
-  --prepared build/runs/preview/prepared --output build/runs/preview-qualification
+uv run --locked python scripts/acceptance.py eda --image layout-bench-tools:local
 LAYOUT_BENCH_TEST_IMAGE=layout-bench-tools:local uv run --locked pytest \
   tests/integration/test_batch.py tests/integration/test_admission_cli.py \
   tests/integration/test_session.py
@@ -82,10 +81,14 @@ uv run --locked python scripts/public_preview.py build --image layout-bench-tool
 bash tests/integration/test_pdk_view.sh
 bash tests/integration/test_task_preparation.sh
 uv run --locked pytest tests/integration/test_characterization.py \
-  tests/integration/test_sg13g2.py tests/integration/test_physical_checks.py \
+  tests/integration/test_sg13g2.py \
+  tests/integration/test_magic_rc.py tests/integration/test_comparator.py \
+  tests/integration/test_full_ota.py tests/integration/test_sg13g2_model_calls.py
 ```
 
-Task preparation also needs the optional source submodule. Evaluator changes must satisfy the [qualification requirements](docs/tasks.md#qualification); protocol tests and synthetic hidden fixtures do not replace real circuit evidence. Public CI uses public or synthetic inputs; hidden qualification materials stay in the authorized environment. Run upstream PDK regressions in that submodule, separately from framework checks.
+The EDA acceptance suite uses the published comparator and full_OTA witnesses, OTA pre/post calibration, geometry rejection, and tool-error checks. It needs the PDK and tools image but no course checkout. The original-asset regression tests additionally need the optional IHP-AnalogAcademy source submodule. Evaluator changes must satisfy the [qualification requirements](docs/tasks.md#qualification); protocol tests and synthetic hidden fixtures do not replace real circuit evidence. Public CI uses public or synthetic inputs; hidden qualification materials stay in the authorized environment. Run upstream PDK regressions in that submodule, separately from framework checks.
+
+When changing public catalog source records, run `uv run --locked pytest tests/integration/test_catalog_assets.py` with the corresponding source submodules initialized. These checks compare pinned commits and original asset digests; they do not run EDA and are separate from the offline unit suite.
 
 Report the checks actually run and their limits. Documentation-only changes do not require rebuilding tools or rerunning EDA.
 
@@ -115,6 +118,14 @@ Task success is defined by that task's declared requirements. A DRC/LVS pass alo
 
 Architecture changes update [docs/architecture.md](docs/architecture.md). Update configuration, protocol and operating rules in their owning topic from the [README guide table](README.md#resources); each contract has one authoritative location. Keep README onboarding short and task-specific qualification evidence with its task. Private task data and deployment configuration are not developed in this repository.
 
+Write public documentation for readers of a clean checkout. Describe the current
+behavior, source and modification rationale, validation conditions, results, and
+limits. Provide reproduction commands or links to distributed artifacts; local
+run directories and unpublished image IDs are not accessible evidence. Keep
+experiment chronology, discarded results, approval discussions, and transient
+test summaries out of public READMEs. Paths such as `build/runs/example` are
+appropriate when the documented commands create them for the reader.
+
 ## Reporting a problem
 
 Include the framework commit, host OS/architecture, Python and Docker versions, relevant image IDs, the exact command and expected versus observed behavior. For a public task, attach the smallest useful report and reproduction steps. Review logs before posting: model prompts, credentials, endpoint details and proprietary inputs may require removal.
@@ -122,3 +133,5 @@ Include the framework commit, host OS/architecture, Python and Docker versions, 
 If you find a suspected security issue, avoid publishing credentials, nonpublic designs or a working exploit in a public issue. Use GitHub's private vulnerability reporting if enabled for this repository; otherwise request a private reporting channel without including sensitive details.
 
 Keep pull requests focused. Describe the behavior change, why it is needed and validation results. Do not include generated caches, virtual environments, API keys or complete run directories; small, deliberately public fixtures and qualified reference assets belong with their tests or tasks.
+
+When adding or cleaning up tests, follow the [test conventions](tests/AGENTS.md) for independent expectations, behavioral assertions, fixtures, and test scope.

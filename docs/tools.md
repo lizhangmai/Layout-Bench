@@ -10,11 +10,12 @@ The host uses Linux x86-64, Git, uv, Python 3.12+, and accessible Docker/BuildKi
 |---|---|
 | `doctor` | Check the host and Docker before downloading; does not call a model |
 | `build` | Build only the unified image; accepts `--image`, defaulting to `layout-bench-tools:local` |
-| `prepare --output <new-directory>` | Prepare the view, Magic, MOS models, KLayout rules, Agent resource bundle, and configurations from the pinned PDK, binding all of them to the actual image ID |
-| `run --prepared <prepared-directory> --output <new-directory>` | Re-evaluate the public reference, verify expected-failure submissions, and run two independent repetitions while saving raw evidence |
-| `qualify --prepared <prepared-directory> --output <new-directory>` | Rebuild the reference and counterexamples and revalidate public-task qualification and pre-layout calibration |
+| `prepare --output <new-directory>` | Prepare the selected case, Magic, simulation models, KLayout rules, and solver resource bundle from the pinned PDK; bind tools to the actual image ID |
+| `run --prepared <prepared-directory> --output <new-directory>` | Evaluate the prepared case witness through its complete declared plan and save raw evidence |
 
-`quickstart` chains host checks, image build, PDK initialization, preparation, and smoke validation, and writes `prepared/` and `run/`. It reuses build caches and the pinned upstream checkout, but prepares derived resources and fresh run artifacts again. `--skip-build` reuses an existing image and still binds its actual ID; it does not download an unpublished prebuilt image or overwrite existing output. The smoke run evaluates the reference, the original offline protocol probe, and the provider-neutral canonical probe; the latter is a deterministic harness control, not a model baseline. The prepared directory contains both probe configurations. The script assembles only public preview fixtures; use `main.py` and your own tool configuration for custom tasks.
+`quickstart` chains host checks, image build, PDK initialization, preparation, and reference evaluation, and writes `prepared/` and `run/`. It defaults to comparator; `quickstart` and `prepare` accept `--case full_OTA` to select the OTA. The script uses each case's `[toolchain]`, constraints, evaluation plan, and published witness. Preparation changes only the image and resource paths in a host-side copy at `prepared/case/case.toml`. The solver loader still materializes only declared inputs, excluding the copied reference and source README. Comparator uses the MOS model bundle; full_OTA uses the analog model bundle for its MOS, MIM capacitor, and tap models.
+
+`--skip-build` reuses the existing image and still binds its actual ID. Existing PDK files are reused and checked against reviewed digests; output directories must be new. Quick start makes no model calls and does not establish new qualification conditions. Case-specific tests cover calibration and rejection behavior; see [CONTRIBUTING](../CONTRIBUTING.md#verification).
 
 The unified image contains KLayout, Python, ngspice, Qucs-S/Qucsator, Magic, OpenVAF, and Xschem. Harness runtimes are deliberately outside this image: a harness supplies its executable and reviewed files, or selects an image that provides them, while the benchmark only requires the common session protocol. Each operation still starts an isolated container, but every EDA operation resolves the same image ID. The image contains no task, PDK, harness source, or credentials; `.dockerignore` allows only dependency declarations and lock files. Install the KLayout CLI and Python API from separate packages and have tool checks confirm that their versions agree. The build does not depend on a local KLayout source tree or private cache.
 
@@ -37,10 +38,9 @@ The script preserves existing `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` variab
 | `PDK missing` or a pinned source file is absent | Run `quickstart` to initialize the PDK and the required nested KLayout Python dependencies, or run `git submodule update --init --depth 1 third_party/IHP-Open-PDK` followed by `git -C third_party/IHP-Open-PDK submodule update --init --depth 1 ihp-sg13g2/libs.tech/klayout/python/pycell4klayout-api ihp-sg13g2/libs.tech/klayout/python/pypreprocessor`; when a source digest differs, inspect local changes and the recorded commit and keep the hash check enabled |
 | A required nested PDK directory is non-empty but has no Git metadata | Do not run recursive update over it. Move the partial directory aside, then run the targeted nested-submodule command above; if its reviewed marker files are complete, `quickstart` reuses it and `prepare` verifies the content |
 | `No such image` or image validation fails during preparation | Run `quickstart` or `build`; when naming an image manually, pass `--image` to `prepare` |
-| A `build/...` support bundle is missing | Complete `prepare` first. The preview script creates separate tool configurations; older configurations that still use `.cache/sg13g2-*` remain supported when those paths are supplied explicitly |
+| A `build/...` support bundle is missing | Complete `prepare` first. Use the resulting `prepared/case/case.toml`, whose embedded bindings point to the prepared bundles |
 | Output directory already exists | Choose a new `--output` path; logs produced by failed steps remain in the old directory for diagnosis |
 | Build download fails | Check connectivity to Ubuntu, the Python package index, and tool release sites; downloads require matching digests. With a host loopback proxy, add `--network host` to `quickstart` or `build` and preserve `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY`; see [stepwise preparation and reuse](#stepwise-preparation-and-reuse) for other network setup |
-| Protocol probe exits 1 / success rate is 0 | The probe draws only a rectangle and does not implement a circuit, so evaluation failure is expected. The preview wrapper checks normal exit, submission, and statistics; do not treat an infrastructure failure as a passing probe |
 | A real model lacks a key or cannot be reached | Validate the environment with the no-key public flow first, then configure your endpoint, model, and host key variable using [the model gateway and declared wire adapter](running.md#model-inference); public CI does not call a paid model |
 
 <a id="external-sources"></a>
@@ -75,13 +75,42 @@ Keep originals byte-for-byte as supplied upstream and register framework-generat
 
 ## EDA Backend Contract
 
-The backend extension interface is described in [architecture](architecture.md#extension-layers). `main.py characterize` performs an independent measurement and `main.py evaluate` re-evaluates a GDS. A plan returns 0 when it passes, 1 when a check or specification fails, and 2 for a configuration or execution error. Output includes `report.json` and artifacts saved by digest. Characterization fixtures are not formal layout tasks.
+The backend extension interface is described in [architecture](architecture.md#extension-layers). `main.py characterize` performs an independent measurement and `main.py evaluate` re-evaluates a GDS. Tool bindings may be embedded in a schema-2 case as `[toolchain]`, following the [task configuration guide](tasks.md#evaluation-plan). `evaluate` and `run` use these bindings when `--toolchain` is omitted; `characterize` still requires an explicit toolchain configuration. A plan returns 0 when it passes, 1 when a check or specification fails, and 2 for a configuration or execution error. Output includes `report.json` and artifacts saved by digest. Characterization fixtures are not formal layout tasks.
 
 ### ngspice and Magic
 
 ngspice writes an input role as `<role>.spice` and uses `deck.spice` as its entry point. The testbench declares analyses and measurements; `parameters.values` generates `parameters.spice`, `parameters.measurements` specifies names and units, and `parameters.exports` names declared artifacts. Exit 0 still requires a complete set of finite measurements. See the [RC](../tests/fixtures/characterization/rc.toml), [divider](../tests/fixtures/characterization/divider.toml), and [MOS post-layout](../tests/fixtures/sg13g2/switch.toml) characterization fixtures.
 
-Magic's `layout.extract_capacitance` takes the top cell and ordered `ports` from trusted configuration; check the port list against the authoritative netlist. Later jobs must reference the extracted netlist exported as-is rather than replacing it with string substitutions or a hand-written netlist. The current flow extracts devices and parasitic capacitance only and records `wire_resistance=false`; it cannot claim complete RC extraction. A case-specific qualification record must document the exact conditions and calibration scope.
+Magic takes the top cell and ordered `ports` from trusted configuration; check the port list against the authoritative netlist. Later jobs must consume the exported netlist as-is. `magic-capacitance-docker` retains its capacitance-only behavior and records `wire_resistance=false`. `magic-rc-docker` adds distributed resistance and capacitance, and can be bound to `layout.extract_rc`.
+
+The RC adapter requires Magic 8.3.653 or newer. It uses a geometrically checked,
+flattened extraction copy, keeps devices separate, and sets resistance selection,
+minimum resistance, and delay thresholds to zero with network simplification
+disabled. `capacitance_threshold_ff` controls capacitance omission; the comparator
+uses zero. These are the explicit controls documented by the
+[Magic extresist reference](https://opencircuitdesign.com/magic/commandref/extresist.html).
+The archived upstream `extresist tolerance 1` setting is deprecated in the
+installed Magic and is not used by this backend. Raw extraction, resistance,
+topology, feedback, and port/geometry checks are retained with the result.
+
+The shared image builds Magic 8.3.678 with one driver-selection correction in
+`ResProcessNode`: the W/L accumulator and maximum use floating point, matching
+the device reader. Integer truncation otherwise skips unlabelled internal nets
+whose MOS drivers all have W/L below one, even with zero extraction thresholds.
+The [Dockerfile](../Dockerfile) applies the correction to the pinned source;
+the [RC regression](../tests/integration/test_magic_rc.py) checks the analytical
+resistance increment of a wire between two such devices. This changes tool
+arithmetic, not PDK extraction rules.
+
+The supported RC interface has one declared port per conductor. A native
+topology check rejects multiple ports on one conductor: the installed Magic
+can otherwise duplicate the resistance network or bypass it with an alias
+resistor. This limitation produces an evaluation error. The
+[RC integration checks](../tests/integration/test_magic_rc.py) validate a known
+wire-resistance increment, its effect on transistor delay, a fixture threshold
+rejection, and invalid/unsupported inputs. Case-specific extraction warnings,
+models, and calibration still require review; the comparator's current status
+and commands are in its [case README](../tasks/IHP-AnalogAcademy/cases/comparator/README.md).
 
 ### KLayout Physical Checks
 
@@ -93,7 +122,9 @@ The artifact check uses KLayout's native reader to validate the GDSII stream, th
 
 ### Original-asset evaluation
 
-The former `drc.json`, `lvs.json` and `lvs-comparator.json` profiles are removed. Reprepare support from `technology/sg13g2/klayout.json`; old frozen bundles are not updated in place. The profiles now make their upstream scope explicit:
+Prepare support from `technology/sg13g2/klayout.json`. Frozen bundles are not
+updated in place; prepare a new bundle when the manifest changes. The profiles
+declare their upstream scope explicitly:
 
 | Profile | Mapping and provenance |
 |---|---|
@@ -101,12 +132,12 @@ The former `drc.json`, `lvs.json` and `lvs-comparator.json` profiles are removed
 | `lvs-upstream.json` | Current pinned PDK GUI defaults (`tech/macros/sg13g2_lvs.lym`): explicit taps, native simplification, strict named ports. |
 | `lvs-analogacademy.json` | Course-era defaults mapped to the current PDK: explicit taps, native simplification, and comparison without the additional `flag_missing_ports` check. The historical [GUI options](https://github.com/IHP-GmbH/IHP-Open-PDK/blob/eb1b540c58346cf6259285a38d09b2a04feb344a/ihp-sg13g2/libs.tech/klayout/tech/macros/lvs_options.yml) and [LVS runset](https://github.com/IHP-GmbH/IHP-Open-PDK/blob/eb1b540c58346cf6259285a38d09b2a04feb344a/ihp-sg13g2/libs.tech/klayout/tech/lvs/sg13g2.lvs) establish these defaults, not the author's actual saved options. |
 
-`python -m benchmarking.upstream` evaluates all eight currently cataloged cases through one API, one case per invocation. Each case's `[upstream_evaluation]` declares the original layout/netlist asset IDs, separate layout and reference circuit names, profile names, and selection basis. The entry point checks the upstream commit and selected asset hashes, invokes the existing evaluation API, and archives the exact case TOML alongside the report. It does not export or rewrite netlists, remove taps, tie bulk nodes, change device parameters, or supply waivers. Native runset simplification is part of upstream evaluation, not input preprocessing. The comparator task also materializes a byte-for-byte copy of its declared upstream LVS netlist; the former normalization script and record have been removed. `tasks/IHP-AnalogAcademy/evaluate.py` remains a thin compatibility entry point. The standalone file-size limit is 64 MiB and the per-job timeout defaults to 600 seconds (`--timeout-seconds`); these do not change executable task limits.
+`python -m benchmarking.upstream` evaluates cataloged cases through one API, one case per invocation. Each case's `[upstream_evaluation]` declares the original layout/netlist asset IDs, separate layout and reference circuit names, profile names, and selection basis. The entry point checks the upstream commit and selected asset hashes, invokes the existing evaluation API, and archives the exact case TOML alongside the report. It does not export or rewrite netlists, remove taps, tie bulk nodes, change device parameters, or supply waivers. Native runset simplification is part of upstream evaluation, not input preprocessing. The comparator task also materializes a byte-for-byte copy of its declared upstream LVS netlist. `tasks/IHP-AnalogAcademy/evaluate.py` is a thin compatibility entry point. The standalone file-size limit is 64 MiB and the per-job timeout defaults to 600 seconds (`--timeout-seconds`); these do not change executable task limits.
 
 ```bash
 uv run --locked python -m benchmarking.prepare_support third_party/IHP-Open-PDK technology/sg13g2/klayout.json build/support/upstream-all
 uv run --locked python -m benchmarking.upstream \
-  tasks/IHP-AnalogAcademy/cases/module_1_bandgap_reference.part_3_layout.OTA_layout.input_pair.toml \
+  tasks/IHP-AnalogAcademy/cases/input_pair/case.toml \
   --support build/support/upstream-all \
   --output build/runs/upstream-input-pair
 ```
@@ -144,8 +175,9 @@ Layout-Bench performs neither that upstream modification nor cell renaming.
 The 40/97 GHz historical reports refer to `TOP`, unlike the available GDS/CDL
 names; their exact historical input pairing therefore remains unverified.
 
-The complete eight-case run with the pinned PDK and KLayout 0.30.11 produced
-the following native results, without waivers:
+With PDK commit `5e6d592e4002946a4616f798c357f0f3c06cf3b6` and KLayout
+0.30.11, the original assets produce the following native results without
+waivers. Reproduce each row with the command above and its catalog case:
 
 | Case | DRC items (main + extra) | LVS job |
 |---|---:|---|
@@ -170,19 +202,41 @@ Use each job's status when interpreting the report: the evaluation API may
 return overall `failed` (exit 1) for a completed DRC rejection even when LVS
 has an execution `error`.
 
-Use new support/output directories on subsequent preparations. The result is physical evidence, not qualification: exit 0 means passed, 1 rejected, 2 an evaluation error. With PDK `5e6d592e4002946a4616f798c357f0f3c06cf3b6` and KLayout 0.30.11, the original input pair reports 63 unwaived DRC items (54 main, 9 extra) and fails LVS on tap parameters; the five combined PMOS devices and five ports match. The original comparator (`module_3_8_bit_SAR_ADC.part_5_analog_layout.comparator.toml`, top cell `DIFF_COMPARATOR`) passes LVS with the same profiles and reports 7 unwaived DRC items (5 `NBL.b` in main, 2 `NW.d` in extra). Do not alter the source to force a pass. Case-local author's settings and exact historical run identity were not archived upstream, so this is a documented reconstruction on the current toolchain, not an exact historical replay.
-
-Legacy fixtures still referencing the removed profiles have not been migrated. They are not the entry point or validation basis for this original-asset evaluation.
+These results establish physical status under the declared profiles, not task
+qualification. The input pair's LVS mismatch concerns tap parameters; its
+combined MOS devices and ports match. The comparator's seven DRC findings and
+their disposition are explained in its
+[case README](../tasks/IHP-AnalogAcademy/cases/comparator/README.md#original-issues-and-modifications).
+The author's settings and exact historical run identity were not archived
+upstream, so the checks reconstruct documented defaults on the current
+toolchain. Keep the original source bytes when reproducing them.
 
 <a id="geometry"></a>
 
 ### Geometry and Port Correspondence
 
-`klayout-geometry-docker` interprets schema 1 of `constraints.json`: `bbox_max` names the functional layers that contribute to the outline and sets maximum width and height; `named_metal_ports` names each port, its drawing/pin/text layers, logical connection layer, and minimum square side that can be contacted; `functional_bbox_area` measures area using the layer set from an outline constraint. The top cell must contain exactly one label with each required name. Its center square must lie completely in the intersection of the pin, drawing, and correctly extracted network regions. Adapters extend the set of constraint kinds; the generic plan executor does not interpret process layers or geometry semantics.
+`klayout-geometry-docker` interprets schema 1 of the geometry constraints, supplied as a JSON snapshot from either `[task.constraints]` or a declared constraints file: `bbox_max` names the functional layers that contribute to the outline and sets maximum width and height; `named_metal_ports` names each port, its drawing/pin/text layers, logical connection layer, and minimum square side that can be contacted; `functional_bbox_area` measures area using the layer set from an outline constraint. The top cell must contain exactly one label with each required name. Its center square must lie completely in the intersection of the pin, drawing, and correctly extracted network regions. Adapters extend the set of constraint kinds; the generic plan executor does not interpret process layers or geometry semantics.
 
 LVS can export a native `klayout-lvs` database and a JSON binding. The binding records the candidate GDS, database digest, top cell, and logical-layer mapping. After validating the binding, the geometry adapter uses the native [LayoutVsSchematic](https://www.klayout.de/doc/code/class_LayoutVsSchematic.html), [NetlistCrossReference](https://www.klayout.de/doc/code/class_NetlistCrossReference.html), and [LayoutToNetlist](https://www.klayout.de/doc/code/class_LayoutToNetlist.html) APIs for network correspondence and geometry. Process support bundles declare deck-layer variables; the adapter reads the names actually registered by the run instead of fixing runtime indices such as `l10`, and it does not modify upstream rules.
 
-Magic's SPICE export drops the `!` from `!CONTROL`, causing a collision with `CONTROL`. The extraction adapter first uses KLayout on an isolated GDS copy to give unsafe interface names unique aliases, preserves the original candidate and mapping evidence, and then uses the native SPICE reader to check the count, names, and order of exported ports. It does not rewrite the original task netlist; simulation connects through the declared port order. For pre-layout simulation, the PDK's native reader and the KLayout writer generate model calls from the authoritative netlist; no additional SPICE/CDL parser is introduced.
+Magic's SPICE export drops the `!` from `!CONTROL`, causing a collision with `CONTROL`. The extraction adapter first uses KLayout on an isolated GDS copy to give unsafe interface names unique aliases, preserves the original candidate and mapping evidence, and then uses the native SPICE reader to check the count, names, and order of exported ports. It does not rewrite the original task netlist; simulation connects through the declared port order.
+
+The AnalogAcademy LVS profile also accepts ngspice model calls for
+`sg13_lv_nmos`, `sg13_lv_pmos`, `cap_cmim`, `ntap1` and `ptap1`. Its
+`sg13g2-model-calls.lvs` entry point is generated from the KLayout support
+manifest and includes the unchanged upstream runset. A KLayout
+[reader delegate](https://www.klayout.de/doc-qt5/code/class_NetlistSpiceReaderDelegate.html)
+maps these `X` calls to the native PDK device handlers, preserving their terminal
+mapping, parameter units, simplification and comparison rules. Other `X` calls
+retain normal hierarchy handling, and legacy CDL primitive cards retain their
+native interpretation. Use circuit-local `.param` definitions and compact
+expressions on model calls; expression parsing and parameter scoping remain
+those of the pinned native reader. This is an input adapter, with no rule
+waivers or new device models. The full OTA uses one authoritative circuit for LVS and direct
+pre-layout simulation: tap `a`/`p` geometry and derived `r` share the same
+parameter definitions, and MOS finger/multiplicity parameters reach ngspice
+without LVS simplification. Candidate scoring still simulates only GDS-derived
+PEX. Other source dialects require an explicitly validated adaptation.
 
 ### Qucs-S and Qucsator
 

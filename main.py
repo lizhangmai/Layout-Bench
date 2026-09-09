@@ -90,7 +90,8 @@ def main() -> None:
     run_parser.add_argument("--resources", type=Path, help="Verified support bundle mounted at /resources")
     run_parser.add_argument("--inference", type=Path, help="Fixed HTTPS inference profile; credential stays on host")
     for command in (evaluate_parser, characterize_parser, run_parser):
-        command.add_argument("--toolchain", type=Path, required=True)
+        command.add_argument("--toolchain", type=Path, required=command is characterize_parser,
+                             help="Toolchain or case TOML; run/evaluate default to the case's [toolchain]")
         command.add_argument("--output", type=Path, required=True, help="New directory for report and evidence")
     recover_parser = subcommands.add_parser("recover", help="Verify durable submissions without resuming or scoring a run")
     recover_parser.add_argument("directory", type=Path)
@@ -169,6 +170,7 @@ def main() -> None:
                 task.materialize(args.materialize)
             print(json.dumps(task.description(), ensure_ascii=False, indent=2))
             return
+        toolchain_path = args.toolchain if args.toolchain is not None else args.config
         if args.command == "run":
             resources = {}
             if args.resources:
@@ -179,7 +181,7 @@ def main() -> None:
             if profile:
                 validate_harness_wire(config.harness.wire_api, profile.wire_api)
             report = run_agent(load_task(args.config), config, resources,
-                               load_toolchain(args.toolchain), args.output,
+                               load_toolchain(toolchain_path), args.output,
                                inference=InferenceGateway(profile) if profile else None)
             print(json.dumps(_run_summary(report, args.output), indent=2))
             if report["outcome"] != "passed":
@@ -213,7 +215,7 @@ def main() -> None:
                     raise ValueError(f"Duplicate input: {role}")
                 source = Path(path).absolute()
                 inputs[ref] = Asset(read_file(source.parent, source.name), file_format)
-        report = run_evaluation(plan, inputs, load_toolchain(args.toolchain), args.output,
+        report = run_evaluation(plan, inputs, load_toolchain(toolchain_path), args.output,
                                 task_sha256=task_digest)
     except (TypeError, ValueError, OSError, subprocess.SubprocessError) as error:
         parser.exit(2, f"Layout-Bench command failed: {error}\n")

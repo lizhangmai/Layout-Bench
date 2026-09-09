@@ -2,6 +2,8 @@
 
 This file applies to a standalone checkout. The common framework, public tasks, reference solutions, and qualification materials belong in this repository; hidden tasks and internal assembly belong in the separate Private repository, with a one-way dependency from Private → Public.
 
+Write all repository-owned Markdown in English, except `README_CN.md`.
+
 ## Starting Work
 
 At the repository root, run `git status --short --branch` and preserve unrelated changes. For the public development preview, prioritize reproducible tasks, tool preparation, and user entry points. Use the [README](README.md) as the entry point and [CONTRIBUTING](CONTRIBUTING.md) for contribution and verification rules. Read the following guides according to the scope of the change:

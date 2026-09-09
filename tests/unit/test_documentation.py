@@ -54,17 +54,3 @@ def test_document_symlink_does_not_read_outside_checkout(tmp_path):
     assert len(errors) == 1
     assert 'regular file' in errors[0]
     assert 'sensitive-path' not in errors[0]
-
-
-def test_pending_base_interface_placeholder_is_removed():
-    assert not (ROOT / 'benchmarking/base.py').exists()
-
-
-def test_eda_acceptance_workflow_is_manual_or_nightly_only():
-    workflow = (ROOT / '.github/workflows/public-eda.yml').read_text()
-    assert 'workflow_dispatch:' in workflow
-    assert 'schedule:' in workflow
-    assert 'cron:' in workflow
-    assert 'python scripts/acceptance.py eda' in workflow
-    assert 'pull_request:' not in workflow
-    assert '\n  push:' not in workflow

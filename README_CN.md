@@ -24,7 +24,7 @@
 
 Layout-Bench 在隔离容器中运行 Agent，记录明确提交的 GDS，并使用独立的 EDA 工具评估冻结后的候选版图。DRC/LVS 用于建立物理有效性；完整任务还会检查声明的几何约束和后仿性能限值。
 
-> **公开预览版。** 当前仓库用 `tests/fixtures/sg13g2/checked-switch` 作为框架集成 smoke fixture。当前公开电路目录为 [`tasks/IHP-AnalogAcademy/catalog.toml`](tasks/IHP-AnalogAcademy/catalog.toml) 和 [`tasks/TO_Apr2025/catalog.toml`](tasks/TO_Apr2025/catalog.toml)；两者目前都只包含 4 个已筛选电路，且 pinned upstream 均已提供可公开复用版图、对应网表和物理证据。只有原理图的电路不会纳入公开 Bench。
+> **公开预览版。** 快速开始直接评估 [comparator](tasks/IHP-AnalogAcademy/cases/comparator/README.md) 的参考版图，也可选择 [full_OTA](tasks/IHP-AnalogAcademy/cases/full_OTA/README.md)。其余公开电路见 [IHP AnalogAcademy](tasks/IHP-AnalogAcademy/catalog.toml) 和 [TO_Apr2025](tasks/TO_Apr2025/catalog.toml) 清单；是否具备可执行评测和通过见证，以各 case 的状态和说明为准。
 
 ## 为什么选择 Layout-Bench？
 
@@ -56,7 +56,7 @@ cd Layout-Bench
 uv run --python 3.12 --locked python scripts/public_preview.py quickstart --output build/runs/preview
 ```
 
-该命令只构建一个 `layout-bench-tools:local` 镜像，获取固定版本的 PDK，准备经过审查的资料，并运行参考解、提交和批量检查。KLayout、ngspice、Qucs-S/Qucsator、Magic、OpenVAF、Xschem 和 Python 包含在这个镜像中；harness runtime 通过统一会话契约由各 harness 自行提供，因此不需要按 EDA 角色拆分镜像。快速开始不会调用模型账户。
+该命令只构建一个 `layout-bench-tools:local` 镜像，获取固定版本的 PDK，准备经过审查的资料，并按 comparator 自身的完整评测计划验证参考 GDS。KLayout、ngspice、Qucs-S/Qucsator、Magic、OpenVAF、Xschem 和 Python 包含在这个镜像中；harness runtime 通过统一会话契约由各 harness 自行提供，因此不需要按 EDA 角色拆分镜像。快速开始不会调用模型账户。
 
 如果主机代理只监听 `127.0.0.1` 或 `localhost`，请在 quick-start 命令中加入 `--network host`，让镜像构建能够访问该代理。该选项只影响镜像构建；评估容器仍然禁用网络。
 
@@ -64,24 +64,21 @@ uv run --python 3.12 --locked python scripts/public_preview.py quickstart --outp
 
 仓库本地生成的文件统一放在顶层 `build/`：benchmark 运行证据放在 `build/runs/`，手工准备的 PDK 和 EDA 支持包放在 `build/support/`，Python 分发包放在 `build/dist/`。`build/lib/` 和 `build/bdist.*` 是 setuptools 的临时打包目录。该目录已被 Git 忽略；不需要本地报告或已准备资源时可以删除。
 
-成功的 smoke run 会以 `PASS` 结束，并写入：
+成功运行会以 `PASS` 结束，并生成：
 
-| 文件 | 预期结果 |
+| 文件 | 内容 |
 | --- | --- |
-| `build/runs/preview/run/preview.json` | 参考解通过、协议失败符合预期、批量运行完成，且未调用模型。 |
-| `build/runs/preview/run/reference/report.json` | checked-switch 集成 fixture 通过框架参考评估。 |
-| `build/runs/preview/run/probe/run.json` | 离线探针成功提交矩形，然后按预期在任务评估中失败。 |
-| `build/runs/preview/run/canonical-probe/run.json` | 不绑定厂商的标准循环执行确定性 adapter，然后按预期在任务评估中失败。 |
-| `build/runs/preview/run/batch/summary.json` | 两次独立探针运行、样本完整覆盖、任务成功数为 0。 |
+| `build/runs/preview/run/preview.json` | case ID、参考评估结果和未调用模型的记录。 |
+| `build/runs/preview/run/reference/report.json` | GDS、DRC、LVS、几何约束、RC 提取和后仿性能的完整结果。 |
+| `build/runs/preview/prepared/case/case.toml` | 绑定实际镜像 ID 和资源路径的 case 配置，可直接用于 `main.py run` 或 `evaluate`。 |
 
-当这些预期都满足时，包装脚本返回 **0**。详细输出保存在运行目录的 `.log` 文件中。各命令会区分版图被拒绝和基础设施错误：`main.py run` 在版图被拒绝时返回 **1**；`main.py batch` 在所有计划测量都完成时返回 **0**，即使每个版图都失败。
+包装脚本只在参考见证通过完整评测时返回 **0**。这说明声明条件下存在通过解，不代表模型能力、最优解或所有工况的签核。
 
-使用 qualification-smoke 别名重复执行确定性 fixture 检查：
+使用已有镜像验证 full_OTA：
 
 ```bash
-uv run --locked python scripts/public_preview.py qualify \
-  --prepared build/runs/preview/prepared \
-  --output build/runs/preview-qualification
+uv run --locked python scripts/public_preview.py quickstart --case full_OTA \
+  --skip-build --output build/runs/ota-preview
 ```
 
 IHP 和 TO_Apr2025 的参考解和 qualification 资产只会随通过“上游已有完整实现”门槛的电路公开。标准 Agent 运行只接收 case TOML 的 `[task]` 段声明的输入，永远不会挂载参考解。
@@ -90,7 +87,7 @@ IHP 和 TO_Apr2025 的参考解和 qualification 资产只会随通过“上游�
 
 工作流程如下：
 
-1. **选择任务**：从 checked-switch 集成 fixture 或已经通过“上游有完整实现”筛选的 IHP/TO_Apr2025 case 开始。
+1. **选择任务**：从 comparator 或 full_OTA 等已经具备完整评测和通过见证的 case 开始。
 2. **配置 harness**：提供任意可执行命令、经过审查的文件、资料和预算；可选 harness profile 只记录协议和执行语义。
 3. **提交候选版图**：在 `/workspace` 中工作，然后运行 `python -I /protocol/submit.py`，明确提交配置的 GDS。
 4. **评估和比较**：单个候选使用独立评估器；批量测量使用冻结的“任务 × 配置 × 重复次数”计划。
@@ -100,10 +97,9 @@ IHP 和 TO_Apr2025 的参考解和 qualification 资产只会随通过“上游�
 通过主机持有的 gateway 连接模型时，按[运行指南](docs/running.md#model-inference)创建 schema 1 推理配置，填写端点、模型和主机密钥变量名，再运行自己的 harness 配置：
 
 ```bash
-uv run --locked python main.py run tests/fixtures/sg13g2/checked-switch/task.toml \
+uv run --locked python main.py run build/runs/preview/prepared/case/case.toml \
   --agent path/to/agent.toml \
   --resources build/runs/preview/prepared/agent-resources \
-  --toolchain build/runs/preview/prepared/toolchain.toml \
   --inference build/runs/inference.toml \
   --output build/runs/my-first-model-run
 ```
@@ -142,14 +138,14 @@ DRC/LVS 是物理有效性门槛。任务成功还要求所有硬约束、必需
 | 了解 CI/CD 和发布触发条件 | [参与贡献](CONTRIBUTING.md#ci-cd) |
 | 参与贡献或报告问题 | [CONTRIBUTING.md](CONTRIBUTING.md) |
 
-框架检查不需要 Docker 镜像、PDK 或模型凭据。CI 会运行 lint、单元测试和本地文档链接检查；手动的[公开 EDA 预览](.github/workflows/public-eda.yml)工作流会在真实容器中执行 checked-switch 集成 fixture。
+框架检查不需要 Docker 镜像、PDK 或模型凭据。CI 会运行 lint、单元测试和本地文档链接检查；手动的[公开 EDA 预览](.github/workflows/public-eda.yml)工作流会在真实容器中评估公开 case 的参考见证，并运行相应的 EDA 回归检查。
 
 ## 常见问题
 
 <details>
 <summary><strong>运行 benchmark 需要模型密钥吗？</strong></summary>
 
-不需要。公开快速开始使用确定性的离线探针和生成的后端 fixture。只有在为自己的 Agent 运行配置真实推理端点时才需要模型密钥。
+不需要。公开快速开始直接评估已发布 case 的参考 GDS。只有在为自己的 Agent 运行配置真实推理端点时才需要模型密钥。
 
 </details>
 
@@ -182,15 +178,15 @@ DRC/LVS 是物理有效性门槛。任务成功还要求所有硬约束、必需
 </details>
 
 <details>
-<summary><strong>公开预览 fixture 是什么？</strong></summary>
+<summary><strong>快速开始会运行哪个电路？</strong></summary>
 
-它是确定性的 SG13G2 checked-switch 集成 fixture，用于验证框架协议和后端连线，不是 IHP AnalogAcademy benchmark 电路。
+默认运行 comparator；使用 `--case full_OTA` 运行 OTA。两者均直接采用其 `case.toml` 声明的规则、约束和性能限值。
 
 </details>
 
 ## 范围
 
-本公开包包含通用可执行 harness 会话协议、不绑定厂商的 canonical harness 示例、由主机持有的模型 gateway、可配置 EDA 后端、确定性集成 fixture 和本地批量统计。不包含托管评测、身份认证或官方排行榜。
+本公开包包含通用可执行 harness 会话协议、不绑定厂商的 canonical harness 示例、由主机持有的模型 gateway、可配置 EDA 后端、公开电路 case 和本地批量统计。不包含托管评测、身份认证或官方排行榜。
 
 框架采用 [MIT](LICENSE) 许可。IHP AnalogAcademy 和 TO_Apr2025 录入清单保留上游许可和逐文件声明；后续派生任务资产也必须保留对应上游声明。Submodule、工具和依赖保留各自的许可与声明；来源和资料准备见[工具指南](docs/tools.md#external-sources)。
 

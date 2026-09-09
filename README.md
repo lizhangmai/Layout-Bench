@@ -8,7 +8,7 @@ Measure whether an agent can turn a circuit netlist, physical constraints, and p
 </p>
 
 <p align="center">
-<a href="README_CN.md">简体中文</a> •
+<a href="README_CN.md">Simplified Chinese</a> •
 <a href="#quick-start">Quick Start</a> •
 <a href="docs/architecture.md">Architecture</a> •
 <a href="CONTRIBUTING.md">Contributing</a>
@@ -23,7 +23,7 @@ Measure whether an agent can turn a circuit netlist, physical constraints, and p
 
 Layout-Bench runs an Agent in an isolated container, records an explicit GDS submission, and evaluates the frozen candidate with independent EDA tools. DRC/LVS establish physical validity; a complete task also checks the declared geometry and post-layout performance limits.
 
-> **Public preview.** The repository ships a framework integration fixture (`tests/fixtures/sg13g2/checked-switch`) for local smoke checks. The selected public circuit catalogs are [`tasks/IHP-AnalogAcademy/catalog.toml`](tasks/IHP-AnalogAcademy/catalog.toml) and [`tasks/TO_Apr2025/catalog.toml`](tasks/TO_Apr2025/catalog.toml); each currently contains only four cases whose pinned upstream checkout already provides a reusable layout together with the corresponding netlist and physical evidence. Schematic-only circuits are intentionally not included.
+> **Public preview.** Quick start evaluates the published [comparator](tasks/IHP-AnalogAcademy/cases/comparator/README.md) witness, with [full_OTA](tasks/IHP-AnalogAcademy/cases/full_OTA/README.md) also available. Other public circuits are indexed in [IHP AnalogAcademy](tasks/IHP-AnalogAcademy/catalog.toml) and [TO_Apr2025](tasks/TO_Apr2025/catalog.toml); consult each case's status and README for evaluation readiness and qualification scope.
 
 ## Why Layout-Bench?
 
@@ -55,7 +55,7 @@ cd Layout-Bench
 uv run --python 3.12 --locked python scripts/public_preview.py quickstart --output build/runs/preview
 ```
 
-This builds one `layout-bench-tools:local` image, fetches the pinned PDK, prepares reviewed resources, and runs the reference, submission, and batch checks. KLayout, ngspice, Qucs-S/Qucsator, Magic, OpenVAF, Xschem, and Python are in that image; harness runtimes are supplied by each harness through the common session contract, so no role-specific EDA image is needed. The quick start never calls a model account.
+This builds one `layout-bench-tools:local` image, fetches the pinned PDK, prepares reviewed resources, and evaluates the comparator reference GDS through its complete case plan. KLayout, ngspice, Qucs-S/Qucsator, Magic, OpenVAF, Xschem, and Python are in that image; harness runtimes are supplied by each harness through the common session contract, so no role-specific EDA image is needed. The quick start never calls a model account.
 
 If your host proxy listens only on `127.0.0.1` or `localhost`, add `--network host` to the quick-start command so the image build can reach it. This applies only to image construction; evaluation containers still run with networking disabled.
 
@@ -63,24 +63,21 @@ The first run downloads tools and the PDK and may take several minutes. Later ru
 
 Repository-local generated files use one top-level directory: benchmark runs are under `build/runs/`, prepared PDK and EDA bundles under `build/support/`, and Python distributions under `build/dist/`. The `build/lib/` and `build/bdist.*` directories are temporary setuptools staging files. The directory is ignored by Git and can be removed at any time when you do not need its local reports or prepared resources.
 
-A successful smoke run ends with `PASS` and writes:
+A successful run ends with `PASS` and creates:
 
-| File | Expected result |
+| File | Content |
 | --- | --- |
-| `build/runs/preview/run/preview.json` | Reference passed, protocol failure expected, batch complete, and no model called. |
-| `build/runs/preview/run/reference/report.json` | The checked-switch fixture passes the framework reference evaluation. |
-| `build/runs/preview/run/probe/run.json` | The offline probe submits a rectangle, then fails task evaluation as expected. |
-| `build/runs/preview/run/canonical-probe/run.json` | The provider-neutral canonical loop executes its deterministic adapter and fails task evaluation as expected. |
-| `build/runs/preview/run/batch/summary.json` | Two independent probe runs, complete coverage, and zero task successes. |
+| `build/runs/preview/run/preview.json` | Case ID, reference evaluation result, and confirmation that no model was called. |
+| `build/runs/preview/run/reference/report.json` | Complete artifact, DRC, LVS, geometry, RC extraction, and post-layout performance results. |
+| `build/runs/preview/prepared/case/case.toml` | Case configuration bound to the actual image ID and resource paths; usable with `main.py run` or `evaluate`. |
 
-The wrapper exits **0** when these expectations hold. Detailed output stays in `.log` files in the run directory. Individual commands distinguish a rejected layout from an infrastructure error: `main.py run` returns **1** for a rejected layout, while `main.py batch` returns **0** when all scheduled measurements finish, even if every layout fails.
+The wrapper returns **0** only when the witness passes the complete evaluation. This demonstrates feasibility under the declared conditions; it is not a model score, an optimum, or signoff across all operating conditions.
 
-To repeat the deterministic fixture checks under the qualification-smoke alias:
+To verify full_OTA using the existing image:
 
 ```bash
-uv run --locked python scripts/public_preview.py qualify \
-  --prepared build/runs/preview/prepared \
-  --output build/runs/preview-qualification
+uv run --locked python scripts/public_preview.py quickstart --case full_OTA \
+  --skip-build --output build/runs/ota-preview
 ```
 
 IHP and TO_Apr2025 reference and qualification assets are published only for cases that pass the upstream-complete screening gate. Standard Agent runs receive only the declared task inputs and never a reference solution.
@@ -91,7 +88,7 @@ IHP and TO_Apr2025 reference and qualification assets are published only for cas
 
 The workflow is simple:
 
-1. **Choose a task** — start with the checked-switch integration fixture or an IHP/TO_Apr2025 case that has passed the upstream-complete screening gate.
+1. **Choose a task** — start with a case that has a complete evaluation and a passing witness, such as comparator or full_OTA.
 2. **Configure a harness** — provide any executable command, reviewed files, resources, and budgets; an optional harness profile records its protocol and execution semantics.
 3. **Submit a candidate** — work in `/workspace`, then run `python -I /protocol/submit.py` to submit the configured GDS explicitly.
 4. **Evaluate and compare** — use the independent evaluator for one candidate, or a frozen batch plan for task × configuration × repetition measurements.
@@ -101,10 +98,9 @@ The configured harness receives `/protocol/prompt.txt`, `/protocol/task.json`, `
 To connect a model through the host-owned gateway, create the schema 1 inference profile described in the [running guide](docs/running.md#model-inference), fill in your endpoint, model, and host key-variable name, and run your harness configuration:
 
 ```bash
-uv run --locked python main.py run tests/fixtures/sg13g2/checked-switch/task.toml \
+uv run --locked python main.py run build/runs/preview/prepared/case/case.toml \
   --agent path/to/agent.toml \
   --resources build/runs/preview/prepared/agent-resources \
-  --toolchain build/runs/preview/prepared/toolchain.toml \
   --inference build/runs/inference.toml \
   --output build/runs/my-first-model-run
 ```
@@ -143,14 +139,14 @@ DRC/LVS are physical-validity gates. Task success additionally requires every ha
 | Understand CI/CD and release triggers | [Contributing](CONTRIBUTING.md#ci-cd) |
 | Contribute or report a problem | [CONTRIBUTING.md](CONTRIBUTING.md) |
 
-Framework checks need no Docker images, PDK, or model credentials. CI runs lint, unit tests, and local documentation-link checks. The manual [Public EDA preview](.github/workflows/public-eda.yml) workflow exercises the checked-switch integration fixture in real containers.
+Framework checks need no Docker images, PDK, or model credentials. CI runs lint, unit tests, and local documentation-link checks. The manual [Public EDA preview](.github/workflows/public-eda.yml) workflow evaluates public case witnesses and runs their EDA regressions in real containers.
 
 ## FAQ
 
 <details>
 <summary><strong>Do I need a model key to run the benchmark?</strong></summary>
 
-No. The public quick start uses a deterministic offline probe and generated backend fixtures. A model key is needed only when you configure a real inference endpoint for your own Agent run.
+No. The public quick start evaluates the reference GDS of a published case. A model key is needed only when you configure a real inference endpoint for your own Agent run.
 
 </details>
 
@@ -183,18 +179,18 @@ No. This is a local preview package. Hosted evaluation, identity authentication,
 </details>
 
 <details>
-<summary><strong>What is the public preview fixture?</strong></summary>
+<summary><strong>Which circuit does quick start evaluate?</strong></summary>
 
-It is a deterministic SG13G2 checked-switch integration fixture. It exercises the framework protocol and backend wiring; it is not an IHP AnalogAcademy benchmark case.
+The default is comparator; select `--case full_OTA` for the OTA. Both use the rules, constraints, and performance limits declared in their own `case.toml`.
 
 </details>
 
 ## Scope
 
-This package includes the common executable-harness session protocol, a provider-neutral canonical harness example, a host-owned model gateway, configurable EDA backends, a deterministic integration fixture, and local batch statistics. It does not include hosted evaluation, identity authentication, or an official leaderboard.
+This package includes the common executable-harness session protocol, a provider-neutral canonical harness example, a host-owned model gateway, configurable EDA backends, public circuit cases, and local batch statistics. It does not include hosted evaluation, identity authentication, or an official leaderboard.
 
 The framework is licensed under [MIT](LICENSE). IHP AnalogAcademy and TO_Apr2025 source records retain their upstream licenses and per-file notices; any later derived task assets must retain the corresponding upstream notices. Submodules, tools, and dependencies retain their own licenses and notices; source and resource preparation are described in the [tool guide](docs/tools.md#external-sources).
 
 <p align="center">
-<a href="README_CN.md">阅读中文文档 →</a>
+<a href="README_CN.md">Read in Chinese →</a>
 </p>
