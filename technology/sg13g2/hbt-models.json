@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "source": {
+    "repository": "https://github.com/IHP-GmbH/IHP-Open-PDK",
+    "commit": "5e6d592e4002946a4616f798c357f0f3c06cf3b6"
+  },
+  "files": {
+    "LICENSE": {
+      "path": "LICENSE",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "format": "text"
+    },
+    "models/cap_cmomf.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/cap_cmomf.lib",
+      "sha256": "410001def252a236f221442efcea6353874d1614db593db4142ea3b8a499a207",
+      "format": "spice"
+    },
+    "models/cap_cmomi.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/cap_cmomi.lib",
+      "sha256": "ae6270ea4abf6ad409065d6d24df2a9aa5b121cba3d6facbc14d6a3ceb7b424f",
+      "format": "spice"
+    },
+    "models/capacitors_mod.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/capacitors_mod.lib",
+      "sha256": "ff9eb4cc9fdccc0645d9db0bd37e25e9fee2a633765910a7f55ac2084c49695f",
+      "format": "spice"
+    },
+    "models/capacitors_mod_mismatch.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/capacitors_mod_mismatch.lib",
+      "sha256": "6c550362c762362e276f0ed0a4f875616ab6a9de853f1a8f6851b52676ea6f77",
+      "format": "spice"
+    },
+    "models/capacitors_stat.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/capacitors_stat.lib",
+      "sha256": "68d2ef41174bcfae5997b355c4fd3dbe4f2b8ec4be30ff79d474052b3be1715a",
+      "format": "spice"
+    },
+    "models/cornerCAP.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/cornerCAP.lib",
+      "sha256": "4fc4a0f17ca2aef66ca38c2d2e7cead3307b69508d304ed073129565ec1c3e56",
+      "format": "spice"
+    },
+    "models/cornerHBT.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/cornerHBT.lib",
+      "sha256": "bae3d705445de8d6b8de4aa798a0e3e5e7cab617d6495d9c56473bc5377de462",
+      "format": "spice"
+    },
+    "models/cornerRES.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/cornerRES.lib",
+      "sha256": "c6d749e72cfa2e06e4a14fac3f5662541bf6197b89265ecbedd632fd3503c425",
+      "format": "spice"
+    },
+    "models/resistors_mod.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/resistors_mod.lib",
+      "sha256": "7c77da0c0419c8a332550da3f934f530262bd452734090db827b68ff88d09c43",
+      "format": "spice"
+    },
+    "models/resistors_mod_mismatch.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/resistors_mod_mismatch.lib",
+      "sha256": "ce5ea8559df174fbdad8192e45e5d65772ae3af90af61ba295419b2cb5154b29",
+      "format": "spice"
+    },
+    "models/resistors_stat.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/resistors_stat.lib",
+      "sha256": "9e34411ed09a569323adec8181e4bdd6832af279c9e05b181f00cb2e5d696db6",
+      "format": "spice"
+    },
+    "models/sg13g2_hbt_mod.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/sg13g2_hbt_mod.lib",
+      "sha256": "ae9288f885dd30fab24b07ed1e7e02e69eac9154022a0a6da576985183b0bd79",
+      "format": "spice"
+    },
+    "models/sg13g2_hbt_mod_mismatch.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/sg13g2_hbt_mod_mismatch.lib",
+      "sha256": "e7b462e4aa4fbcb00d8f618f7780fea87d65918f2faa4e86c1412d6262371357",
+      "format": "spice"
+    },
+    "models/sg13g2_hbt_stat.lib": {
+      "path": "ihp-sg13g2/libs.tech/ngspice/models/sg13g2_hbt_stat.lib",
+      "sha256": "80d1893eb06a3417d05400335d8e58c8309b9c80061ca96ceff8f8fd68c9a7db",
+      "format": "spice"
+    },
+    "verilog-a/cap_cmomf/cap_cmomf.va": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/cap_cmomf/cap_cmomf.va",
+      "sha256": "f0f8c3c3c31a6b553c365f36ec04e6f1a5870d3ff06b6eba90ddefbc2f48cc6e",
+      "format": "verilog-a"
+    },
+    "verilog-a/cap_cmomi/cap_cmomi.va": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/cap_cmomi/cap_cmomi.va",
+      "sha256": "f8618465b9aa74d596983ded0e10780a9bccba3103b3a2daf58a44243ab5c210",
+      "format": "verilog-a"
+    },
+    "verilog-a/r3_cmc/r3_cmc.va": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/r3_cmc/r3_cmc.va",
+      "sha256": "398746f45048a9e075913e85a982258b929c9042257339bf1fc47d7e25303551",
+      "format": "verilog-a"
+    },
+    "verilog-a/r3_cmc/r3_cmc_macros.include": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/r3_cmc/r3_cmc_macros.include",
+      "sha256": "66e1bf0b43495a9c17454a1ac203171db5488edc7e19563f4f645389ba7eebb4",
+      "format": "text"
+    },
+    "verilog-a/r3_cmc/LICENSE.txt": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/r3_cmc/LICENSE.txt",
+      "sha256": "60436a82eb1cff9e3e7fb4ba8c913b8adf72ff8578836d5134e376088a2bc698",
+      "format": "text"
+    },
+    "verilog-a/r3_cmc/NOTICE.txt": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/r3_cmc/NOTICE.txt",
+      "sha256": "fa3dc18885dd09baaffbf02fda561438df81787d1dd255f6218bcc2764f34132",
+      "format": "text"
+    },
+    "verilog-a/r3_cmc/Changelog": {
+      "path": "ihp-sg13g2/libs.tech/verilog-a/r3_cmc/Changelog",
+      "sha256": "14e460005858ebdbdd21f83d9c7a3176e761825e86bfb82723a9bcd8d0e3bbf3",
+      "format": "text"
+    }
+  },
+  "generated": {
+    ".spiceinit": {
+      "format": "text",
+      "content": "* Reviewed HBT, resistor and capacitor support; native VBIC and compiled R3_CMC.\nsetcs sourcepath = ( $sourcepath /workspace/support/models )\nosdi /workspace/support/osdi/cap_cmomi.osdi\nosdi /workspace/support/osdi/cap_cmomf.osdi\nosdi /workspace/support/osdi/r3_cmc.osdi\n"
+    }
+  },
+  "compile": [
+    {
+      "source": "verilog-a/cap_cmomi/cap_cmomi.va",
+      "output": "osdi/cap_cmomi.osdi",
+      "defines": [
+        "__NGSPICE__"
+      ]
+    },
+    {
+      "source": "verilog-a/cap_cmomf/cap_cmomf.va",
+      "output": "osdi/cap_cmomf.osdi",
+      "defines": [
+        "__NGSPICE__"
+      ]
+    },
+    {
+      "source": "verilog-a/r3_cmc/r3_cmc.va",
+      "output": "osdi/r3_cmc.osdi",
+      "defines": [
+        "__NGSPICE__"
+      ]
+    }
+  ]
+}

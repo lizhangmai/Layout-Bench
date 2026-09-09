@@ -120,3 +120,10 @@ subcircuit = "FDM_QNC_00_LN_TIA"
 drc_profile = "drc-upstream.json"
 lvs_profile = "lvs-to-apr2025.json"
 basis = "Use original KLayout evaluation GDS and LVS CDL; archived minimal/maximal reports motivate current main plus extra scope. Archived LVS uses comparison without mandatory top-port agreement (40 GHz: 0 layout vs 9 reference pins, Match). Exact saved switches and historical runset identity are unavailable; current pinned defaults plus compare-only port policy are a reconstruction."
+
+[[upstream_assets]]
+id = "TO_Apr2025.40_GHZ_LOW_NOISE_TIA.archived_simulation"
+path = "40_GHZ_LOW_NOISE_TIA/design_data/qucs-s/40_GHz_Low_Noise_TIA.dat.ngspice"
+role = "simulation-evidence"
+format = "qucs-dataset"
+sha256 = "313cec7687feaae76c48df67631e948c93f15f08a7efe0027a4fa62d096553da"

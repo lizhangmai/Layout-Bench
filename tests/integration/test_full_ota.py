@@ -117,11 +117,11 @@ def test_reference_passes_and_pre_post_calibration_uses_the_same_conditions(envi
     assert post["jobs"]["geometry"]["inputs"]["constraints"]["sha256"] == task.inline_constraints.sha256
 
     # Derive source characterization from the single authoritative case plan.
-    # Simulate exactly the authoritative bytes used by LVS. Model calls retain
-    # source ng/m; no conversion through a simplified LVS device graph occurs.
+    # Simulate the matched schematic's separate SPICE export. Model calls
+    # retain source ng/m; source-export regression checks its CDL equivalence.
     data = task.evaluation.description()
     simulation = next(job for job in data["jobs"] if job["id"] == "nominal")
-    simulation["inputs"]["dut"] = "input:netlist"
+    simulation["inputs"]["dut"] = "input:simulation"
     data.update(mode="characterization", jobs=[simulation],
                 metrics=[metric for metric in data["metrics"] if metric["category"] == "performance"])
     pre = run_evaluation(parse_evaluation(json.dumps(data).encode(), file_format="json"),
@@ -129,7 +129,7 @@ def test_reference_passes_and_pre_post_calibration_uses_the_same_conditions(envi
                          backends, tmp_path / "pre", task_sha256=task.digest)
     assert pre["outcome"] == "passed", pre["jobs"]
     assert pre["task_success"] is None
-    assert pre["jobs"]["nominal"]["inputs"]["dut"]["sha256"] == post["jobs"]["lvs"]["inputs"]["netlist"]["sha256"]
+    assert pre["jobs"]["nominal"]["inputs"]["dut"]["sha256"] == task.evaluation_inputs()["input:simulation"].sha256
     assert pre["jobs"]["nominal"]["inputs"]["deck"] == nominal["inputs"]["deck"]
     assert pre["backends"]["circuit.simulate"] == post["backends"]["circuit.simulate"]
     check_waveform_measurements(pre, tmp_path / "pre")

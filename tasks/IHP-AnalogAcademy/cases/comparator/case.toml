@@ -13,18 +13,23 @@ environment = "ihp-sg13g2-comparator-rc-tt"
 
 [task.inputs.description]
 path = "problem.md"
-sha256 = "a8114dac2f3067b7d2f812543dc2621e98a9f2a5630fdb2d003a749d1580b6c7"
+sha256 = "7f2fdf839210062b632ed9634e0d48bf43b4953f01e1fdb31450a5dfc0bb18a3"
 format = "text"
 
 [task.inputs.netlist]
-path = "materials/circuit.spice"
-sha256 = "fb74cb22eebf4ee891956ef779718a9378ef3a5d538c62b527684873f9bec1f5"
+path = "materials/circuit.cdl"
+sha256 = "0fe0279db5d2975dec32196670118a05d0dd9a240e7f70b642c94e0a7ec80a4c"
 format = "spice"
 subcircuit = "DIFF_COMPARATOR"
 
+[task.inputs.simulation]
+path = "materials/circuit.spice"
+sha256 = "daffa3508cb005a2a96651e48ec56909c94596208d48cbc099e24702f8f72221"
+format = "spice"
+
 [task.inputs.performance]
 path = "materials/testbench.spice"
-sha256 = "a34ea030b581f0c2825f7b95969149e19d07f231e6074e78a6656af559478857"
+sha256 = "61d8165d7b359539cebe3a94815dcbd22cede35ca87c393e345832523f3c4c8e"
 format = "spice"
 
 [task.constraints]
@@ -365,7 +370,7 @@ timeout_seconds = 600
 type = "ngspice-docker"
 [toolchain.backends.simulation.settings]
 image = "layout-bench-tools:local"
-support = "build/support/comparator-models"
+support = "build/support/comparator-analog-models"
 timeout_seconds = 600
 
 [toolchain.bindings]
@@ -468,3 +473,45 @@ subcircuit = "DIFF_COMPARATOR"
 drc_profile = "drc-upstream.json"
 lvs_profile = "lvs-analogacademy.json"
 basis = "Use original layout and source LVS netlist. Map current PDK GUI DRC scope and documented course-era LVS compare-only semantics; exact author switches were not archived. See docs/tools.md for option provenance."
+
+# Matched derivative schematic; upstream originals remain in sources.
+[source_export]
+tool = "xschem-lvs"
+schematic = "DIFF_COMPARATOR.sch"
+netlist = "circuit.cdl"
+
+[[source_export.files]]
+checkout = "case"
+path = "source/DIFF_COMPARATOR.sch"
+target = "DIFF_COMPARATOR.sch"
+sha256 = "493c734af7979be47a88627c3398cfa62a2436b23d814e452460b4cd773464f0"
+
+[[source_export.files]]
+checkout = "case"
+path = "source/sg13g2_case/ntap_ap.sym"
+target = "sg13g2_case/ntap_ap.sym"
+sha256 = "73c3cea91bf9f44e3d10690a7b62e045685b01d6369d4817f9a6795bcdc834e5"
+
+[[source_export.files]]
+checkout = "case"
+path = "source/sg13g2_case/ptap_ap.sym"
+target = "sg13g2_case/ptap_ap.sym"
+sha256 = "a2bef97545104aa817a26a828a162d4ce4cc242352f67e610478fd640311d4fa"
+
+[[source_export.files]]
+checkout = "pdk"
+path = "ihp-sg13g2/libs.tech/xschem/sg13g2_pr/sg13_lv_nmos.sym"
+target = "sg13g2_pr/sg13_lv_nmos.sym"
+sha256 = "4c65869259c7aea7ff30d8612c5017419423d55e27dbb0aea28323e7da49ba7d"
+
+[[source_export.files]]
+checkout = "pdk"
+path = "ihp-sg13g2/libs.tech/xschem/sg13g2_pr/sg13_lv_pmos.sym"
+target = "sg13g2_pr/sg13_lv_pmos.sym"
+sha256 = "bc03331b71de250641ba1eb34c3b13bd3bb21a53ed7c329ecf6b0b1a7c53a6c1"
+
+[[source_export.files]]
+checkout = "pdk"
+path = "ihp-sg13g2/libs.tech/xschem/sg13g2_pr/annotate_fet_params.sym"
+target = "sg13g2_pr/annotate_fet_params.sym"
+sha256 = "abcebfdd0ffda54f9e1ef4d8b1f50a4523975cb6da64bf48b37a046c73f930aa"

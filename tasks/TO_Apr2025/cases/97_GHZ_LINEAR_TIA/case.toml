@@ -134,3 +134,10 @@ subcircuit = "FMD_QNC_01_LIN_TIA"
 drc_profile = "drc-upstream.json"
 lvs_profile = "lvs-to-apr2025.json"
 basis = "Use original KLayout evaluation GDS and LVS CDL; archived minimal/maximal reports motivate current main plus extra scope. Archived LVS uses comparison without mandatory top-port agreement (40 GHz: 0 layout vs 9 reference pins, Match). Exact saved switches and historical runset identity are unavailable; current pinned defaults plus compare-only port policy are a reconstruction."
+
+[[upstream_assets]]
+id = "TO_Apr2025.97_GHZ_LINEAR_TIA.archived_simulation"
+path = "97_GHZ_LINEAR_TIA/design_data/qucs-s/97_GHZ_LINEAR_TIA.dat.ngspice"
+role = "simulation-evidence"
+format = "qucs-dataset"
+sha256 = "ff122a34bb4e4444ea70ac1d78b5c086f4074fcf9f695fff4447f11d962a5d9a"

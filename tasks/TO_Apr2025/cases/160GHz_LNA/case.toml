@@ -127,3 +127,17 @@ subcircuit = "TOP"
 drc_profile = "drc-upstream.json"
 lvs_profile = "lvs-to-apr2025.json"
 basis = "Use original KLayout evaluation GDS and LVS CDL; archived minimal/maximal reports motivate current main plus extra scope. Archived LVS uses comparison without mandatory top-port agreement (40 GHz: 0 layout vs 9 reference pins, Match). Exact saved switches and historical runset identity are unavailable; current pinned defaults plus compare-only port policy are a reconstruction."
+
+[[upstream_assets]]
+id = "TO_Apr2025.160GHz_LNA.archived_simulation"
+path = "160GHz_LNA/design_data/qucs-s/160GHz_LNA_pi_model.dat.ngspice"
+role = "simulation-evidence"
+format = "qucs-dataset"
+sha256 = "024e23c61fe9a53a9137afaa159c7f211da084bdbc84f86e2882bc8b546bd4c7"
+
+[[upstream_assets]]
+id = "TO_Apr2025.160GHz_LNA.pi_schematic"
+path = "160GHz_LNA/design_data/qucs-s/160GHz_LNA_pi_model.sch"
+role = "supporting-source"
+format = "qucs"
+sha256 = "d96026df53cad8445aefee142b86677f9fc5c43702f69faab79286a863a8dbdd"

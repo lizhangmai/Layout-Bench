@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 ROOT = Path(__file__).resolve().parents[1]
 # These public cases have ready-to-use witnesses and nominal RC evaluation.
 # The case owns all rule bindings; this table selects its simulation resources.
-CASE_MODELS = {"comparator": "mos-models", "full_OTA": "analog-models"}
+CASE_MODELS = {"comparator": "analog-models", "full_OTA": "analog-models"}
 IMAGE = "layout-bench-tools:local"
 RUNS = "build/runs"
 PDK_PATH = Path("third_party/IHP-Open-PDK")

@@ -1,7 +1,7 @@
 # Comparator: SG13G2 Layout from a Netlist
 
 Create an IHP SG13G2 layout for `DIFF_COMPARATOR` in the
-[authoritative netlist](materials/circuit.spice). Preserve its connectivity and
+[authoritative netlist](materials/circuit.cdl). Preserve its connectivity and
 device parameters, including well/substrate connections and tap devices. The
 layout must pass the physical checks and meet the performance limits after
 parasitic RC extraction.
@@ -10,7 +10,8 @@ parasitic RC extraction.
 
 | Material | Purpose |
 |---|---|
-| [materials/circuit.spice](materials/circuit.spice) | Authoritative circuit for LVS |
+| [materials/circuit.cdl](materials/circuit.cdl) | Authoritative LVS export of the matched schematic |
+| [materials/circuit.spice](materials/circuit.spice) | Equivalent simulator export of the same schematic, for pre-layout simulation |
 | [materials/testbench.spice](materials/testbench.spice) | Public simulation stimuli and measurement expressions |
 | `/protocol/task.json` → `constraints` | Exact functional layers, geometry limits and area definition |
 | `/protocol/task.json` → `evaluation` | Complete scoring plan: step inputs, dependencies, parameters and metrics |
@@ -41,9 +42,9 @@ reviewed resource bundles, with resources selected for each execution role.
 | Evaluation operation | Configuration and scope |
 |---|---|
 | DRC | `drc-upstream.json`: pinned PDK main and additional maximal rules, deep mode, density and antenna checks disabled, no waivers |
-| LVS | `lvs-analogacademy.json`: preserve explicit taps and the original netlist; use native PDK simplification and comparison. No additional `flag_missing_ports` check is applied. RC extraction still requires all eight ports listed below. |
+| LVS | `lvs-analogacademy.json`: preserve explicit taps and the authoritative netlist; use native PDK simplification and comparison. No additional `flag_missing_ports` check is applied. RC extraction still requires all eight ports listed below. |
 | RC extraction | Magic `ngspice()` style: retain capacitance and extract wire resistance, without device merging or resistor-network simplification. Each declared port must correspond to a distinct conductor; multiple ports on one conductor are unsupported. |
-| Simulation | ngspice uses the submitted layout's extracted netlist, fixed PDK MOS models, and the supplied testbench and parameters |
+| Simulation | ngspice uses the submitted layout's extracted netlist, fixed PDK MOS/resistor models, and the supplied testbench and parameters |
 
 The evaluator compares the layout with the authoritative netlist and independently
 derives the simulation DUT, waveforms and measurements from the submitted GDS.
@@ -52,6 +53,12 @@ Solver-supplied netlists, waveforms or measurements cannot replace this evaluati
 If the harness declares `process-feedback.v1`, run
 `python -I /protocol/process_check.py` to check the current candidate. The final
 submission is still evaluated independently.
+
+For pre-layout simulation, copy `materials/circuit.spice` byte-for-byte to
+`dut.spice` beside the testbench and use the reviewed SG13G2 `analog-models`
+bundle. Both pre/post analyses load `mos_tt` and `res_typ`. For scoring, the
+evaluator supplies the candidate-derived RC netlist as `dut.spice`; solver
+simulation results cannot replace independent extraction and measurement.
 
 ## Submission
 

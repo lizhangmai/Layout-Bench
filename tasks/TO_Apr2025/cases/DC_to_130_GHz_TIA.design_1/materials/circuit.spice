@@ -1,0 +1,12 @@
+** sch_path: /workspace/source/FMD_QNC_03a_TIA_1.sch
+.subckt FMD_QNC_03a_TIA_1 INPUT OUTPUT VCC2V VCC2V1 VEE
+*.PININFO INPUT:B OUTPUT:B VCC2V:B VCC2V1:B VEE:B
+XQ1 DN1 INPUT VEE VEE npn13G2 Nx=5 mm_ok=0
+XQ2 OUTPUT DN1 VEE VEE npn13G2 Nx=4 mm_ok=0
+XRC1 VCC2V DN1 VEE rppd w=15u l=4u m=1 b=0 mm_ok=0
+XRC2 VCC2V1 OUTPUT VEE rppd w=11.5u l=2u m=1 b=0 mm_ok=0
+XRF DN1 INPUT VEE rppd w=29u l=6.3u m=1 b=0 mm_ok=0
+XC1 VCC2V VEE cap_cmim w=30u l=30u m=1 mm_ok=0
+XC2 VCC2V1 VEE cap_cmim w=30u l=30u m=1 mm_ok=0
+XRTAP VEE VEE ptap1 a=3.6504e-12 p=18.72e-6 r=43.80789
+.ends

@@ -1,0 +1,32 @@
+* Input-pair fixed-interface nominal admittance characterization.
+.lib /workspace/support/models/cornerMOSlv.lib mos_tt
+.lib /workspace/support/models/cornerRES.lib res_typ
+.include dut.spice
+.include parameters.spice
+.temp 27
+* Equal numerical shunts regularize floating nodes; DC leakage is not characterized.
+.option rshunt=1e12
+VDD vdd 0 DC 1.2
+VM vm 0 DC 0.6 AC {minus_ac}
+VP vp 0 DC 0.6 AC {plus_ac}
+VD3 dn3 0 DC 0.6
+VD4 dn4 0 DC 0.6
+XDUT vm vp vdd dn3 dn4 input_common_centroid
+.control
+set noaskquit
+set numdgt=12
+op
+write op.raw all
+ac dec 40 1k 1g
+let cap_p = -imag(i(VP))/(2*pi*frequency)
+let cap_m = -imag(i(VM))/(2*pi*frequency)
+let conductance_p = -real(i(VP))
+let conductance_m = -real(i(VM))
+meas ac input_p_cap find cap_p at=1meg
+meas ac input_m_cap find cap_m at=1meg
+meas ac input_p_conductance find conductance_p at=1meg
+meas ac input_m_conductance find conductance_m at=1meg
+write ac.raw all
+quit
+.endc
+.end

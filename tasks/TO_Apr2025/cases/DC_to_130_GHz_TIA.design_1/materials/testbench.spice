@@ -1,0 +1,24 @@
+* SPDX-License-Identifier: Apache-2.0
+* DC operating-point check of the Layout-Bench design_1 core derivative.
+* Two independent 2 V supplies, 26.85 C, nominal upstream model corners.
+* External RF ports are DC-blocked in the source; no DC input/output load.
+* No RF/EM performance or task qualification is claimed by this check.
+.lib /workspace/support/models/cornerHBT.lib hbt_typ
+.lib /workspace/support/models/cornerRES.lib res_typ
+.lib /workspace/support/models/cornerCAP.lib cap_typ
+.include circuit.spice
+.temp 26.85
+VCC1 vcc1 0 2
+VCC2 vcc2 0 2
+XDUT input output vcc1 vcc2 0 FMD_QNC_03a_TIA_1
+.control
+op
+let input_bias = v(input)
+let output_bias = v(output)
+let supply1_current = -i(VCC1)
+let supply2_current = -i(VCC2)
+print input_bias output_bias supply1_current supply2_current
+write operating_point.raw all
+quit
+.endc
+.end

@@ -1,7 +1,7 @@
 # Full OTA: SG13G2 Layout from a Netlist
 
 Create an IHP SG13G2 layout for `two_stage_OTA_layout` in
-[materials/circuit.spice](materials/circuit.spice). Preserve the specified MOS
+[materials/circuit.cdl](materials/circuit.cdl). Preserve the specified MOS
 and MIM devices, dimensions, connectivity, well/substrate nodes and tap devices.
 The layout must pass physical checks, fit the specified functional outline and
 meet nominal OTA performance limits after RC extraction from the submitted GDS.
@@ -10,7 +10,8 @@ meet nominal OTA performance limits after RC extraction from the submitted GDS.
 
 | Input | Purpose |
 |---|---|
-| [materials/circuit.spice](materials/circuit.spice) | Shared authoritative circuit for LVS and pre-layout simulation; preserves device multiplicity, tap area/perimeter and MIM dimensions |
+| [materials/circuit.cdl](materials/circuit.cdl) | Authoritative LVS export of the matched schematic; preserves device multiplicity, tap area/perimeter and MIM dimensions |
+| [materials/circuit.spice](materials/circuit.spice) | Equivalent simulator export of the same schematic, for pre-layout simulation |
 | [materials/testbench.spice](materials/testbench.spice) | Nominal stimuli, PDK corner selection, operating point and AC measurements |
 | [materials/LICENSE](materials/LICENSE) | License for the delivered circuit materials |
 | `/protocol/task.json` | Published constraints, evaluation plan, input paths and submission contract |
@@ -44,7 +45,8 @@ For pre-layout simulation, copy `materials/circuit.spice` byte-for-byte to
 `dut.spice` beside the testbench. Use the reviewed analog model bundle and its
 `.spiceinit` startup settings. Model calls preserve each MOS `w`, `l`, `ng` and
 `m`; tap area/perimeter parameters also determine their simulation resistance.
-The LVS profile maps these calls to the same native PDK devices for comparison.
+LVS reads `circuit.cdl` through the native PDK reader; the source regression
+checks that the two exports describe equivalent devices and connections.
 For scoring, the evaluator supplies candidate-derived PEX as `dut.spice` and
 includes it without edits. Solver-provided simulation results cannot replace
 independent extraction and measurement.

@@ -4,7 +4,7 @@ source_commit = "63e203a0eccfb6028a1a0a8364553e4e979b55b3"
 source_license = "Apache-2.0 upstream root; file-level notices apply"
 source_count = 4
 case_count = 4
-artifact_count = 53
+artifact_count = 58
 
 [[cases]]
 id = "TO_Apr2025.160GHz_LNA"
@@ -286,3 +286,28 @@ sha256 = "f24f7825410b86229e91299864efc13636f70be68151a89514f8e6a0fb229e26"
 path = "DC_to_130_GHz_TIA/design_1/design_data/lvs/LVS_Check_Netlist.cdl"
 kind = "netlist"
 sha256 = "b38914fc45d33df5ad9bfa1aab0152d2c123d1aa1f13529ea63cc8acaf0ee6b2"
+
+[[artifacts]]
+path = "160GHz_LNA/design_data/qucs-s/160GHz_LNA_pi_model.dat.ngspice"
+kind = "simulation-data"
+sha256 = "024e23c61fe9a53a9137afaa159c7f211da084bdbc84f86e2882bc8b546bd4c7"
+
+[[artifacts]]
+path = "160GHz_LNA/design_data/qucs-s/160GHz_LNA_pi_model.sch"
+kind = "schematic"
+sha256 = "d96026df53cad8445aefee142b86677f9fc5c43702f69faab79286a863a8dbdd"
+
+[[artifacts]]
+path = "40_GHZ_LOW_NOISE_TIA/design_data/qucs-s/40_GHz_Low_Noise_TIA.dat.ngspice"
+kind = "simulation-data"
+sha256 = "313cec7687feaae76c48df67631e948c93f15f08a7efe0027a4fa62d096553da"
+
+[[artifacts]]
+path = "97_GHZ_LINEAR_TIA/design_data/qucs-s/97_GHZ_LINEAR_TIA.dat.ngspice"
+kind = "simulation-data"
+sha256 = "ff122a34bb4e4444ea70ac1d78b5c086f4074fcf9f695fff4447f11d962a5d9a"
+
+[[artifacts]]
+path = "DC_to_130_GHz_TIA/design_1/design_data/qucs-s/DC_to_130_GHz_TIA.dat.ngspice"
+kind = "simulation-data"
+sha256 = "ac7de91d6058d7a2d171d68be2256177571ff174e315fc58c5748dd13fd65406"

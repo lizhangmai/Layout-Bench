@@ -16,7 +16,7 @@ The two-stage OTA comes from IHP AnalogAcademy's Module 1 bandgap-reference
 [Part 3 layout lesson](../../../../third_party/IHP-AnalogAcademy/modules/module_1_bandgap_reference/part_3_layout/README.md).
 The earlier [Part 1 testbench](../../../../third_party/IHP-AnalogAcademy/modules/module_1_bandgap_reference/part_1_OTA/testbenches/ota_testbench.sch)
 provides the nominal operating conditions. It instantiates a different schematic
-revision, so it does not replace the layout CDL's device population.
+revision. The case uses the matched derivative schematic described below.
 
 | Identity | Value |
 |---|---|
@@ -31,11 +31,14 @@ CDL, extracted circuit and upstream DRC reports, as well as the Part 1 materials
 It also binds the delivered inputs and reference assets. The reference repairs
 the upstream GDS; upstream checkouts and PDK files are unchanged.
 
-The task baseline retains the CDL's MOS/MIM population, dimensions and
-signal topology. The model-facing files are consistently named
-`materials/circuit.spice` and `materials/testbench.spice`. The former uses the
-native PDK LVS dialect; its extension is not a promise of direct ngspice
-compatibility. The original `.cdl` remains recorded under `upstream_assets`.
+The task baseline retains the established reference circuit's MOS/MIM population,
+dimensions and signal topology. [source/two_stage_OTA_layout.sch](source/two_stage_OTA_layout.sch)
+is a deliberately modified version of the upstream layout schematic, matched to
+the case reference GDS. It is not an untouched upstream original.
+`materials/circuit.cdl` is its raw LVS export; `materials/circuit.spice` is its
+raw simulator export; `materials/testbench.spice` supplies the shared pre/post
+stimuli and measurements. The original `.sch` and `.cdl` identities remain
+recorded under `sources` and `upstream_assets`.
 
 The [asset exclusion and input isolation rules](../../../../docs/tasks.md#input-isolation) apply.
 Only declared problem/material files and reviewed resources enter a standard
@@ -105,7 +108,7 @@ implant type, also have empty XORs. Drawn nBuLay area changes from 205.37775 to
 | MIM top plate floats in both archived and fresh extraction | Connect its existing TopMetal1 route to DN4 through Metal3–Metal5 and TopVia1 (125/0); preserve the capacitor plates and dimensions |
 | Input substrate ring lacks the marker needed for explicit tap extraction | Add `sub!` on 63/0 inside its substrate-recognition region; the output substrate ring already has a marker |
 | Internal nodes appear as ports, external labels repeat | Recreate six unique external metal labels and pins; remove internal pin markers |
-| Layout schematic has extra M11–M14 absent from the CDL | Retain the CDL population; do not import that alternative revision |
+| Layout schematic has extra M11–M14 absent from the reference geometry | Remove these four dummy instances and their local wires/labels in the matched schematic; retain the twelve implemented MOS instances |
 
 | Tap | Connection | Repaired active area (µm²) | Perimeter (µm) |
 |---|---|---:|---:|
@@ -115,13 +118,58 @@ implant type, also have empty XORs. Drawn nBuLay area changes from 205.37775 to
 | R4 | VSS to output-stage substrate | 30.288 | 201.92 |
 | R5 | VDD to output-PMOS NWell | 26.815 | 173.00 |
 
-Native LVS now reports **Match** against the derived authoritative circuit.
+Native LVS reports **Match** against the matched schematic's raw CDL export.
 The CDL contains 12 MOS instances; native LVS combines parallel instances.
-The original schematic export is not an alternative input: its five tap
-instances lack `w`/`l` required by current symbols and export as literal `?`
-lines, in addition to the population discrepancy above.
+The unmodified upstream schematic contains 16 MOS instances and has no explicit
+tap dimensions. With the current Xschem and pinned PDK symbols, those taps
+inherit 0.78 × 0.78 µm defaults. Neither that population nor those tap geometries
+represent this reference. The earlier literal `?` export failure arose from the
+old Xschem environment, not from a missing physical device specification in the
+matched derivative.
 
 The repaired reference is ready to read directly. No repair generator is required.
+
+### Matched Schematic and Reproducible Exports
+
+The matched source preserves the upstream drawing's core circuitry and the six
+ordered ports. It removes M11–M14, retains M8/M10/M15/M16, and keeps the existing
+MOS/MIM dimensions and multiplicities. M5/M7 and R1–R5 are renamed to match the
+case's established instance correspondence; `well`, `well2`, `well1` and `sub!`
+become `bulk`, `bulk1`, `bulk4` and `bulk2` respectively. Both NMOS stages share
+`bulk2`; the output-PMOS tap connects VDD to `bulk4`. The capacitor connects
+DN4 to VOUT, matching the repaired route. This source targets the case reference,
+not the defective original GDS.
+
+The case-local [ntap symbol](source/sg13g2_case/ntap_ap.sym) and
+[ptap symbol](source/sg13g2_case/ptap_ap.sym) derive from the pinned PDK symbols,
+retain their notices and terminal order, and take explicit active area `A` and
+perimeter `P`. These parameters describe the physical rings listed above;
+they are not equivalent rectangular W/L dimensions. Their LVS format emits
+native tap A/P cards. Their simulation format calls the unchanged PDK tap model
+with `a`, `p` and `r = 1/(A/9.8e-10 + P/9.8e-4)`. Xschem evaluates resistance
+with native `ev7`; exported netlists are not rewritten. The PDK itself is unchanged.
+
+`[source_export]` in [case.toml](case.toml) pins the derivative schematic,
+the two local tap symbols, and the native MOS/MIM symbols. Only exported circuit
+materials enter the solver task; the source drawing and local symbols remain
+maintainer assets. To export CDL from a clean checkout with the tools image and
+pinned PDK initialized, run from the repository root:
+
+```bash
+uv run --locked python -m benchmarking.prepare \
+  tasks/IHP-AnalogAcademy/cases/full_OTA/case.toml \
+  build/runs/full-ota-matched-export \
+  --checkout case=tasks/IHP-AnalogAcademy/cases/full_OTA \
+  --checkout pdk=third_party/IHP-Open-PDK
+uv run --locked pytest tests/integration/test_matched_schematic_exports.py
+```
+
+Use a fresh export directory. The command creates raw `circuit.cdl`, provenance
+and the Xschem log. The regression additionally exports `circuit.spice` using
+the simulation format, checks both frozen files byte-for-byte, compares their
+unsimplified device graphs through the native PDK reader/model-call adapter,
+and independently checks tap geometry and the resistance formula.
+
 
 ## PEX and Calibration
 
@@ -171,26 +219,17 @@ pwell nodes remain without drivers and use the conditioning above. The
 extractor checks interface ports and preserves candidate geometry during
 preparation. Grid-rescaling notices reflect Magic input-grid refinement.
 
-### Shared Circuit and Matched-Condition Results
+### Schematic Exports and Matched-Condition Results
 
-[materials/circuit.spice](materials/circuit.spice) is the single authoritative
-circuit for LVS and pre-layout simulation. Its PDK subcircuit calls preserve
-each MOS `w`, `l`, `ng` and `m`, MIM dimensions/multiplicity, and all five tap
-connections. Each tap's area and perimeter are defined once; the same parameters
-feed LVS and the PDK resistance formula
-`1 / (A_m2 / 9.8e-10 + P_m / 9.8e-4)`. The ngspice tap models use `r`; the
-additional `a`/`p` instance parameters carry physical geometry for LVS.
+[materials/circuit.cdl](materials/circuit.cdl) supplies the native LVS circuit.
+[materials/circuit.spice](materials/circuit.spice) supplies pre-layout simulation
+from the same matched schematic. Both preserve MOS `w`, `l`, `ng`, `m`,
+MIM dimensions/multiplicity, and all five tap connections and A/P parameters.
+The native PDK reader and reviewed model-call adapter independently establish
+their device-graph equivalence without simplifying the simulation input.
 
-The shared `lvs-analogacademy.json` profile selects a model-call adapter from
-the [KLayout support manifest](../../../../technology/sg13g2/klayout.json).
-It recognizes the five model interfaces used here and delegates device creation,
-terminal mapping and parameter comparison to the pinned native PDK reader.
-Original CDL inputs retain their existing interpretation. Upstream model and
-rule files are unchanged; the adapter does not simplify the simulation input.
-
-Calibration uses the authoritative circuit bytes directly, KLayout 0.30.11,
-Magic 8.3.678 with the driver-selection correction, and ngspice 42 in the
-shared tools image.
+Calibration uses the simulator export, KLayout 0.30.11, Magic 8.3.678 with the
+driver-selection correction, and ngspice 42 in the shared tools image.
 
 | Metric | Pre-layout | Post-layout | Acceptance limit |
 |---|---:|---:|---:|
@@ -269,7 +308,8 @@ run the integration suite with the tools image and pinned PDK available:
 
 ```bash
 git submodule update --init --depth 1 third_party/IHP-AnalogAcademy
-uv run --locked pytest tests/integration/test_full_ota.py --basetemp build/runs/full-ota-validation
+uv run --locked pytest tests/integration/test_matched_schematic_exports.py \
+  tests/integration/test_full_ota.py --basetemp build/runs/full-ota-validation
 ```
 
 Choose a fresh `--basetemp` directory because pytest replaces its contents.

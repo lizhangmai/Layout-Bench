@@ -83,12 +83,21 @@ bash tests/integration/test_task_preparation.sh
 uv run --locked pytest tests/integration/test_characterization.py \
   tests/integration/test_sg13g2.py \
   tests/integration/test_magic_rc.py tests/integration/test_comparator.py \
-  tests/integration/test_full_ota.py tests/integration/test_sg13g2_model_calls.py
+  tests/integration/test_full_ota.py tests/integration/test_matched_schematic_exports.py \
+  tests/integration/test_sg13g2_model_calls.py \
+  tests/integration/test_input_pair_source.py tests/integration/test_input_pair_postlayout.py
 ```
 
 The EDA acceptance suite uses the published comparator and full_OTA witnesses, OTA pre/post calibration, geometry rejection, and tool-error checks. It needs the PDK and tools image but no course checkout. The original-asset regression tests additionally need the optional IHP-AnalogAcademy source submodule. Evaluator changes must satisfy the [qualification requirements](docs/tasks.md#qualification); protocol tests and synthetic hidden fixtures do not replace real circuit evidence. Public CI uses public or synthetic inputs; hidden qualification materials stay in the authorized environment. Run upstream PDK regressions in that submodule, separately from framework checks.
 
 When changing public catalog source records, run `uv run --locked pytest tests/integration/test_catalog_assets.py` with the corresponding source submodules initialized. These checks compare pinned commits and original asset digests; they do not run EDA and are separate from the offline unit suite.
+
+For TO_Apr2025 design 1 source/physical diagnostics, run
+`uv run --locked pytest tests/integration/test_to_apr2025_source.py tests/integration/test_to_apr2025_schematic.py` with the
+TO/PDK checkouts and tools image. This verifies original-asset rejection,
+independent extraction discrepancies, Qucs export compatibility, derivative
+schematic exports and nominal HBT-model operation; it does
+not establish performance qualification.
 
 Report the checks actually run and their limits. Documentation-only changes do not require rebuilding tools or rerunning EDA.
 

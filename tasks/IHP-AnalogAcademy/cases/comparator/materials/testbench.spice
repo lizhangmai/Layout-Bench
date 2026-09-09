@@ -1,7 +1,8 @@
 * Comparator accepted nominal performance test; see problem.md for scoring rules.
 .include dut.spice
 .include parameters.spice
-.lib cornerMOSlv.lib mos_tt
+.lib /workspace/support/models/cornerMOSlv.lib mos_tt
+.lib /workspace/support/models/cornerRES.lib res_typ
 .temp 27
 VDD VDD 0 DC 1.2
 VBIAS VBIAS 0 DC 0.6

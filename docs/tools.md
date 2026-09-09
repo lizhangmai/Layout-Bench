@@ -73,6 +73,15 @@ Keep originals byte-for-byte as supplied upstream and register framework-generat
 
 `benchmarking.prepare` gives a network-isolated preparation container only the files explicitly listed by a case TOML's `[source_export]` section, invokes Xschem to export the raw LVS netlist, and saves source digests and diagnostic logs. Arguments include the case configuration, output directory, and `--checkout NAME=PATH` for each source. Use the unified image with `--image layout-bench-tools:local`. Any source export is preparation evidence, not a substitute for an upstream layout. See the [task guide](tasks.md) for source and input-semantics checks.
 
+The Dockerfile builds a pinned Xschem release from checksum-verified source.
+Ubuntu's older Xschem package lacks the native `ev7` expression helper used by
+the current SG13G2 tap symbols and can silently export a tap as `?`. The image
+upgrade supplies that helper without changing PDK symbols or adding an exporter
+shim. The [input-pair source regression](../tests/integration/test_input_pair_source.py)
+exports the original schematic and checks its MOS connectivity and tap geometry
+against the schematic dimensions. Rebuild the tools image before using this
+export path; a process exit code of zero alone does not establish netlist validity.
+
 ## EDA Backend Contract
 
 The backend extension interface is described in [architecture](architecture.md#extension-layers). `main.py characterize` performs an independent measurement and `main.py evaluate` re-evaluates a GDS. Tool bindings may be embedded in a schema-2 case as `[toolchain]`, following the [task configuration guide](tasks.md#evaluation-plan). `evaluate` and `run` use these bindings when `--toolchain` is omitted; `characterize` still requires an explicit toolchain configuration. A plan returns 0 when it passes, 1 when a check or specification fails, and 2 for a configuration or execution error. Output includes `report.json` and artifacts saved by digest. Characterization fixtures are not formal layout tasks.
@@ -190,7 +199,9 @@ waivers. Reproduce each row with the command above and its catalog case:
 | 97 GHz TIA | 544 | Reader error: two-terminal poly resistor |
 | DC–130 GHz TIA design 1 | 110 | Reader error: two-terminal poly resistor |
 
-All four TO source LVS netlists use two-terminal `rppd` devices. The current
+All four TO source LVS netlists use legacy two-terminal poly-resistor cards:
+`rhigh` in the 160 GHz LNA, and `rppd` (also `rhigh` in the 97 GHz case)
+in the TIAs. The current
 PDK's `lvs/rule_decks/custom_reader.lvs:create_resistor` unconditionally
 requires three nodes for poly resistors and raises `Poly resistor should
 have 3 nodes, please recheck` before comparison. There is no exposed switch
@@ -237,6 +248,17 @@ pre-layout simulation: tap `a`/`p` geometry and derived `r` share the same
 parameter definitions, and MOS finger/multiplicity parameters reach ngspice
 without LVS simplification. Candidate scoring still simulates only GDS-derived
 PEX. Other source dialects require an explicitly validated adaptation.
+
+### HBT core simulation support
+
+[The HBT model profile](../technology/sg13g2/hbt-models.json) prepares the pinned
+HBT, resistor and capacitor include closure, using native ngspice VBIC and
+OpenVAF-compiled R3_CMC and MoM models. It retains the R3_CMC license and
+NOTICE with the IHP adaptation. No compact-model source is patched.
+The [design 1 regression](../tests/integration/test_to_apr2025_schematic.py)
+checks nominal DC operation of the schematic-derived two-stage TIA core.
+This does not validate RF/EM extraction, PEX, noise or statistical corners;
+see the [case scope](../tasks/TO_Apr2025/cases/DC_to_130_GHz_TIA.design_1/README.md#core-operating-point-check).
 
 ### Qucs-S and Qucsator
 

@@ -7,7 +7,7 @@ against public rules. Start with [problem.md](problem.md);
 | Role | Location | Purpose |
 |---|---|---|
 | Problem | [problem.md](problem.md) | Circuit objective, ports, submission requirements, and passing conditions |
-| Materials | [materials/](materials/) | Authoritative circuit netlist `circuit.spice` and simulation testbench `testbench.spice` |
+| Materials | [materials/](materials/) | LVS netlist `circuit.cdl`, simulator netlist `circuit.spice`, and shared `testbench.spice` |
 | Tools | [Tool instructions in the problem](problem.md#tools-and-usage), `[toolchain]` in `case.toml` | The problem explains tools and usage; the configuration binds evaluator EDA backends and PDK support bundles |
 | Answer | The model writes `/workspace/output/final.gds` and explicitly submits it | [reference/DIFF_COMPARATOR.gds](reference/DIFF_COMPARATOR.gds) is the maintainer's feasibility witness and is excluded from model inputs |
 | Scoring | [Scoring rules in the problem](problem.md#scoring), `[task.evaluation]` and `[task.constraints]` in `case.toml` | Physical checks → RC extraction → simulation at four operating points → individual decisions, reported in `report.json` |
@@ -58,7 +58,7 @@ locations below. Prepare them once if absent; existing validated bundles can be 
 ```bash
 uv run --locked python -m benchmarking.prepare_support third_party/IHP-Open-PDK technology/sg13g2/klayout.json build/support/comparator-klayout
 uv run --locked python -m benchmarking.prepare_support third_party/IHP-Open-PDK technology/sg13g2/magic.json build/support/comparator-magic
-uv run --locked python -m benchmarking.prepare_support third_party/IHP-Open-PDK technology/sg13g2/mos-models.json build/support/comparator-models
+uv run --locked python -m benchmarking.prepare_support third_party/IHP-Open-PDK technology/sg13g2/analog-models.json build/support/comparator-analog-models
 ```
 
 These are evaluator support bundles. The run configuration separately supplies
@@ -74,7 +74,13 @@ in Module 3 (8-bit SAR ADC), Part 5 (analog layout). The pinned upstream commit 
 [upstream Apache-2.0 license](../../LICENSE) and file-level notices.
 `case.toml` records source paths and digests.
 
-- `materials/circuit.spice` freezes the upstream `layout/lvs_netlist/DIFF_COMPARATOR.spice` without content changes.
+- `source/DIFF_COMPARATOR.sch` is a matched derivative of the upstream
+  `layout/schematic/DIFF_COMPARATOR.sch`. It preserves all 13 MOS instances,
+  their parameters and connections, and the eight ordered ports. The two taps
+  use the active-ring geometry of the current reference and archived LVS circuit.
+- `materials/circuit.cdl` and `materials/circuit.spice` are untouched Xschem
+  exports of that matched schematic in the LVS and simulator formats respectively.
+  The archived upstream LVS netlist remains recorded under `upstream_assets`.
 - `reference/DIFF_COMPARATOR.gds` is based on the upstream `layout/DIFF_COMPARATOR.gds`, with the two geometric repairs below.
 - Simulation stimuli are based on the upstream `xschem_post_layout/testbench/comparator_tb.sch`. The current fixed-input tests, measurement definitions, and limits are benchmark requirements established after calibration.
 
@@ -113,25 +119,66 @@ authoritative netlist:
   input points in the problem in place of the upstream input ramp.
   Clock edges, loads, time steps, and measurement windows are explicit, with
   delay and output margin checked for each cycle.
-- Both upstream schematic taps are 100 × 100 µm, with different areas/perimeters
-  from the frozen LVS netlist. Pre-layout calibration uses the frozen LVS netlist
-  and the native PDK formula `R = 1 / (A / 9.8e-10 + P / 9.8e-4)`
-  (A in m², P in m), giving ntap 8.553275 Ω and ptap 11.236470 Ω.
-  During calibration, native netlist readers/writers convert device calls to the
-  PDK subcircuit interface and adapt escaped `V-` and `OUT-` names. Device
-  parameters and connections are preserved, without removing taps or shorting
-  bulk terminals. The authoritative LVS netlist remains unchanged.
-- Post-layout simulation extracts distributed RC from the submitted GDS.
-  The RC netlist does not call tap subcircuits, so the scoring testbench omits
-  unused tap model includes;
-  pre-layout calibration retains the actual PDK tap models. The evaluator
-  generates the post-layout DUT, waveforms, and measurements.
+- The original schematic's two 100 × 100 µm rectangular taps are replaced in
+  the matched derivative by explicit active area/perimeter: R1 ntap A=15.376 µm²,
+  P=99.2 µm; R2 ptap A=11.376 µm², P=75.84 µm. These are the existing physical
+  rings, not a change to the reference GDS or the 45 × 45 µm task outline.
+  The local [ntap symbol](source/sg13g2_case/ntap_ap.sym) and
+  [ptap symbol](source/sg13g2_case/ptap_ap.sym) derive from the pinned PDK symbols
+  with preserved terminal order and notices. LVS emits native A/P cards;
+  simulation emits PDK model calls and evaluates
+  `R = 1 / (A / 9.8e-10 + P / 9.8e-4)` (A in m², P in m), giving
+  8.553275 Ω and 11.236470 Ω. The upstream PDK is unchanged.
+- Both analyses use the same testbench and pinned `analog-models` bundle,
+  including `mos_tt` and `res_typ`. Pre-layout uses `circuit.spice` directly;
+  post-layout uses the current candidate's distributed RC extraction without
+  modifying its bytes. The MOS finger counts and multiplicities are preserved
+  in the simulator export; no simplified LVS graph is used to create it.
 
-Pre-layout/post-layout calibration under the same conditions showed an
-approximately +1.8 mV shift in the dynamic ramp transition. This is not a static
-offset or Monte Carlo measurement. The problem's input points and performance
-limits are benchmark requirements informed by calibration; they do not
-represent the course's full original 8-bit ADC accuracy specification.
+### Reproduce the Matched Schematic
+
+[source/DIFF_COMPARATOR.sch](source/DIFF_COMPARATOR.sch) targets the current
+reference layout. Its change from the upstream schematic is the tap geometry
+representation and the corresponding symbol/label arrangement, plus a derivative
+notice. It is not presented as an untouched upstream schematic.
+`[source_export]` in [case.toml](case.toml) pins the drawing, local tap symbols,
+and required PDK symbols. Source files remain maintainer assets; only declared
+task inputs enter the solver environment.
+
+Run from the repository root with the shared tools image and pinned PDK available:
+
+```bash
+uv run --locked python -m benchmarking.prepare \
+  tasks/IHP-AnalogAcademy/cases/comparator/case.toml \
+  build/runs/comparator-matched-export \
+  --checkout case=tasks/IHP-AnalogAcademy/cases/comparator \
+  --checkout pdk=third_party/IHP-Open-PDK
+uv run --locked pytest tests/integration/test_matched_schematic_exports.py \
+  tests/integration/test_comparator.py \
+  --basetemp build/runs/comparator-matched-validation
+```
+
+Use fresh output directories; pytest clears its `--basetemp` directory.
+The export command creates raw CDL, provenance and the Xschem log. The source
+regression re-exports both dialects, checks the frozen bytes, compares their
+unsimplified native device graphs, and verifies the tap resistance formula.
+The comparator regression evaluates the actual reference and runs all four
+pre-layout input points through the same stimuli and models. It independently
+recomputes cycle delays, output margins and mean supply power from raw waveform
+voltages/current. Generated `pre/report.json` and `reference/report.json`
+record these measurements and the actual tool/support identities.
+
+Across the four declared input points (±3 mV and ±5 mV), nominal calibration gives:
+
+| Observation | Pre-layout | Post-layout | Acceptance limit |
+|---|---:|---:|---:|
+| Maximum cycle delay | 1.872 ns | 2.542 ns | ≤3 ns |
+| Minimum settled output margin | 1.19997 V | 1.19818 V | ≥1 V |
+| Maximum mean VDD power | 58.152 µW | 64.153 µW | 0–80 µW |
+
+These are fixed-input transient measurements, not static offset or Monte Carlo
+results. The declared limits are unchanged; no dynamic-ramp transition result is
+claimed by this calibration.
 
 The reference passes the complete evaluation with the shared
 [Magic driver-selection correction](../../../../docs/tools.md#ngspice-and-magic):

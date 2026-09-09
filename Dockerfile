@@ -83,6 +83,25 @@ RUN curl --fail --show-error --silent --location --retry 3 --retry-all-errors --
     && make install \
     && install -D LICENSE /opt/magic/share/doc/LICENSE
 
+FROM common AS xschem-build
+# Release 3.4.7 supplies ev7, required by the pinned SG13G2 tap symbols.
+ARG XSCHEM_COMMIT=92dd8fe5f4d5c1057489710d8a22f18fdc9d7ed0
+ARG XSCHEM_SHA256=db5250690bc193bb2874e7a3b43d7bfc3499c882feb7fa885080434cc9a81c7c
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential flex bison \
+        tcl-dev tk-dev libx11-dev libxpm-dev libcairo2-dev libjpeg-dev \
+    && rm -rf /var/lib/apt/lists/*
+RUN curl --fail --show-error --silent --location --retry 3 --retry-all-errors --connect-timeout 20 \
+        "https://codeload.github.com/StefanSchippers/xschem/tar.gz/${XSCHEM_COMMIT}" \
+        --output /tmp/xschem.tar.gz \
+    && echo "${XSCHEM_SHA256}  /tmp/xschem.tar.gz" | sha256sum --check \
+    && tar -xzf /tmp/xschem.tar.gz -C /tmp \
+    && cd "/tmp/xschem-${XSCHEM_COMMIT}" \
+    && ./configure --prefix=/opt/xschem \
+    && make -j4 \
+    && make install \
+    && install -D LICENSE /opt/xschem/share/doc/LICENSE
+
 # The public development environment is one image. Every preparation, solver,
 # and judge container is an isolated invocation of this same EDA toolchain.
 # Harness runtimes are supplied by the harness (or its selected image); the
@@ -91,7 +110,7 @@ FROM common AS tools
 USER root
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git jq make ripgrep \
-        ngspice=42+ds-3build1 xschem=3.4.4-1 binutils \
+        ngspice=42+ds-3build1 binutils tk libxpm4 libcairo2 libjpeg-turbo8 \
     && rm -rf /var/lib/apt/lists/*
 ARG QUCS_S_VERSION=26.1.1-1
 ARG QUCS_S_SHA256=580c3cf5aa7f99bf76ee49822317633c46649aebec2f64f83fb52a2db8b45fab
@@ -113,4 +132,6 @@ COPY --from=model-compiler /usr/local/bin/openvaf /usr/local/bin/openvaf
 COPY --from=model-compiler /usr/local/share/doc/openvaf /usr/local/share/doc/openvaf
 COPY --from=magic-build /opt/magic /opt/magic
 ENV PATH=/opt/magic/bin:${PATH}
+COPY --from=xschem-build /opt/xschem /opt/xschem
+ENV PATH=/opt/xschem/bin:${PATH}
 USER ubuntu

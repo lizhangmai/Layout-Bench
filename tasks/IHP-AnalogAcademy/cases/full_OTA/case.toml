@@ -13,14 +13,19 @@ environment = "ihp-sg13g2-full-ota-rc-tt"
 
 [task.inputs.description]
 path = "problem.md"
-sha256 = "5ab57fbea08f48bc1458253ec62956b7d376d7ed0096cd9ee0f0c9f4997634fc"
+sha256 = "c538946474d15383621240e6c6ad7292bcde439691f9846c1ee25344d263b4b8"
 format = "text"
 
 [task.inputs.netlist]
-path = "materials/circuit.spice"
-sha256 = "066763e29f58e6054f5db2c67d8331eaaa1b669728a54a27318f787ac4e57641"
+path = "materials/circuit.cdl"
+sha256 = "b26120b95af66cc4075ac9d12a25444b6badbe7e2c96b50d7a1bd7a15b0cf409"
 format = "spice"
 subcircuit = "two_stage_OTA_layout"
+
+[task.inputs.simulation]
+path = "materials/circuit.spice"
+sha256 = "2c82bb396be0377ae24ee933e5402f87edf9e5da5f2c509774e6ff5c50705a20"
+format = "spice"
 
 [task.inputs.performance]
 path = "materials/testbench.spice"
@@ -329,3 +334,45 @@ subcircuit = "two_stage_OTA_layout"
 drc_profile = "drc-upstream.json"
 lvs_profile = "lvs-analogacademy.json"
 basis = "Use original layout and source LVS netlist. Map current PDK GUI DRC scope and documented course-era LVS compare-only semantics; exact author switches were not archived. See docs/tools.md for option provenance."
+
+# Matched derivative schematic; upstream originals remain in sources.
+[source_export]
+tool = "xschem-lvs"
+schematic = "two_stage_OTA_layout.sch"
+netlist = "circuit.cdl"
+
+[[source_export.files]]
+checkout = "case"
+path = "source/sg13g2_case/ntap_ap.sym"
+target = "sg13g2_case/ntap_ap.sym"
+sha256 = "73c3cea91bf9f44e3d10690a7b62e045685b01d6369d4817f9a6795bcdc834e5"
+
+[[source_export.files]]
+checkout = "case"
+path = "source/sg13g2_case/ptap_ap.sym"
+target = "sg13g2_case/ptap_ap.sym"
+sha256 = "a2bef97545104aa817a26a828a162d4ce4cc242352f67e610478fd640311d4fa"
+
+[[source_export.files]]
+checkout = "case"
+path = "source/two_stage_OTA_layout.sch"
+target = "two_stage_OTA_layout.sch"
+sha256 = "32e2b5caaf334b8683f203d05c5848b99041590883b102ae31f6cfb0d12815b3"
+
+[[source_export.files]]
+checkout = "pdk"
+path = "ihp-sg13g2/libs.tech/xschem/sg13g2_pr/sg13_lv_nmos.sym"
+target = "sg13g2_pr/sg13_lv_nmos.sym"
+sha256 = "4c65869259c7aea7ff30d8612c5017419423d55e27dbb0aea28323e7da49ba7d"
+
+[[source_export.files]]
+checkout = "pdk"
+path = "ihp-sg13g2/libs.tech/xschem/sg13g2_pr/sg13_lv_pmos.sym"
+target = "sg13g2_pr/sg13_lv_pmos.sym"
+sha256 = "bc03331b71de250641ba1eb34c3b13bd3bb21a53ed7c329ecf6b0b1a7c53a6c1"
+
+[[source_export.files]]
+checkout = "pdk"
+path = "ihp-sg13g2/libs.tech/xschem/sg13g2_pr/cap_cmim.sym"
+target = "sg13g2_pr/cap_cmim.sym"
+sha256 = "b11c811ee178d260c4b7afcaa8c123f8a6c8c108dde1a119c91aa4386d24e20b"
