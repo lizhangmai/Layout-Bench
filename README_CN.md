@@ -24,7 +24,7 @@
 
 Layout-Bench 在隔离容器中运行 Agent，记录明确提交的 GDS，并使用独立的 EDA 工具评估冻结后的候选版图。DRC/LVS 用于建立物理有效性；完整任务还会检查声明的几何约束和后仿性能限值。
 
-> **公开预览版。** 快速开始直接评估 [comparator](tasks/IHP-AnalogAcademy/cases/comparator/README.md) 的参考版图，也可选择 [full_OTA](tasks/IHP-AnalogAcademy/cases/full_OTA/README.md)。其余公开电路见 [IHP AnalogAcademy](tasks/IHP-AnalogAcademy/catalog.toml) 和 [TO_Apr2025](tasks/TO_Apr2025/catalog.toml) 清单；是否具备可执行评测和通过见证，以各 case 的状态和说明为准。
+> **公开预览版。** 快速开始直接评估 [comparator](tasks/ihp-sg13g2/IHP-AnalogAcademy/cases/comparator/README.md) 的参考版图，也可选择 [full_OTA](tasks/ihp-sg13g2/IHP-AnalogAcademy/cases/full_OTA/README.md)。其余公开电路见 [IHP AnalogAcademy](tasks/ihp-sg13g2/IHP-AnalogAcademy/catalog.toml) 和 [TO_Apr2025](tasks/ihp-sg13g2/TO_Apr2025/catalog.toml) 清单；是否具备可执行评测和通过见证，以各 case 的状态和说明为准。
 
 ## 为什么选择 Layout-Bench？
 

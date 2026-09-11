@@ -1,6 +1,5 @@
-import json
-
 import pytest
+import tomli_w
 
 from benchmarking.bundles import load_bundle, publish_bundle
 from benchmarking.files import Asset
@@ -39,10 +38,12 @@ def test_support_preparation_only_reads_the_declared_hash_matching_sources(tmp_p
     source.mkdir()
     (source / "model.lib").write_bytes(model.content)
     (source / "unlisted").write_text("must not be copied")
-    profile = tmp_path / "profile.json"
-    profile.write_text(json.dumps({"schema_version": 1, "source": {"kind": "synthetic"},
-                                  "files": {"models/a.lib": {"path": "model.lib", "sha256": model.sha256,
-                                                             "format": "spice"}}}))
+    manifest = tmp_path / "manifest.toml"
+    manifest.write_text(tomli_w.dumps(
+        {"schema_version": 1, "source": {"kind": "synthetic"},
+         "profiles": {"models": {"files": {"models/a.lib": {"path": "model.lib", "sha256": model.sha256,
+                                                            "format": "spice"}}}}}))
+    profile = f"{manifest}#models"
     output = tmp_path / "prepared"
     digest = prepare_support(source, profile, output)
     bundle = load_bundle(output)

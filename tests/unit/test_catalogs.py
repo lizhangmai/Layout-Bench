@@ -1,7 +1,7 @@
 """Catalogs agree with case declarations without freezing today's inventory."""
 
 import pytest
-from catalog_helpers import CATALOGS, assert_asset_allowed, read_catalog
+from helpers.catalog import CATALOGS, assert_asset_allowed, read_catalog
 
 from benchmarking.tasks import _validate_case, load_task
 
@@ -13,7 +13,6 @@ def test_catalog_and_case_declarations_are_consistent(path):
     catalog, configs = read_catalog(path)
     assert catalog["schema_version"] == 3
     assert catalog["cases"], "A published catalog must contain cases"
-    assert catalog["case_count"] == len(configs)
     assert len({item["id"] for item in catalog["cases"]}) == len(configs)
     assert len({config for config, _ in configs}) == len(configs)
     # One circuit per directory is the public organization convention.
@@ -32,8 +31,6 @@ def test_catalog_and_case_declarations_are_consistent(path):
 
     sources = [source for _, data in configs for source in data["sources"]]
     assets = [asset for _, data in configs for asset in data.get("upstream_assets", [])]
-    assert catalog["source_count"] == len(sources)
-    assert catalog["artifact_count"] == len(catalog["artifacts"])
     assert len({item["path"] for item in catalog["artifacts"]}) == len(catalog["artifacts"])
     for entries in (sources, assets):
         assert len({item["id"] for item in entries}) == len(entries)

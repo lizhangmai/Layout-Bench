@@ -1,6 +1,6 @@
 # Adding Tasks and Validating the Judge
 
-See the [comparator case](../tasks/IHP-AnalogAcademy/cases/comparator/case.toml) for an executable task and its embedded toolchain, constraints, and evaluation plan. The selected public IHP and TO_Apr2025 cases are listed in [`tasks/IHP-AnalogAcademy/catalog.toml`](../tasks/IHP-AnalogAcademy/catalog.toml) and [`tasks/TO_Apr2025/catalog.toml`](../tasks/TO_Apr2025/catalog.toml); a case may be promoted only when the pinned upstream checkout already contains the reusable layout and corresponding physical evidence. Source review then freezes inputs, constraints, evaluation, tool bindings, and independent qualification. Models, budgets, repetitions, and access policy belong to the outer [run plan](running.md).
+See the [comparator case](../tasks/ihp-sg13g2/IHP-AnalogAcademy/cases/comparator/case.toml) for an executable task and its embedded toolchain, constraints, and evaluation plan. The selected public IHP and TO_Apr2025 cases are listed in [`tasks/ihp-sg13g2/IHP-AnalogAcademy/catalog.toml`](../tasks/ihp-sg13g2/IHP-AnalogAcademy/catalog.toml) and [`tasks/ihp-sg13g2/TO_Apr2025/catalog.toml`](../tasks/ihp-sg13g2/TO_Apr2025/catalog.toml); a case may be promoted only when the pinned upstream checkout already contains the reusable layout and corresponding physical evidence. Source review then freezes inputs, constraints, evaluation, tool bindings, and independent qualification. Models, budgets, repetitions, and access policy belong to the outer [run plan](running.md).
 
 The catalog is an inventory index, not a shortcut around task qualification. A
 `candidate` record becomes a benchmark task only after its authoritative
@@ -10,15 +10,16 @@ typed as `source-only` or `supporting-source`; they are not silently treated as
 `netlist_to_gds` tasks. Each record is bound to the upstream submodule commit
 and source digest, so updating the submodule requires a new source review.
 
-IHP AnalogAcademy and TO_Apr2025 cases use one directory per circuit under
-`tasks/<collection>/cases/<circuit>/`, with a single `case.toml` entry point.
+Public cases are grouped by PDK: IHP AnalogAcademy and TO_Apr2025 cases use one
+directory per circuit under `tasks/<pdk>/<collection>/cases/<circuit>/`, with a
+single `case.toml` entry point.
 The catalog's `config_path` locates the entry point; the full case ID and upstream
 source paths remain in the manifest. File roles are declared by the manifest;
 the loader does not require particular directory names.
 
 ### Problem, materials, tools, answer, and scoring
 
-The [comparator case](../tasks/IHP-AnalogAcademy/cases/comparator/README.md)
+The [comparator case](../tasks/ihp-sg13g2/IHP-AnalogAcademy/cases/comparator/README.md)
 provides a concrete entry point for this workflow:
 
 | Role | Comparator location | Runtime responsibility |
@@ -49,7 +50,7 @@ decision. Other cases may retain their existing manifest-declared paths.
 
 Public tasks use public designs and open PDKs/EDAs approved for distribution, and publish their inputs, reference solution, and qualification materials. A reference solution is for debugging and demonstrating feasibility; it is neither the only answer nor an optimum or scoring denominator. A standard solve receives only declared inputs; debugging with reference materials must be distinguished from solving in an empty workspace.
 
-An existing authoritative netlist can be frozen directly. When entering a case from a schematic, invoke the original tools on the files listed by the case TOML's `[source_export]` section and retain the untouched netlist, source-file digests, Git commit, actual image, and command. The current Xschem entry point is in the [tools guide](tools.md#source-preparation). Use a fixed PDK reader to cross-check the target circuit, device parameters, nets, and ports; a hand-copied CDL that matches a self-built layout does not establish fidelity to the source circuit.
+An existing authoritative netlist can be frozen directly. When entering a case from a schematic, invoke the original tools on the files listed by the case TOML's `[source_export]` section — case-owned files in `[source_export.files]` plus the reviewed PDK symbols from its `pdk_profile` reference — and retain the untouched netlist, source-file digests, Git commit, actual image, and command. The current Xschem entry point is in the [tools guide](tools.md#source-preparation). Use a fixed PDK reader to cross-check the target circuit, device parameters, nets, and ports; a hand-copied CDL that matches a self-built layout does not establish fidelity to the source circuit.
 
 <a id="asset-rights"></a>
 
@@ -186,7 +187,7 @@ rejection and candidate-sensitivity checks. A complete per-case counterexample
 suite and dedicated repeatability runs are deferred. The comparator supplies
 its repaired reference as a frozen GDS with documented changes and direct
 evaluation instructions; no generator is required for this case. Its
-[case README](../tasks/IHP-AnalogAcademy/cases/comparator/README.md)
+[case README](../tasks/ihp-sg13g2/IHP-AnalogAcademy/cases/comparator/README.md)
 records sources, modifications and the validation summary; it is not a claim
 that the full qualification checklist below has passed.
 
@@ -197,7 +198,7 @@ operating point's decision delay, signed output and supply power. Its
 `qualified` designation applies to that recorded development scope, with the
 deferrals above; it does not imply PVT, mismatch or full ADC qualification.
 
-The [full OTA](../tasks/IHP-AnalogAcademy/cases/full_OTA/README.md) uses the same
+The [full OTA](../tasks/ihp-sg13g2/IHP-AnalogAcademy/cases/full_OTA/README.md) uses the same
 development intake scope, with its own nominal AC/DC requirements: TT model
 corners, 27 °C, 1.2 V supply, 0.6 V input DC level, 80 µA bias sink and 500 fF
 load. Its `post_layout` plan bounds gain, unity-gain bandwidth, phase margin,

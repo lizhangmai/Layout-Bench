@@ -167,7 +167,7 @@ def prepare(destination, image=IMAGE, case="comparator"):
     from benchmarking.prepare_support import prepare_support
     from benchmarking.tasks import load_task
 
-    source = ROOT / "tasks/IHP-AnalogAcademy/cases" / case
+    source = ROOT / "tasks/ihp-sg13g2/IHP-AnalogAcademy/cases" / case
     config = read_file(source, "case.toml").decode()
     data = tomllib.loads(config)
     task = load_task(source / "case.toml")
@@ -196,7 +196,7 @@ def prepare(destination, image=IMAGE, case="comparator"):
         profile = profiles[backend["type"]]
         if profile not in prepared:
             print(f"Preparing {profile} from the reviewed PDK files", flush=True)
-            prepare_support(pdk, ROOT / f"technology/sg13g2/{profile}.json", destination / profile,
+            prepare_support(pdk, f"{ROOT}/tasks/ihp-sg13g2/pdk.toml#{profile}", destination / profile,
                             compiler_image=image_id)
             prepared.add(profile)
         config = config.replace(json.dumps(settings["support"]), json.dumps(str(destination / profile)))

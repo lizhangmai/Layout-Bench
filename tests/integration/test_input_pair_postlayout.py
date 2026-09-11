@@ -18,7 +18,7 @@ from benchmarking.toolchains import load_toolchain
 
 pytestmark = pytest.mark.integration
 ROOT = Path(__file__).resolve().parents[2]
-CASE = ROOT / "tasks/IHP-AnalogAcademy/cases/input_pair"
+CASE = ROOT / "tasks/ihp-sg13g2/IHP-AnalogAcademy/cases/input_pair"
 
 
 def _ac_rows(path):
@@ -70,7 +70,7 @@ def test_reference_rc_and_input_admittance_use_the_fixed_schematic_interface(tmp
     text = (CASE / "case.toml").read_text()
     for profile, name in [("klayout", "klayout"), ("magic", "magic"), ("analog-models", "models")]:
         support = tmp_path / name
-        prepare_support(ROOT / "third_party/IHP-Open-PDK", ROOT / f"technology/sg13g2/{profile}.json", support)
+        prepare_support(ROOT / "third_party/IHP-Open-PDK", f"{ROOT}/tasks/ihp-sg13g2/pdk.toml#{profile}", support)
         text = text.replace(f"build/support/input-pair-{name}", str(support))
     text = text.replace("layout-bench-tools:local",
                         os.environ.get("LAYOUT_BENCH_TEST_IMAGE", "layout-bench-tools:local"))

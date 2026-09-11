@@ -3,7 +3,7 @@
 import json
 
 import pytest
-from admission_helpers import SECRET, approve, save_policy
+from helpers.admission import SECRET, approve, save_policy
 from test_swarm import FakeSession, backends, execute, make_plan
 
 from benchmarking.admission import (

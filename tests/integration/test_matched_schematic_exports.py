@@ -10,7 +10,7 @@ import pytest
 from benchmarking.bundles import load_bundle
 from benchmarking.docker import DockerTool
 from benchmarking.files import Asset
-from benchmarking.prepare import export_xschem
+from benchmarking.prepare import export_xschem, resolve_source_files
 from benchmarking.prepare_support import prepare_support
 
 pytestmark = pytest.mark.integration
@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parents[2]
 ], ids=["full_OTA", "comparator"])
 def test_matched_schematic_exports_preserve_reference_devices_and_tap_geometry(
         tmp_path, case_name, top, ports, mos, taps):
-    case = ROOT / "tasks/IHP-AnalogAcademy/cases" / case_name
+    case = ROOT / "tasks/ihp-sg13g2/IHP-AnalogAcademy/cases" / case_name
     image = os.environ.get("LAYOUT_BENCH_TEST_IMAGE", "layout-bench-tools:local")
     checkouts = {"case": case, "pdk": ROOT / "third_party/IHP-Open-PDK"}
     export_xschem(case / "case.toml", checkouts, tmp_path / "export", image)
@@ -35,8 +35,9 @@ def test_matched_schematic_exports_preserve_reference_devices_and_tap_geometry(
     assert cdl.content == (case / "materials/circuit.cdl").read_bytes()
     assert b"?" not in cdl.content
     config = tomllib.loads((case / "case.toml").read_text())
+    _, entries, _ = resolve_source_files(case / "case.toml")
     inputs = {}
-    for entry in config["source_export"]["files"]:
+    for entry in entries:
         asset = Asset((checkouts[entry["checkout"]] / entry["path"]).read_bytes(), "text")
         assert asset.sha256 == entry["sha256"]
         inputs["source/" + entry["target"]] = asset
@@ -58,7 +59,7 @@ def test_matched_schematic_exports_preserve_reference_devices_and_tap_geometry(
         line = next(line for line in netlist.content.decode().splitlines() if line.startswith(".subckt"))
         assert line.split()[1:] == expected_ports
 
-    prepare_support(checkouts["pdk"], ROOT / "technology/sg13g2/klayout.json", tmp_path / "support")
+    prepare_support(checkouts["pdk"], f"{ROOT}/tasks/ihp-sg13g2/pdk.toml#klayout", tmp_path / "support")
     bundle = load_bundle(tmp_path / "support")
     # Cross-check model interfaces with the PDK reader without simplification:
     # this catches missing devices, altered terminals and geometry parameters.

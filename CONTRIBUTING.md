@@ -115,7 +115,7 @@ Before the first tagged release, allow GitHub Actions to write packages in the r
 
 | Contribution | Start here | Evidence to include |
 |---|---|---|
-| Public task | [Task design](docs/tasks.md#task-design), `tasks/IHP-AnalogAcademy/` | Source and license, explicit input list, executable constraints/metrics, passing witness and rejected counterexamples |
+| Public task | [Task design](docs/tasks.md#task-design), `tasks/ihp-sg13g2/IHP-AnalogAcademy/` | Source and license, explicit input list, executable constraints/metrics, passing witness and rejected counterexamples |
 | Harness or wire adapter | [Running guide](docs/running.md#offline-cli), `benchmarking/model_config.py`, `benchmarking/inference.py` | Frozen command/files, budgets, protocol metadata, and clear result labels |
 | EDA backend | [Architecture](docs/architecture.md#architecture), `benchmarking/toolchains.py` | Tool identity, isolated inputs, structured evidence and tests of passing/failing/error cases |
 | Runner or statistics | `benchmarking/session.py`, `swarm.py`, `report.py` | Relevant lifecycle, evidence-integrity or measurement tests |

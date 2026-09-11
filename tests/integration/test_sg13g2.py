@@ -24,8 +24,8 @@ FIXTURES = ROOT / "tests/fixtures/sg13g2"
 def context(tmp_path_factory):
     root = tmp_path_factory.mktemp("sg13g2")
     pdk = ROOT / "third_party/IHP-Open-PDK"
-    prepare_support(pdk, ROOT / "technology/sg13g2/magic.json", root / "magic")
-    prepare_support(pdk, ROOT / "technology/sg13g2/mos-models.json", root / "models")
+    prepare_support(pdk, f"{ROOT}/tasks/ihp-sg13g2/pdk.toml#magic", root / "magic")
+    prepare_support(pdk, f"{ROOT}/tasks/ihp-sg13g2/pdk.toml#mos-models", root / "models")
     prepare_pdk(pdk, root / "view")
     generate = runpy.run_path(str(FIXTURES / "generate.py"))["generate_fixtures"]
     fixtures = generate(root / "view", root / "fixtures")

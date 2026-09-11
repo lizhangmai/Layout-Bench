@@ -21,7 +21,7 @@ from benchmarking.toolchains import load_toolchain
 
 pytestmark = pytest.mark.integration
 ROOT = Path(__file__).resolve().parents[2]
-CASE = ROOT / "tasks/IHP-AnalogAcademy/cases/comparator"
+CASE = ROOT / "tasks/ihp-sg13g2/IHP-AnalogAcademy/cases/comparator"
 
 
 @pytest.fixture(scope="module")
@@ -32,7 +32,7 @@ def case_config(tmp_path_factory):
     path = directory / "case.toml"
     config = path.read_text()
     for profile, name in [("klayout", "klayout"), ("magic", "magic"), ("analog-models", "analog-models")]:
-        prepare_support(ROOT / "third_party/IHP-Open-PDK", ROOT / f"technology/sg13g2/{profile}.json", root / name)
+        prepare_support(ROOT / "third_party/IHP-Open-PDK", f"{ROOT}/tasks/ihp-sg13g2/pdk.toml#{profile}", root / name)
         config = config.replace(f"build/support/comparator-{name}", str(root / name))
     path.write_text(config)
     return path

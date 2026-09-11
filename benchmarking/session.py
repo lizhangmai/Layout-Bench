@@ -16,6 +16,7 @@ from .recorder import RecordingError
 from .recording import SessionResult
 
 MAX_CONSOLE_BYTES = 64 * 1024 * 1024
+CONSOLE_PREVIEW_BYTES = 64 * 1024
 MAX_PROCESS_FEEDBACK = 16
 PDK_RESOURCE_KIND = "reviewed-pdk-view"
 PDK_RESOURCE_FILES = (
@@ -166,7 +167,7 @@ class DockerSession:
                 while chunk := stream.read1(8192):
                     if recording_failed.is_set():
                         continue  # Drain the pipe until container removal closes Docker attach.
-                    available = max(0, 65536 - len(console))
+                    available = max(0, CONSOLE_PREVIEW_BYTES - len(console))
                     console.extend(chunk[:available])
                     truncated |= len(chunk) > available
                     try:

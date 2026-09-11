@@ -14,12 +14,12 @@ from benchmarking.evaluate import run_evaluation
 from benchmarking.evaluation import parse_evaluation
 from benchmarking.files import Asset
 from benchmarking.klayout import KLayoutDocker
-from benchmarking.prepare import export_xschem
+from benchmarking.prepare import export_xschem, resolve_source_files
 from benchmarking.prepare_support import prepare_support
 
 pytestmark = pytest.mark.integration
 ROOT = Path(__file__).resolve().parents[2]
-CASE = ROOT / "tasks/IHP-AnalogAcademy/cases/input_pair"
+CASE = ROOT / "tasks/ihp-sg13g2/IHP-AnalogAcademy/cases/input_pair"
 
 
 def test_schematic_export_preserves_mos_and_computes_tap_from_dimensions(tmp_path):
@@ -65,9 +65,9 @@ def test_schematic_export_preserves_mos_and_computes_tap_from_dimensions(tmp_pat
 
     # Export the simulator dialect independently from the same pinned source.
     # No extracted layout or rewritten CDL supplies simulator device parameters.
-    config = tomllib.loads((CASE / "case.toml").read_text())
+    _, entries, _ = resolve_source_files(CASE / "case.toml")
     source_inputs = {}
-    for entry in config["source_export"]["files"]:
+    for entry in entries:
         checkout = "IHP-AnalogAcademy" if entry["checkout"] == "analogacademy" else "IHP-Open-PDK"
         asset = Asset((ROOT / "third_party" / checkout / entry["path"]).read_bytes(), "text")
         assert asset.sha256 == entry["sha256"]
@@ -117,7 +117,7 @@ result = {}
 end
 File.write('comparison.json', JSON.pretty_generate(result))
 """
-    prepare_support(ROOT / "third_party/IHP-Open-PDK", ROOT / "technology/sg13g2/klayout.json",
+    prepare_support(ROOT / "third_party/IHP-Open-PDK", f"{ROOT}/tasks/ihp-sg13g2/pdk.toml#klayout",
                     tmp_path / "support")
     bundle = load_bundle(tmp_path / "support")
     config = tomllib.loads((CASE / "case.toml").read_text())
@@ -150,7 +150,7 @@ File.write('comparison.json', JSON.pretty_generate(result))
 
 def test_repaired_reference_passes_and_original_layout_is_rejected(tmp_path):
     support = tmp_path / "support"
-    prepare_support(ROOT / "third_party/IHP-Open-PDK", ROOT / "technology/sg13g2/klayout.json", support)
+    prepare_support(ROOT / "third_party/IHP-Open-PDK", f"{ROOT}/tasks/ihp-sg13g2/pdk.toml#klayout", support)
     config = tomllib.loads((CASE / "case.toml").read_text())
     original = next(a for a in config["upstream_assets"] if a["role"] == "reference")
     assets = {}

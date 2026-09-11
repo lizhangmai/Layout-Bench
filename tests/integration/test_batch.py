@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from protocol_helpers import write_protocol_task
+from helpers.protocol import write_protocol_task
 
 from benchmarking.files import Asset
 from benchmarking.tasks import load_task

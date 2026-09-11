@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from admission_helpers import SECRET, approve, save_policy
+from helpers.admission import SECRET, approve, save_policy
 
 from benchmarking.files import Asset
 

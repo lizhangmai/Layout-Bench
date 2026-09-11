@@ -23,7 +23,7 @@ Measure whether an agent can turn a circuit netlist, physical constraints, and p
 
 Layout-Bench runs an Agent in an isolated container, records an explicit GDS submission, and evaluates the frozen candidate with independent EDA tools. DRC/LVS establish physical validity; a complete task also checks the declared geometry and post-layout performance limits.
 
-> **Public preview.** Quick start evaluates the published [comparator](tasks/IHP-AnalogAcademy/cases/comparator/README.md) witness, with [full_OTA](tasks/IHP-AnalogAcademy/cases/full_OTA/README.md) also available. Other public circuits are indexed in [IHP AnalogAcademy](tasks/IHP-AnalogAcademy/catalog.toml) and [TO_Apr2025](tasks/TO_Apr2025/catalog.toml); consult each case's status and README for evaluation readiness and qualification scope.
+> **Public preview.** Quick start evaluates the published [comparator](tasks/ihp-sg13g2/IHP-AnalogAcademy/cases/comparator/README.md) witness, with [full_OTA](tasks/ihp-sg13g2/IHP-AnalogAcademy/cases/full_OTA/README.md) also available. Other public circuits are indexed in [IHP AnalogAcademy](tasks/ihp-sg13g2/IHP-AnalogAcademy/catalog.toml) and [TO_Apr2025](tasks/ihp-sg13g2/TO_Apr2025/catalog.toml); consult each case's status and README for evaluation readiness and qualification scope.
 
 ## Why Layout-Bench?
 

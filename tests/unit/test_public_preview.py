@@ -7,7 +7,7 @@ import tomllib
 from pathlib import Path
 
 import pytest
-from protocol_helpers import write_protocol_task
+from helpers.protocol import write_protocol_task
 
 from benchmarking import environment, prepare_support
 from benchmarking.tasks import load_task
@@ -38,7 +38,7 @@ def test_default_build_network_explains_loopback_proxy(preview, monkeypatch):
 @pytest.fixture
 def preview_case(preview, tmp_path, monkeypatch, circuit_case):
     root = tmp_path / "checkout with spaces"
-    source = root / "tasks/IHP-AnalogAcademy/cases/synthetic"
+    source = root / "tasks/ihp-sg13g2/IHP-AnalogAcademy/cases/synthetic"
     task_path = write_protocol_task(source)
     body = task_path.read_text().split("[inputs.netlist]", 1)[1]
     body = re.sub(r"^(\[\[?)", r"\1task.", "[inputs.netlist]" + body, flags=re.MULTILINE)

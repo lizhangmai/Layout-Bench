@@ -12,32 +12,61 @@ import tempfile
 import tomllib
 from pathlib import Path
 
+from .files import Asset
 from .files import keys as _keys
 from .files import read_file as _read_file
 from .files import relative as _relative
+from .files import text as _text
+from .prepare_support import load_profile
 
 
-def export_xschem(manifest: Path, checkouts: dict[str, Path], output: Path,
-                  image: str = "layout-bench-tools:local") -> None:
-    manifest_bytes = manifest.read_bytes()
-    spec = tomllib.loads(manifest_bytes.decode("utf-8"))
-    source_manifest_sha256 = hashlib.sha256(manifest_bytes).hexdigest()
+def resolve_source_files(manifest: Path) -> tuple[dict, list[dict], Asset | None]:
+    """Resolve a source export manifest, expanding its PDK profile reference.
+
+    Returns the export spec, the ordered source file records, and the PDK
+    profile asset (None when the manifest does not declare pdk_profile).
+    Profile files follow the manifest's own files as checkout="pdk" records,
+    so the PDK manifest remains the single declaration of their digests.
+    """
+    spec = tomllib.loads(manifest.read_bytes().decode("utf-8"))
     if spec.get("kind") == "layout_case":
         if not isinstance(spec.get("source_export"), dict):
             raise ValueError("Circuit case does not declare source_export")
         spec = spec["source_export"]
-        source_manifest_sha256 = hashlib.sha256(
-            json.dumps(spec, sort_keys=True, separators=(",", ":")).encode("utf-8")
-        ).hexdigest()
-    _keys(spec, {"tool", "schematic", "netlist", "files"}, set(), "source")
+    _keys(spec, {"tool", "schematic", "netlist", "files"}, {"pdk_profile"}, "source")
+    if not isinstance(spec["files"], list) or not spec["files"]:
+        raise ValueError("source.files must be a nonempty list")
+    entries = []
+    for entry in spec["files"]:
+        _keys(entry, {"checkout", "path", "target", "sha256"}, set(), "source.files")
+        entries.append(dict(entry))
+    profile = None
+    reference = spec.get("pdk_profile")
+    if reference is not None:
+        path, separator, name = _text(reference, "source.pdk_profile").partition("#")
+        if not separator or not path or not name:
+            raise ValueError(f"source.pdk_profile must name a manifest profile: {reference}")
+        profile = load_profile(f"{(manifest.absolute().parent / path).resolve()}#{name}")
+        for target, file_spec in json.loads(profile.content)["files"].items():
+            _keys(file_spec, {"path", "sha256", "format"}, set(), "pdk profile file")
+            entries.append({"checkout": "pdk", "path": file_spec["path"],
+                            "target": target, "sha256": file_spec["sha256"]})
+    return spec, entries, profile
+
+
+def export_xschem(manifest: Path, checkouts: dict[str, Path], output: Path,
+                  image: str = "layout-bench-tools:local") -> None:
+    spec, entries, profile = resolve_source_files(manifest)
+    identity = json.dumps(spec, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    if profile is not None:
+        identity += b"\n" + profile.content
+    source_manifest_sha256 = hashlib.sha256(identity).hexdigest()
     if spec["tool"] != "xschem-lvs":
         raise ValueError("Only the xschem-lvs exporter is implemented")
     schematic = _relative(spec["schematic"], "source.schematic")
     netlist = _relative(spec["netlist"], "source.netlist")
     if "/" in netlist:
         raise ValueError("source.netlist must be a filename")
-    if not isinstance(spec["files"], list) or not spec["files"]:
-        raise ValueError("source.files must be a nonempty list")
     output = output.absolute()
     if output.exists() or output.is_symlink():
         raise FileExistsError(f"Output already exists: {output}")
@@ -47,8 +76,7 @@ def export_xschem(manifest: Path, checkouts: dict[str, Path], output: Path,
         source.mkdir()
         records = []
         targets = set()
-        for entry in spec["files"]:
-            _keys(entry, {"checkout", "path", "target", "sha256"}, set(), "source.files")
+        for entry in entries:
             if entry["checkout"] not in checkouts:
                 raise ValueError(f"Missing checkout: {entry['checkout']}")
             relative = _relative(entry["path"], "source.files.path")
@@ -119,6 +147,8 @@ def export_xschem(manifest: Path, checkouts: dict[str, Path], output: Path,
                 "netlist": netlist, "netlist_sha256": hashlib.sha256(content).hexdigest(),
                 "postprocessing": "none",
             }
+            if profile is not None:
+                provenance["pdk_profile_sha256"] = profile.sha256
             (stage / "provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
             (stage / "netlist.log").write_text(diagnostics)
             stage.rename(output)

@@ -18,12 +18,12 @@ from benchmarking.evaluation import parse_evaluation
 from benchmarking.files import Asset
 from benchmarking.klayout import KLayoutDocker
 from benchmarking.ngspice import NgspiceDocker
-from benchmarking.prepare import export_xschem
+from benchmarking.prepare import export_xschem, resolve_source_files
 from benchmarking.prepare_support import prepare_support
 
 pytestmark = pytest.mark.integration
 ROOT = Path(__file__).resolve().parents[2]
-CASE = ROOT / "tasks/TO_Apr2025/cases/DC_to_130_GHz_TIA.design_1"
+CASE = ROOT / "tasks/ihp-sg13g2/TO_Apr2025/cases/DC_to_130_GHz_TIA.design_1"
 TOP = "FMD_QNC_03a_TIA_1"
 PORTS = ["INPUT", "OUTPUT", "VCC2V", "VCC2V1", "VEE"]
 
@@ -34,7 +34,7 @@ def context(tmp_path_factory):
     config = tomllib.loads((CASE / "case.toml").read_text())
     image = os.environ.get("LAYOUT_BENCH_TEST_IMAGE", "layout-bench-tools:local")
     for name in ("klayout", "hbt-models"):
-        prepare_support(ROOT / "third_party/IHP-Open-PDK", ROOT / f"technology/sg13g2/{name}.json",
+        prepare_support(ROOT / "third_party/IHP-Open-PDK", f"{ROOT}/tasks/ihp-sg13g2/pdk.toml#{name}",
                         directory / name, compiler_image=image)
     for entry in config["assets"]:
         assert Asset((CASE / entry["path"]).read_bytes(), entry["format"]).sha256 == entry["sha256"]
@@ -48,7 +48,8 @@ def test_both_exports_preserve_the_approved_core(context, tmp_path):
     cdl = Asset((tmp_path / "cdl/circuit.cdl").read_bytes(), "spice")
     assert cdl.content == (CASE / "materials/circuit.cdl").read_bytes()
     inputs = {}
-    for entry in config["source_export"]["files"]:
+    _, entries, _ = resolve_source_files(CASE / "case.toml")
+    for entry in entries:
         asset = Asset((checkouts[entry["checkout"]] / entry["path"]).read_bytes(), "text")
         assert asset.sha256 == entry["sha256"]
         inputs["source/" + entry["target"]] = asset

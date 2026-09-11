@@ -82,8 +82,8 @@ CLOAD OUT 0 1p
 @pytest.fixture(scope="module")
 def context(tmp_path_factory):
     root = tmp_path_factory.mktemp("magic-rc")
-    prepare_support(ROOT / "third_party/IHP-Open-PDK", ROOT / "technology/sg13g2/magic.json", root / "magic")
-    prepare_support(ROOT / "third_party/IHP-Open-PDK", ROOT / "technology/sg13g2/mos-models.json", root / "models")
+    prepare_support(ROOT / "third_party/IHP-Open-PDK", f"{ROOT}/tasks/ihp-sg13g2/pdk.toml#magic", root / "magic")
+    prepare_support(ROOT / "third_party/IHP-Open-PDK", f"{ROOT}/tasks/ihp-sg13g2/pdk.toml#mos-models", root / "models")
     prepare_pdk(ROOT / "third_party/IHP-Open-PDK", root / "view")
     backends = {
         "layout.extract_rc": MagicRCDocker(

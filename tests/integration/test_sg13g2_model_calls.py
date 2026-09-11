@@ -59,7 +59,7 @@ netlist.each_circuit do |c|
 end
 File.write('devices.json', JSON.generate(circuits))
 """
-    prepare_support(ROOT / "third_party/IHP-Open-PDK", ROOT / "technology/sg13g2/klayout.json", tmp_path / "support")
+    prepare_support(ROOT / "third_party/IHP-Open-PDK", f"{ROOT}/tasks/ihp-sg13g2/pdk.toml#klayout", tmp_path / "support")
     support = load_bundle(tmp_path / "support")
     result = DockerTool("layout-bench-tools:local", ["klayout", "-v"], 120).run(
         ["klayout", "-b", "-r", "probe.rb"],

@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import tomllib
 from pathlib import Path
 
 from .bundles import publish_bundle
@@ -10,12 +11,31 @@ from .evaluation import identifier
 from .files import Asset, keys, read_file, relative
 
 
-def prepare_support(source: Path, profile: Path, destination: Path, *,
+def load_profile(spec: str) -> Asset:
+    """Resolve a manifest#profile reference to its canonical schema 1 JSON bytes."""
+    path, sep, name = spec.partition("#")
+    if not sep or not name:
+        raise ValueError(f"Support profile must name a manifest profile: {spec}#<name>")
+    path = Path(path).absolute()
+    manifest = tomllib.loads(read_file(path.parent, path.name).decode())
+    keys(manifest, {"schema_version", "source", "profiles"}, set(), "support manifest")
+    if type(manifest["schema_version"]) is not int or manifest["schema_version"] != 1:
+        raise ValueError("Unsupported support manifest schema_version")
+    if name not in manifest["profiles"]:
+        raise ValueError(f"Unknown support profile: {name}")
+    profile = manifest["profiles"][name]
+    if not isinstance(profile, dict):
+        raise TypeError(f"Support profile must be a table: {name}")
+    data = {"schema_version": 1, "source": manifest["source"], **profile}
+    return Asset((json.dumps(data, indent=2, sort_keys=True) + "\n").encode(), "json")
+
+
+def prepare_support(source: Path, profile: str, destination: Path, *,
                     compiler_image: str = "layout-bench-tools:local") -> str:
-    source, profile = source.absolute(), profile.absolute()
+    source = source.absolute()
     if destination.exists() or destination.is_symlink():
         raise FileExistsError(f"Support destination exists: {destination}")
-    raw = Asset(read_file(profile.parent, profile.name), "json")
+    raw = load_profile(profile)
     data = json.loads(raw.content)
     keys(data, {"schema_version", "source", "files"}, {"generated", "compile"}, "support profile")
     if type(data["schema_version"]) is not int or data["schema_version"] != 1:
@@ -77,7 +97,7 @@ def prepare_support(source: Path, profile: Path, destination: Path, *,
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("source", type=Path)
-    parser.add_argument("profile", type=Path)
+    parser.add_argument("profile", help="Manifest profile reference, e.g. tasks/ihp-sg13g2/pdk.toml#klayout")
     parser.add_argument("destination", type=Path)
     parser.add_argument("--compiler-image", default="layout-bench-tools:local")
     args = parser.parse_args()

@@ -10,13 +10,13 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
-from protocol_helpers import write_protocol_task
+from helpers.protocol import write_protocol_task
 
 from benchmarking.files import Asset
 from benchmarking.harnesses import PROCESS_FEEDBACK_CAPABILITY, HarnessSpec
 from benchmarking.model_config import RunConfig
 from benchmarking.recorder import RecordingError, RunRecorder, recover_submissions
-from benchmarking.session import DockerSession, task_message
+from benchmarking.session import CONSOLE_PREVIEW_BYTES, DockerSession, task_message
 from benchmarking.tasks import load_task
 
 IMAGE = os.environ.get("LAYOUT_BENCH_TEST_IMAGE", "layout-bench-tools:local")
@@ -192,7 +192,7 @@ else:
 print('y'*100000)
 ''')
     assert result.termination == "completed", result.console.content
-    assert result.console_truncated and len(result.console.content) == 65536
+    assert result.console_truncated and len(result.console.content) == CONSOLE_PREVIEW_BYTES
 
 
 @pytest.mark.acceptance
@@ -211,7 +211,7 @@ def test_complete_console_and_failed_acceptance_persistence(tmp_path, monkeypatc
         content.extend((recorder.root / chunk["content"]["path"]).read_bytes())
     assert content.startswith(b'x'*100000 + b'\n')
     assert b'"accepted": true' in content
-    assert result.console_truncated and len(result.console.content) == 65536
+    assert result.console_truncated and len(result.console.content) == CONSOLE_PREVIEW_BYTES
     assert recover_submissions(recorder.root)["candidate"]["sha256"] == result.candidate.sha256
 
     failed = RunRecorder(tmp_path / "failed")

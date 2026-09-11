@@ -4,7 +4,7 @@ import hashlib
 import subprocess
 
 import pytest
-from catalog_helpers import CATALOGS, ROOT, assert_asset_allowed, read_catalog
+from helpers.catalog import CATALOGS, ROOT, assert_asset_allowed, read_catalog
 
 pytestmark = pytest.mark.integration
 

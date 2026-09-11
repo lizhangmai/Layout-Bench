@@ -20,14 +20,14 @@ from benchmarking.upstream import evaluate
 
 pytestmark = pytest.mark.integration
 ROOT = Path(__file__).resolve().parents[2]
-CASE = ROOT / "tasks/TO_Apr2025/cases/DC_to_130_GHz_TIA.design_1/case.toml"
+CASE = ROOT / "tasks/ihp-sg13g2/TO_Apr2025/cases/DC_to_130_GHz_TIA.design_1/case.toml"
 
 
 @pytest.fixture(scope="module")
 def source_context(tmp_path_factory):
     directory = tmp_path_factory.mktemp("to-source")
     support = directory / "support"
-    prepare_support(ROOT / "third_party/IHP-Open-PDK", ROOT / "technology/sg13g2/klayout.json", support)
+    prepare_support(ROOT / "third_party/IHP-Open-PDK", f"{ROOT}/tasks/ihp-sg13g2/pdk.toml#klayout", support)
     case = tomllib.loads(CASE.read_text())
     checkout = ROOT / case["origin"]["checkout"]
     assets = {}

@@ -59,10 +59,25 @@ git submodule status --recursive
 
 To update an upstream, fetch it in the target submodule, choose an official commit, fix it at a detached checkout, synchronize nested dependencies, and then inspect `git diff --submodule=log` in the public repository. Validate affected environments and tasks before committing the reference; normal runs do not follow a remote branch automatically. Make PDK source fixes and run upstream regressions in that repository.
 
+After moving the PDK pin, regenerate the support profile digests from the clean checkout and review the resulting diff before rebuilding bundles:
+
+```bash
+uv run --locked python -m benchmarking.refresh_support third_party/IHP-Open-PDK tasks/ihp-sg13g2/pdk.toml
+```
+
+The same command refreshes a circuit case after moving its source-collection pin, rewriting `origin.commit` and the digests of `sources`, `upstream_assets`, and case-owned `source_export` files in place (PDK-owned files stay with the referenced `pdk.toml` profile):
+
+```bash
+uv run --locked python -m benchmarking.refresh_support third_party/IHP-AnalogAcademy \
+  tasks/ihp-sg13g2/IHP-AnalogAcademy/cases/comparator/case.toml
+```
+
+The refresh refuses a checkout with uncommitted tracked changes and fails on any listed file missing upstream, so a stale or renamed selection surfaces at refresh time rather than during evaluation.
+
 | Resource | Preparation and validation |
 |---|---|
 | PDK view | `benchmarking.environment` prepares primitives, callbacks, layer tables, rules, and licenses using the per-file digests in [sg13g2_view.json](../benchmarking/sg13g2_view.json); `--bundle` generates the Agent resource bundle |
-| Tool support bundle | `benchmarking.prepare_support` follows the [technology/sg13g2](../technology/sg13g2) manifests to prepare Magic, MOS models, and KLayout rules; compile models in a separate container |
+| Tool support bundle | `benchmarking.prepare_support` follows the profiles in the [tasks/ihp-sg13g2/pdk.toml](../tasks/ihp-sg13g2/pdk.toml) manifest to prepare Magic, MOS models, and KLayout rules; compile models in a separate container |
 | Frozen bundle | `manifest.json` binds files, sources, and the actual build environment; loading rejects modifications, missing or extra files, and symlinks, while backends consume byte snapshots. A reviewed PDK bundle is auto-detected by sessions; `/protocol/resources.json` publishes its container-local import paths and a preflight import command without adding task or reference files |
 
 Keep originals byte-for-byte as supplied upstream and register framework-generated startup settings separately in the manifest. Preserve the license notices for components such as PSP models, PyCell, and pypreprocessor. The PDK view currently validates only basic MOS/tap primitives; importing a tool or device does not qualify every parameter or process rule.
@@ -71,7 +86,7 @@ Keep originals byte-for-byte as supplied upstream and register framework-generat
 
 ### Prepare a Netlist from a Schematic
 
-`benchmarking.prepare` gives a network-isolated preparation container only the files explicitly listed by a case TOML's `[source_export]` section, invokes Xschem to export the raw LVS netlist, and saves source digests and diagnostic logs. Arguments include the case configuration, output directory, and `--checkout NAME=PATH` for each source. Use the unified image with `--image layout-bench-tools:local`. Any source export is preparation evidence, not a substitute for an upstream layout. See the [task guide](tasks.md) for source and input-semantics checks.
+`benchmarking.prepare` gives a network-isolated preparation container only the files explicitly listed by a case TOML's `[source_export]` section, invokes Xschem to export the raw LVS netlist, and saves source digests and diagnostic logs. The case lists its own files in `[source_export.files]`; reviewed PDK symbols come from the `pdk_profile` reference (for example `../../../pdk.toml#xschem-symbols`), so the PDK manifest remains their single digest declaration. Arguments include the case configuration, output directory, and `--checkout NAME=PATH` for each source. Use the unified image with `--image layout-bench-tools:local`. Any source export is preparation evidence, not a substitute for an upstream layout. See the [task guide](tasks.md) for source and input-semantics checks.
 
 The Dockerfile builds a pinned Xschem release from checksum-verified source.
 Ubuntu's older Xschem package lacks the native `ev7` expression helper used by
@@ -119,7 +134,7 @@ resistor. This limitation produces an evaluation error. The
 wire-resistance increment, its effect on transistor delay, a fixture threshold
 rejection, and invalid/unsupported inputs. Case-specific extraction warnings,
 models, and calibration still require review; the comparator's current status
-and commands are in its [case README](../tasks/IHP-AnalogAcademy/cases/comparator/README.md).
+and commands are in its [case README](../tasks/ihp-sg13g2/IHP-AnalogAcademy/cases/comparator/README.md).
 
 ### KLayout Physical Checks
 
@@ -131,7 +146,7 @@ The artifact check uses KLayout's native reader to validate the GDSII stream, th
 
 ### Original-asset evaluation
 
-Prepare support from `technology/sg13g2/klayout.json`. Frozen bundles are not
+Prepare support from the `klayout` profile in `tasks/ihp-sg13g2/pdk.toml`. Frozen bundles are not
 updated in place; prepare a new bundle when the manifest changes. The profiles
 declare their upstream scope explicitly:
 
@@ -141,17 +156,17 @@ declare their upstream scope explicitly:
 | `lvs-upstream.json` | Current pinned PDK GUI defaults (`tech/macros/sg13g2_lvs.lym`): explicit taps, native simplification, strict named ports. |
 | `lvs-analogacademy.json` | Course-era defaults mapped to the current PDK: explicit taps, native simplification, and comparison without the additional `flag_missing_ports` check. The historical [GUI options](https://github.com/IHP-GmbH/IHP-Open-PDK/blob/eb1b540c58346cf6259285a38d09b2a04feb344a/ihp-sg13g2/libs.tech/klayout/tech/macros/lvs_options.yml) and [LVS runset](https://github.com/IHP-GmbH/IHP-Open-PDK/blob/eb1b540c58346cf6259285a38d09b2a04feb344a/ihp-sg13g2/libs.tech/klayout/tech/lvs/sg13g2.lvs) establish these defaults, not the author's actual saved options. |
 
-`python -m benchmarking.upstream` evaluates cataloged cases through one API, one case per invocation. Each case's `[upstream_evaluation]` declares the original layout/netlist asset IDs, separate layout and reference circuit names, profile names, and selection basis. The entry point checks the upstream commit and selected asset hashes, invokes the existing evaluation API, and archives the exact case TOML alongside the report. It does not export or rewrite netlists, remove taps, tie bulk nodes, change device parameters, or supply waivers. Native runset simplification is part of upstream evaluation, not input preprocessing. The comparator task also materializes a byte-for-byte copy of its declared upstream LVS netlist. `tasks/IHP-AnalogAcademy/evaluate.py` is a thin compatibility entry point. The standalone file-size limit is 64 MiB and the per-job timeout defaults to 600 seconds (`--timeout-seconds`); these do not change executable task limits.
+`python -m benchmarking.upstream` evaluates cataloged cases through one API, one case per invocation. Each case's `[upstream_evaluation]` declares the original layout/netlist asset IDs, separate layout and reference circuit names, profile names, and selection basis. The entry point checks the upstream commit and selected asset hashes, invokes the existing evaluation API, and archives the exact case TOML alongside the report. It does not export or rewrite netlists, remove taps, tie bulk nodes, change device parameters, or supply waivers. Native runset simplification is part of upstream evaluation, not input preprocessing. The comparator task instead delivers the untouched Xschem export of its matched derivative schematic as the task netlist (see the case README). `tasks/ihp-sg13g2/IHP-AnalogAcademy/evaluate.py` is a thin compatibility entry point. The standalone file-size limit is 64 MiB and the per-job timeout defaults to 600 seconds (`--timeout-seconds`); these do not change executable task limits.
 
 ```bash
-uv run --locked python -m benchmarking.prepare_support third_party/IHP-Open-PDK technology/sg13g2/klayout.json build/support/upstream-all
+uv run --locked python -m benchmarking.prepare_support third_party/IHP-Open-PDK tasks/ihp-sg13g2/pdk.toml#klayout build/support/upstream-all
 uv run --locked python -m benchmarking.upstream \
-  tasks/IHP-AnalogAcademy/cases/input_pair/case.toml \
+  tasks/ihp-sg13g2/IHP-AnalogAcademy/cases/input_pair/case.toml \
   --support build/support/upstream-all \
   --output build/runs/upstream-input-pair
 ```
 
-Run the same command with any case listed in either `tasks/*/catalog.toml`,
+Run the same command with any case listed in a `tasks/*/*/catalog.toml`,
 using a fresh output directory. The metadata supplies the top cell;
 `--top-cell` is an optional assertion and rejects conflicts. `--root` specifies
 the checkout root (default: current working directory).
@@ -217,7 +232,7 @@ These results establish physical status under the declared profiles, not task
 qualification. The input pair's LVS mismatch concerns tap parameters; its
 combined MOS devices and ports match. The comparator's seven DRC findings and
 their disposition are explained in its
-[case README](../tasks/IHP-AnalogAcademy/cases/comparator/README.md#original-issues-and-modifications).
+[case README](../tasks/ihp-sg13g2/IHP-AnalogAcademy/cases/comparator/README.md#original-issues-and-modifications).
 The author's settings and exact historical run identity were not archived
 upstream, so the checks reconstruct documented defaults on the current
 toolchain. Keep the original source bytes when reproducing them.
@@ -251,14 +266,14 @@ PEX. Other source dialects require an explicitly validated adaptation.
 
 ### HBT core simulation support
 
-[The HBT model profile](../technology/sg13g2/hbt-models.json) prepares the pinned
+[The HBT model profile](../tasks/ihp-sg13g2/pdk.toml) prepares the pinned
 HBT, resistor and capacitor include closure, using native ngspice VBIC and
 OpenVAF-compiled R3_CMC and MoM models. It retains the R3_CMC license and
 NOTICE with the IHP adaptation. No compact-model source is patched.
 The [design 1 regression](../tests/integration/test_to_apr2025_schematic.py)
 checks nominal DC operation of the schematic-derived two-stage TIA core.
 This does not validate RF/EM extraction, PEX, noise or statistical corners;
-see the [case scope](../tasks/TO_Apr2025/cases/DC_to_130_GHz_TIA.design_1/README.md#core-operating-point-check).
+see the [case scope](../tasks/ihp-sg13g2/TO_Apr2025/cases/DC_to_130_GHz_TIA.design_1/README.md#core-operating-point-check).
 
 ### Qucs-S and Qucsator
 
@@ -283,9 +298,9 @@ Role-specific image tags are not part of the supported workflow. This keeps tool
 
 ```bash
 uv run --locked python -m benchmarking.environment third_party/IHP-Open-PDK build/support/pdk-view
-uv run --locked python -m benchmarking.prepare_support third_party/IHP-Open-PDK technology/sg13g2/magic.json build/support/sg13g2-magic
-uv run --locked python -m benchmarking.prepare_support third_party/IHP-Open-PDK technology/sg13g2/mos-models.json build/support/sg13g2-mos-models
-uv run --locked python -m benchmarking.prepare_support third_party/IHP-Open-PDK technology/sg13g2/klayout.json build/support/sg13g2-klayout
+uv run --locked python -m benchmarking.prepare_support third_party/IHP-Open-PDK tasks/ihp-sg13g2/pdk.toml#magic build/support/sg13g2-magic
+uv run --locked python -m benchmarking.prepare_support third_party/IHP-Open-PDK tasks/ihp-sg13g2/pdk.toml#mos-models build/support/sg13g2-mos-models
+uv run --locked python -m benchmarking.prepare_support third_party/IHP-Open-PDK tasks/ihp-sg13g2/pdk.toml#klayout build/support/sg13g2-klayout
 ```
 
 Resolve relative `settings.support` paths from the backend's launch working directory, while paths in a plan are relative to the plan file; keep these namespaces distinct. New configurations may use absolute support paths. The [integration tests](../tests/integration) maintain complete fixture invocations; see [CONTRIBUTING](../CONTRIBUTING.md#verification) for how to select and run them.

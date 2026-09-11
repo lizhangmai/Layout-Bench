@@ -20,7 +20,7 @@ from benchmarking.toolchains import load_toolchain
 
 pytestmark = pytest.mark.integration
 ROOT = Path(__file__).resolve().parents[2]
-CASE = ROOT / "tasks/IHP-AnalogAcademy/cases/full_OTA"
+CASE = ROOT / "tasks/ihp-sg13g2/IHP-AnalogAcademy/cases/full_OTA"
 
 
 def declared_asset(config, role):
@@ -37,7 +37,7 @@ def environment(tmp_path_factory):
     # Freeze just the declared inputs and host configuration for this check.
     load_task(CASE / "case.toml").materialize(root / "case")
     for profile, name in [("klayout", "klayout-spice"), ("magic", "magic"), ("analog-models", "models")]:
-        prepare_support(ROOT / "third_party/IHP-Open-PDK", ROOT / f"technology/sg13g2/{profile}.json", root / name)
+        prepare_support(ROOT / "third_party/IHP-Open-PDK", f"{ROOT}/tasks/ihp-sg13g2/pdk.toml#{profile}", root / name)
         config = config.replace(f"build/support/full-ota-{name}", str(root / name))
     path = root / "case/case.toml"
     path.write_text(config)
